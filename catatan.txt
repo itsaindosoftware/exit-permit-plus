@@ -1,0 +1,6 @@
+admin@example.com
+password
+
+php artisan key:generate
+
+php artisan serve --port=8080
