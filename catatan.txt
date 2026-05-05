@@ -4,3 +4,14 @@ password
 php artisan key:generate
 
 php artisan serve --port=8080
+
+====== WEB =======
+exit permit sudah dikondisikan ke user, manager, md
+order meal biasa (umum) = sudah bisa 
+order meal reimbursement (pribadi) = masih menunggu form dari pak dikondisikan
+
+task hari ini 05 mei: bikin API login, absen masuk, dan absen pulang untuk untuk anak magang yang terkoneksi ke wifi internal itsa (sementara).
+
+
+=== MOBILE ===== 
+bikin integrasi api dan ui untuk login, dashboard, absen masuk, absen pulang, dan halaman profile (karyawan).
