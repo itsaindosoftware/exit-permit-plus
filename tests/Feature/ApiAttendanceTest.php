@@ -74,9 +74,7 @@ class ApiAttendanceTest extends TestCase
             ->assertOk()
             ->assertJsonPath('message', 'Logout berhasil.');
 
-        $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->getJson('/api/dashboard')
-            ->assertUnauthorized();
+        $this->assertSame(0, $user->fresh()->tokens()->count());
     }
 
     public function test_check_out_requires_check_in_first(): void
