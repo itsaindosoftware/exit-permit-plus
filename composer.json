@@ -11,6 +11,7 @@
         "laravel/framework": "^11.31",
         "laravel/sanctum": "^4.3",
         "laravel/tinker": "^2.9",
+        "maatwebsite/excel": "*",
         "tightenco/ziggy": "^2.0"
     },
     "require-dev": {

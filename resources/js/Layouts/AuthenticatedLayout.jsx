@@ -6,9 +6,11 @@ export default function AuthenticatedLayout({ header, children }) {
     const flash = usePage().props.flash;
     const notifications = usePage().props.notifications ?? { unread: [], unread_count: 0 };
     const [showSidebar, setShowSidebar] = useState(false);
+    const isRatna = String(user?.email ?? '').toLowerCase() === 'ratna@example.com';
 
     const menuItems = [
         { label: 'Dashboard', routeName: 'dashboard' },
+        ...(isRatna ? [{ label: 'Schedule Car', routeName: 'schedule-cars.index' }] : []),
         { label: 'Exit Permit', routeName: 'exit-permits.index' },
         { label: 'Order Meal Umum', routeName: 'order-meals.index' },
         { label: 'Order Meal Exit Permit', routeName: 'exit-permit-meals.index' },

@@ -2,8 +2,6 @@ import InputError from '@/Components/InputError';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 
-const currencyFormatter = new Intl.NumberFormat('id-ID');
-
 const inputClass =
     'mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-cyan-600 focus:ring-2 focus:ring-cyan-200';
 
@@ -18,16 +16,25 @@ function SectionHeading({ number, title }) {
     );
 }
 
-export default function Create({ exitTypes, reimbursementAmounts }) {
+export default function Create({ exitTypes, carOptions = [], driverOptions = [] }) {
     const { data, setData, post, processing, errors } = useForm({
+        requestor_items: [
+            {
+                name: '',
+                employee_id: '',
+                position: '',
+                department: '',
+                reimburs_lunch_box: '',
+            },
+        ],
         permit_date: '',
         start_time: '',
         end_time: '',
         destination: '',
         exit_type: exitTypes[0] ?? 'sick',
-        vehicle_plate: '',
+        car_id: '',
+        driver_id: '',
         returned_to_office: false,
-        reimbursement_amount: reimbursementAmounts[0] ?? 12000,
         reason: '',
         notes: '',
         attachment_photo: null,
@@ -38,7 +45,38 @@ export default function Create({ exitTypes, reimbursementAmounts }) {
         post(route('exit-permits.store'), { forceFormData: true });
     };
 
-    const mealPreview = data.returned_to_office && data.start_time && data.end_time;
+    const addRequestorRow = () => {
+        setData('requestor_items', [
+            ...data.requestor_items,
+            {
+                name: '',
+                employee_id: '',
+                position: '',
+                department: '',
+                reimburs_lunch_box: '',
+            },
+        ]);
+    };
+
+    const removeRequestorRow = (index) => {
+        if (data.requestor_items.length === 1) {
+            return;
+        }
+
+        setData(
+            'requestor_items',
+            data.requestor_items.filter((_, rowIndex) => rowIndex !== index),
+        );
+    };
+
+    const updateRequestorRow = (index, field, value) => {
+        setData(
+            'requestor_items',
+            data.requestor_items.map((row, rowIndex) => (
+                rowIndex === index ? { ...row, [field]: value } : row
+            )),
+        );
+    };
 
     return (
         <AuthenticatedLayout
@@ -58,7 +96,7 @@ export default function Create({ exitTypes, reimbursementAmounts }) {
                         langsung terhubung ke sistem approval dan reimbursement.
                     </p>
                     <p className="mt-3 inline-flex rounded-full bg-cyan-100 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-cyan-800">
-                        Approval Flow: User Submit | Manager Approval | MD Approval | Diketahui HR
+                        Approval Flow: User Submit | Manager Approval | MD Approval | HR Manager Approval | Check by Sisca (HR)
                     </p>
                 </div>
 
@@ -84,32 +122,83 @@ export default function Create({ exitTypes, reimbursementAmounts }) {
                                         <th className="border border-slate-300 px-3 py-2 text-left font-semibold">POSITION</th>
                                         <th className="border border-slate-300 px-3 py-2 text-left font-semibold">DEPARTMENT</th>
                                         <th className="border border-slate-300 px-3 py-2 text-left font-semibold">REIMBURS LUNCH BOX (Y/N)</th>
+                                        <th className="border border-slate-300 px-3 py-2 text-left font-semibold">AKSI</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td className="border border-slate-300 px-3 py-2 align-top">1.</td>
-                                        <td className="border border-slate-300 px-3 py-2">
-                                            <p className="font-medium text-slate-700">Auto dari akun login</p>
-                                        </td>
-                                        <td className="border border-slate-300 px-3 py-2 text-slate-500">Isi dari data HRIS</td>
-                                        <td className="border border-slate-300 px-3 py-2 text-slate-500">Isi dari data HRIS</td>
-                                        <td className="border border-slate-300 px-3 py-2 text-slate-500">Isi dari data HRIS</td>
-                                        <td className="border border-slate-300 px-3 py-2">
-                                            <span
-                                                className={
-                                                    `inline-flex rounded-full px-3 py-1 text-xs font-semibold ` +
-                                                    (mealPreview
-                                                        ? 'bg-emerald-100 text-emerald-700'
-                                                        : 'bg-slate-100 text-slate-600')
-                                                }
-                                            >
-                                                {mealPreview ? 'Y (Preview)' : 'N (Preview)'}
-                                            </span>
-                                        </td>
-                                    </tr>
+                                    {data.requestor_items.map((row, index) => (
+                                        <tr key={`requestor-row-${index}`}>
+                                            <td className="border border-slate-300 px-3 py-2 align-top font-semibold text-slate-700">{index + 1}.</td>
+                                            <td className="border border-slate-300 px-2 py-1">
+                                                <input
+                                                    type="text"
+                                                    className="w-full rounded border border-slate-300 px-2 py-1 text-xs outline-none focus:border-cyan-600 focus:ring-1 focus:ring-cyan-200 md:text-sm"
+                                                    value={row.name}
+                                                    onChange={(e) => updateRequestorRow(index, 'name', e.target.value)}
+                                                    placeholder="Nama"
+                                                />
+                                            </td>
+                                            <td className="border border-slate-300 px-2 py-1">
+                                                <input
+                                                    type="text"
+                                                    className="w-full rounded border border-slate-300 px-2 py-1 text-xs outline-none focus:border-cyan-600 focus:ring-1 focus:ring-cyan-200 md:text-sm"
+                                                    value={row.employee_id}
+                                                    onChange={(e) => updateRequestorRow(index, 'employee_id', e.target.value)}
+                                                    placeholder="Employee ID"
+                                                />
+                                            </td>
+                                            <td className="border border-slate-300 px-2 py-1">
+                                                <input
+                                                    type="text"
+                                                    className="w-full rounded border border-slate-300 px-2 py-1 text-xs outline-none focus:border-cyan-600 focus:ring-1 focus:ring-cyan-200 md:text-sm"
+                                                    value={row.position}
+                                                    onChange={(e) => updateRequestorRow(index, 'position', e.target.value)}
+                                                    placeholder="Position"
+                                                />
+                                            </td>
+                                            <td className="border border-slate-300 px-2 py-1">
+                                                <input
+                                                    type="text"
+                                                    className="w-full rounded border border-slate-300 px-2 py-1 text-xs outline-none focus:border-cyan-600 focus:ring-1 focus:ring-cyan-200 md:text-sm"
+                                                    value={row.department}
+                                                    onChange={(e) => updateRequestorRow(index, 'department', e.target.value)}
+                                                    placeholder="Department"
+                                                />
+                                            </td>
+                                            <td className="border border-slate-300 px-2 py-1">
+                                                <input
+                                                    type="text"
+                                                    className="w-full rounded border border-slate-300 px-2 py-1 text-xs uppercase outline-none focus:border-cyan-600 focus:ring-1 focus:ring-cyan-200 md:text-sm"
+                                                    value={row.reimburs_lunch_box}
+                                                    onChange={(e) => updateRequestorRow(index, 'reimburs_lunch_box', e.target.value.toUpperCase())}
+                                                    placeholder="Y / N"
+                                                />
+                                            </td>
+                                            <td className="border border-slate-300 px-2 py-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeRequestorRow(index)}
+                                                    disabled={data.requestor_items.length === 1}
+                                                    className="rounded bg-rose-600 px-2 py-1 text-xs font-semibold text-white transition hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-50"
+                                                >
+                                                    Hapus
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
                                 </tbody>
                             </table>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+                            <p className="text-xs text-slate-600 md:text-sm">Tambahkan atau kurangi baris sesuai jumlah data requestor.</p>
+                            <button
+                                type="button"
+                                onClick={addRequestorRow}
+                                className="rounded bg-cyan-700 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-cyan-600"
+                            >
+                                + Tambah Baris
+                            </button>
                         </div>
 
                         <div className="grid gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 md:grid-cols-2">
@@ -158,7 +247,7 @@ export default function Create({ exitTypes, reimbursementAmounts }) {
                             </div>
                         </div>
 
-                        <div className="grid gap-4 md:grid-cols-2">
+                        <div>
                             <div>
                                 <label htmlFor="destination" className="text-sm font-semibold text-slate-800">Destination</label>
                                 <input
@@ -171,24 +260,6 @@ export default function Create({ exitTypes, reimbursementAmounts }) {
                                     placeholder="Contoh: Klinik, Dealer, Kantor vendor"
                                 />
                                 <InputError message={errors.destination} className="mt-2" />
-                            </div>
-
-                            <div>
-                                <label htmlFor="reimbursement_amount" className="text-sm font-semibold text-slate-800">Reimbursement</label>
-                                <select
-                                    id="reimbursement_amount"
-                                    className={inputClass}
-                                    value={data.reimbursement_amount}
-                                    required
-                                    onChange={(e) => setData('reimbursement_amount', Number(e.target.value))}
-                                >
-                                    {reimbursementAmounts.map((amount) => (
-                                        <option key={amount} value={amount}>
-                                            Rp {currencyFormatter.format(amount)}
-                                        </option>
-                                    ))}
-                                </select>
-                                <InputError message={errors.reimbursement_amount} className="mt-2" />
                             </div>
                         </div>
 
@@ -233,17 +304,46 @@ export default function Create({ exitTypes, reimbursementAmounts }) {
                         </div>
 
                         {data.exit_type === 'business_trip' && (
-                            <div>
-                                <label htmlFor="vehicle_plate" className="text-sm font-semibold text-slate-800">1.3 No. Police Car</label>
-                                <input
-                                    id="vehicle_plate"
-                                    type="text"
-                                    className={`${inputClass} uppercase`}
-                                    value={data.vehicle_plate}
-                                    onChange={(e) => setData('vehicle_plate', e.target.value.toUpperCase())}
-                                    placeholder="Contoh: B 1234 XYZ"
-                                />
-                                <InputError message={errors.vehicle_plate} className="mt-2" />
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <div>
+                                    <label htmlFor="vehicle_plate" className="text-sm font-semibold text-slate-800">1.3 No. Police Car</label>
+                                    <select
+                                        id="vehicle_plate"
+                                        className={inputClass}
+                                        value={data.car_id}
+                                        onChange={(e) => setData('car_id', e.target.value ? Number(e.target.value) : '')}
+                                        required
+                                    >
+                                        <option value="">Pilih no polisi dan spesifikasi kendaraan</option>
+                                        {carOptions.map((car) => (
+                                            <option key={car.id} value={car.id}>{car.police_no} - {car.spesification}</option>
+                                        ))}
+                                    </select>
+                                    <InputError message={errors.car_id || errors.vehicle_plate} className="mt-2" />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="driver_name" className="text-sm font-semibold text-slate-800">1.4 Nama Supir</label>
+                                    <select
+                                        id="driver_name"
+                                        className={inputClass}
+                                        value={data.driver_id}
+                                        onChange={(e) => setData('driver_id', e.target.value ? Number(e.target.value) : '')}
+                                        required
+                                    >
+                                        <option value="">Pilih supir</option>
+                                        {driverOptions.map((driver) => (
+                                            <option key={driver.id} value={driver.id}>{driver.name}</option>
+                                        ))}
+                                    </select>
+                                    <InputError message={errors.driver_id || errors.driver_name} className="mt-2" />
+                                </div>
+                            </div>
+                        )}
+
+                        {data.exit_type !== 'business_trip' && (
+                            <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                                Field nomor polisi dan supir hanya wajib untuk Assignment / Company.
                             </div>
                         )}
 

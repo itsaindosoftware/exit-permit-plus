@@ -1,8 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 
-const currencyFormatter = new Intl.NumberFormat('id-ID');
-
 const exitTypeLabel = {
     business_trip: 'Perjalanan Dinas',
     sick: 'Sakit',
@@ -75,7 +73,6 @@ export default function Index({ exitPermits, canCreate }) {
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Jenis</th>
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Tujuan</th>
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Meal</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Reimburse</th>
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Status</th>
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Tahap Approval</th>
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Aksi</th>
@@ -92,6 +89,9 @@ export default function Index({ exitPermits, canCreate }) {
                                             {item.vehicle_plate && (
                                                 <div className="text-xs text-slate-500">No. Polisi: {item.vehicle_plate}</div>
                                             )}
+                                            {item.driver_name && (
+                                                <div className="text-xs text-slate-500">Supir: {item.driver_name}</div>
+                                            )}
                                         </td>
                                         <td className="px-4 py-3">
                                             <span
@@ -105,7 +105,6 @@ export default function Index({ exitPermits, canCreate }) {
                                                 {item.eligible_for_meal ? 'Eligible' : 'No'}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-3 font-medium text-slate-700">Rp {currencyFormatter.format(item.reimbursement_amount ?? 0)}</td>
                                         <td className="px-4 py-3">
                                             <span
                                                 className={
@@ -133,7 +132,7 @@ export default function Index({ exitPermits, canCreate }) {
                                                     className="rounded bg-cyan-700 px-3 py-1 text-xs font-semibold text-white transition hover:bg-cyan-600"
                                                 >
                                                     {item.can_submit_approval
-                                                        ? 'Approve'
+                                                        ? 'Detail & Approval'
                                                         : item.can_arrange_car
                                                             ? 'Arrange Car'
                                                             : item.can_verify_attendance

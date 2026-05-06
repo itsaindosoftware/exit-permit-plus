@@ -15,6 +15,8 @@ use Inertia\Response;
 
 class OrderMealController extends Controller
 {
+    private const ATTENDANCE_VERIFIER_EMAIL = 'sisca.dewiyani@example.com';
+
     public function index(): Response
     {
         return $this->indexByScope(OrderMeal::SCOPE_GENERAL);
@@ -135,25 +137,39 @@ class OrderMealController extends Controller
         ]);
     }
 
-    private function createByScope(string $scope): Response
+    private function createByScope(string $scope): Response|RedirectResponse
     {
+        $eligibleExitPermits = [];
+
+        if ($scope === OrderMeal::SCOPE_EXIT_PERMIT) {
+            $eligibleExitPermits = $this->eligibleExitPermitsForMeal(request()->user());
+
+            if (count($eligibleExitPermits) === 0) {
+                return redirect()->route($this->routeName($scope, 'index'))
+                    ->with('warning', 'Order meal Exit Permit tersedia setelah verifikasi attendance Sisca untuk data BIPO yang kembali ke kantor.');
+            }
+        }
+
         return Inertia::render('OrderMeals/Create', [
             'mode' => $scope,
             'indexRouteName' => $this->routeName($scope, 'index'),
             'storeRouteName' => $this->routeName($scope, 'store'),
+            'eligibleExitPermits' => $eligibleExitPermits,
         ]);
     }
 
     private function storeByScope(Request $request, string $scope): RedirectResponse
     {
-        $validated = $this->validatedData($request, false, true);
+        $validated = $this->validatedData($request, false, true, $scope);
         $scheduleType = $validated['schedule_type'];
         $repeatCount = (int) ($validated['repeat_count'] ?? 1);
         $baseMealDate = Carbon::parse((string) $validated['meal_date']);
         $exitPermitId = null;
 
         if ($scope === OrderMeal::SCOPE_EXIT_PERMIT) {
-            $exitPermitId = $this->resolveVerifiedExitPermitIdForMeal($request->user()->id, $baseMealDate->toDateString());
+            $selectedExitPermitId = (int) ($validated['exit_permit_id'] ?? 0);
+            $exitPermit = $this->resolveVerifiedExitPermitForMeal($request->user(), $selectedExitPermitId, $baseMealDate->toDateString());
+            $exitPermitId = $exitPermit->id;
         }
 
         $baseQuantity = (int) $validated['quantity'];
@@ -287,9 +303,15 @@ class OrderMealController extends Controller
         return in_array($user?->role?->code, ['manager', 'md'], true);
     }
 
-    private function validatedData(Request $request, bool $allowStatus = false, bool $isStore = false): array
+    private function validatedData(Request $request, bool $allowStatus = false, bool $isStore = false, ?string $scope = null): array
     {
         $validated = $request->validate([
+            'exit_permit_id' => [
+                Rule::requiredIf(fn() => $isStore && $scope === OrderMeal::SCOPE_EXIT_PERMIT),
+                'nullable',
+                'integer',
+                'exists:exit_permits,id',
+            ],
             'meal_date' => ['required', 'date'],
             'menu_name' => ['required', 'string', 'max:255'],
             'quantity' => ['required', 'integer', 'min:1'],
@@ -317,30 +339,78 @@ class OrderMealController extends Controller
             unset($validated['repeat_count']);
         }
 
+        if ($scope !== OrderMeal::SCOPE_EXIT_PERMIT) {
+            unset($validated['exit_permit_id']);
+        }
+
         return $validated;
     }
 
-    private function resolveVerifiedExitPermitIdForMeal(int $userId, string $mealDate): int
+    private function resolveVerifiedExitPermitForMeal($user, int $exitPermitId, string $mealDate): ExitPermit
     {
         $exitPermit = ExitPermit::query()
-            ->where('user_id', $userId)
-            ->whereDate('permit_date', $mealDate)
+            ->whereKey($exitPermitId)
             ->where('status', 'approved')
             ->whereNotNull('md_approved_at')
+            ->whereNotNull('hr_verified_at')
             ->whereNotNull('attendance_checked_at')
             ->where('has_valid_checkin', true)
             ->where('returned_to_office', true)
-            ->where('post_md_path', ExitPermit::POST_MD_PATH_MEAL)
-            ->latest('id')
+            ->whereDate('permit_date', $mealDate)
+            ->whereHas('requestors', fn($query) => $query->whereRaw('UPPER(department) = ?', ['BIPO']))
             ->first();
 
-        if ($exitPermit) {
-            return $exitPermit->id;
+        if (!$exitPermit) {
+            throw ValidationException::withMessages([
+                'exit_permit_id' => 'Order meal hanya bisa diajukan untuk Exit Permit BIPO yang sudah diverifikasi Sisca dan kembali ke kantor.',
+            ]);
+        }
+
+        if ($user?->role?->code === 'user' && (int) $exitPermit->user_id !== (int) $user?->id) {
+            throw ValidationException::withMessages([
+                'exit_permit_id' => 'Exit Permit yang dipilih bukan milik akun Anda.',
+            ]);
+        }
+
+        if ($user?->role?->code === 'hr' && strtolower((string) $user?->email) === self::ATTENDANCE_VERIFIER_EMAIL) {
+            return $exitPermit;
+        }
+
+        if ($user?->role?->code === 'user') {
+            return $exitPermit;
         }
 
         throw ValidationException::withMessages([
-            'meal_date' => 'Order meal hanya bisa diajukan setelah exit permit di-approve MD, diverifikasi absensi oleh Sisca, dan karyawan kembali ke kantor.',
+            'exit_permit_id' => 'Akun ini tidak memiliki akses untuk submit Order Meal Exit Permit.',
         ]);
+    }
+
+    private function eligibleExitPermitsForMeal($user): array
+    {
+        $query = ExitPermit::query()
+            ->where('status', 'approved')
+            ->whereNotNull('md_approved_at')
+            ->whereNotNull('hr_verified_at')
+            ->whereNotNull('attendance_checked_at')
+            ->where('has_valid_checkin', true)
+            ->where('returned_to_office', true)
+            ->whereHas('requestors', fn($q) => $q->whereRaw('UPPER(department) = ?', ['BIPO']))
+            ->latest('permit_date');
+
+        if ($user?->role?->code === 'user') {
+            $query->where('user_id', $user?->id);
+        } elseif (!($user?->role?->code === 'hr' && strtolower((string) $user?->email) === self::ATTENDANCE_VERIFIER_EMAIL)) {
+            return [];
+        }
+
+        return $query
+            ->get(['id', 'permit_date', 'destination'])
+            ->map(fn(ExitPermit $permit) => [
+                'id' => $permit->id,
+                'label' => sprintf('#%d | %s | %s', $permit->id, (string) $permit->permit_date, (string) $permit->destination),
+            ])
+            ->values()
+            ->all();
     }
 
     private function routeName(string $scope, string $action): string

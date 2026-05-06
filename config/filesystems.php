@@ -41,7 +41,7 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => env('APP_URL').'/storage',
+            'url' => env('APP_URL') . '/storage',
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
@@ -58,6 +58,30 @@ return [
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
             'throw' => false,
             'report' => false,
+        ],
+
+        'attendance_ftp' => [
+            'driver' => 'ftp',
+            'host' => env('ATTENDANCE_FTP_HOST'),
+            'username' => env('ATTENDANCE_FTP_USERNAME'),
+            'password' => env('ATTENDANCE_FTP_PASSWORD'),
+            'port' => (int) env('ATTENDANCE_FTP_PORT', 21),
+            'root' => env('ATTENDANCE_FTP_ROOT', ''),
+            'passive' => (bool) env('ATTENDANCE_FTP_PASSIVE', true),
+            'ssl' => (bool) env('ATTENDANCE_FTP_SSL', false),
+            'timeout' => (int) env('ATTENDANCE_FTP_TIMEOUT', 30),
+            'throw' => false,
+        ],
+
+        'attendance_sftp' => [
+            'driver' => 'sftp',
+            'host' => env('ATTENDANCE_SFTP_HOST'),
+            'username' => env('ATTENDANCE_SFTP_USERNAME'),
+            'password' => env('ATTENDANCE_SFTP_PASSWORD'),
+            'port' => (int) env('ATTENDANCE_SFTP_PORT', 22),
+            'root' => env('ATTENDANCE_SFTP_ROOT', ''),
+            'timeout' => (int) env('ATTENDANCE_SFTP_TIMEOUT', 30),
+            'throw' => false,
         ],
 
     ],

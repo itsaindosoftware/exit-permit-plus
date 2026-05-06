@@ -12,7 +12,7 @@ const statusClass = {
     rejected: 'bg-rose-100 text-rose-700',
 };
 
-export default function Index({ reimbursements, canCreate, eligibleExitPermits }) {
+export default function Index({ reimbursements, canCreate, eligibleExitPermits, viewerRole }) {
     const totalItems = reimbursements?.total ?? reimbursements?.data?.length ?? 0;
 
     return (
@@ -46,7 +46,7 @@ export default function Index({ reimbursements, canCreate, eligibleExitPermits }
                     </div>
                 </div>
 
-                {canCreate && (eligibleExitPermits?.length ?? 0) === 0 && (
+                {viewerRole === 'user' && (eligibleExitPermits?.length ?? 0) === 0 && (
                     <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
                         Belum ada Exit Permit yang lolos jalur reimbursement (approved MD + verifikasi Sisca).
                     </div>

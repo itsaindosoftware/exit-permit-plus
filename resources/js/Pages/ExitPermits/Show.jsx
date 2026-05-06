@@ -1,8 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 
-const currencyFormatter = new Intl.NumberFormat('id-ID');
-
 const exitTypeLabel = {
     business_trip: 'Perjalanan Dinas',
     sick: 'Sakit',
@@ -52,14 +50,44 @@ export default function Show({ exitPermit, approvalStage }) {
                     <InfoItem label="Jenis Exit" value={exitTypeLabel[exitPermit.exit_type] ?? exitPermit.exit_type} />
                     <InfoItem label="Tujuan" value={exitPermit.destination} />
                     <InfoItem label="No. Police Car (1.4)" value={exitPermit.vehicle_plate ?? 'Belum diisi'} />
+                    <InfoItem label="Nama Supir" value={exitPermit.driver_name ?? 'Belum diisi'} />
                     <InfoItem label="Returned To Office" value={exitPermit.returned_to_office ? 'Ya' : 'Tidak'} />
                     <InfoItem label="Eligible Meal" value={exitPermit.eligible_for_meal ? 'Ya' : 'Tidak'} />
-                    <InfoItem label="Reimbursement" value={`Rp ${currencyFormatter.format(exitPermit.reimbursement_amount ?? 0)}`} />
                 </div>
 
                 <div className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:grid-cols-2">
                     <InfoItem label="Alasan" value={exitPermit.reason} />
                     <InfoItem label="Catatan" value={exitPermit.notes ?? '-'} />
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Requestor Detail</p>
+                    <div className="mt-3 overflow-x-auto rounded-lg border border-slate-300">
+                        <table className="min-w-full border-collapse text-xs md:text-sm">
+                            <thead className="bg-slate-100 text-slate-700">
+                                <tr>
+                                    <th className="border border-slate-300 px-3 py-2 text-left font-semibold">NO</th>
+                                    <th className="border border-slate-300 px-3 py-2 text-left font-semibold">NAME</th>
+                                    <th className="border border-slate-300 px-3 py-2 text-left font-semibold">EMPLOYEE ID</th>
+                                    <th className="border border-slate-300 px-3 py-2 text-left font-semibold">POSITION</th>
+                                    <th className="border border-slate-300 px-3 py-2 text-left font-semibold">DEPARTMENT</th>
+                                    <th className="border border-slate-300 px-3 py-2 text-left font-semibold">REIMBURS LUNCH BOX (Y/N)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {(exitPermit.requestor_items ?? []).map((row, index) => (
+                                    <tr key={`requestor-show-${index}`}>
+                                        <td className="border border-slate-300 px-3 py-2">{index + 1}.</td>
+                                        <td className="border border-slate-300 px-3 py-2">{row.name || '-'}</td>
+                                        <td className="border border-slate-300 px-3 py-2">{row.employee_id || '-'}</td>
+                                        <td className="border border-slate-300 px-3 py-2">{row.position || '-'}</td>
+                                        <td className="border border-slate-300 px-3 py-2">{row.department || '-'}</td>
+                                        <td className="border border-slate-300 px-3 py-2">{row.reimburs_lunch_box || '-'}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">

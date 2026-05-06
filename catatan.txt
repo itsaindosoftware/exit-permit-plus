@@ -15,3 +15,5 @@ task hari ini 05 mei: bikin API login, absen masuk, dan absen pulang untuk untuk
 
 === MOBILE ===== 
 bikin integrasi api dan ui untuk login, dashboard, absen masuk, absen pulang, dan halaman profile (karyawan).
+
+ php artisan db:seed

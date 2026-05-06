@@ -2,8 +2,6 @@ import InputError from '@/Components/InputError';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 
-const currencyFormatter = new Intl.NumberFormat('id-ID');
-
 const inputClass =
     'mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-cyan-600 focus:ring-2 focus:ring-cyan-200';
 
@@ -24,26 +22,66 @@ export default function Edit({
     canSubmitApproval,
     canArrangeCar,
     canVerifyAttendance,
+    attendancePreview,
     viewerRole,
     approvalStage,
     exitTypes,
-    reimbursementAmounts,
+    carOptions = [],
+    driverOptions = [],
 }) {
-    const { data, setData, put, processing, errors } = useForm({
+    const createEmptyRequestorRow = () => ({
+        name: '',
+        employee_id: '',
+        position: '',
+        department: '',
+        reimburs_lunch_box: '',
+    });
+
+    const { data, setData, put, post, processing, errors } = useForm({
+        requestor_items: exitPermit.requestor_items?.length
+            ? exitPermit.requestor_items
+            : [createEmptyRequestorRow()],
         permit_date: exitPermit.permit_date ?? '',
         start_time: exitPermit.start_time ?? '',
         end_time: exitPermit.end_time ?? '',
         destination: exitPermit.destination ?? '',
         exit_type: exitPermit.exit_type ?? exitTypes[0] ?? 'sick',
+        car_id: exitPermit.car_id ?? '',
+        driver_id: exitPermit.driver_id ?? '',
         vehicle_plate: exitPermit.vehicle_plate ?? '',
+        driver_name: exitPermit.driver_name ?? '',
         returned_to_office: exitPermit.returned_to_office ?? false,
-        reimbursement_amount: exitPermit.reimbursement_amount ?? reimbursementAmounts[0] ?? 12000,
         reason: exitPermit.reason ?? '',
         notes: exitPermit.notes ?? '',
         attachment_photo: null,
+        attendance_file: null,
         has_valid_checkin: exitPermit.has_valid_checkin ?? true,
         status: canSubmitApproval ? 'approved' : (exitPermit.status ?? 'pending'),
     });
+
+    const addRequestorRow = () => {
+        setData('requestor_items', [...data.requestor_items, createEmptyRequestorRow()]);
+    };
+
+    const removeRequestorRow = (index) => {
+        if (data.requestor_items.length === 1) {
+            return;
+        }
+
+        setData(
+            'requestor_items',
+            data.requestor_items.filter((_, rowIndex) => rowIndex !== index),
+        );
+    };
+
+    const updateRequestorRow = (index, field, value) => {
+        setData(
+            'requestor_items',
+            data.requestor_items.map((row, rowIndex) => (
+                rowIndex === index ? { ...row, [field]: value } : row
+            )),
+        );
+    };
 
     const submit = (e) => {
         e.preventDefault();
@@ -55,9 +93,22 @@ export default function Edit({
         put(route('exit-permits.update', exitPermit.id), { forceFormData: true });
     };
 
+    const previewAttendance = () => {
+        if (!canVerifyAttendance || exitPermit.exit_type !== 'business_trip') {
+            return;
+        }
+
+        post(route('exit-permits.attendance-preview', exitPermit.id), {
+            forceFormData: true,
+            preserveScroll: true,
+        });
+    };
+
     const formLocked = !canUpdateRequest;
     const vehiclePlateLocked = !(canUpdateRequest || canArrangeCar);
     const isRecapViewer = ['hr', 'admin'].includes(viewerRole);
+    const selectedCar = carOptions.find((car) => car.id === data.car_id);
+    const selectedDriver = driverOptions.find((driver) => driver.id === data.driver_id);
 
     return (
         <AuthenticatedLayout
@@ -78,8 +129,12 @@ export default function Edit({
                         </p>
                     </div>
                     <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">Reimbursement</p>
-                        <p className="mt-2 text-sm text-slate-700">Rp {currencyFormatter.format(data.reimbursement_amount)}</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">Kendaraan</p>
+                        <p className="mt-2 text-sm text-slate-700">
+                            {selectedCar
+                                ? `${selectedCar.spesification} - ${selectedDriver?.name || 'Supir belum dipilih'}`
+                                : (data.vehicle_plate ? `${data.vehicle_plate} - ${data.driver_name || 'Supir belum dipilih'}` : 'Belum diatur')}
+                        </p>
                     </div>
                     <div>
                         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">Approval Stage</p>
@@ -93,7 +148,9 @@ export default function Edit({
                     <div className="rounded-lg border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm font-medium text-cyan-900">
                         {viewerRole === 'manager'
                             ? 'Dokumen ini menunggu approval Manager. Jika approve, akan lanjut ke MD.'
-                            : 'Dokumen ini menunggu approval MD. Setelah approve MD, dokumen dicatat sebagai diketahui HR.'}
+                            : viewerRole === 'md'
+                                ? 'Dokumen ini menunggu approval MD. Jika approve, dokumen akan lanjut ke HR Manager.'
+                                : 'Dokumen ini menunggu approval HR Manager sebagai tahap final sebelum verifikasi attendance HR.'}
                     </div>
                 )}
 
@@ -105,7 +162,7 @@ export default function Edit({
 
                 {canArrangeCar && (
                     <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-medium text-indigo-900">
-                        Tugas arrange mobil/supir: silakan isi field 1.4 No. Police Car, lalu klik tombol simpan.
+                        Tugas arrange mobil/supir: silakan pilih nomor polisi dan nama supir, lalu klik tombol simpan.
                     </div>
                 )}
 
@@ -140,30 +197,87 @@ export default function Edit({
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td className="border border-slate-300 px-3 py-2 align-top">1.</td>
-                                        <td className="border border-slate-300 px-3 py-2">
-                                            <p className="font-medium text-slate-700">Pemohon (akun terkait)</p>
-                                        </td>
-                                        <td className="border border-slate-300 px-3 py-2 text-slate-500">Isi dari data HRIS</td>
-                                        <td className="border border-slate-300 px-3 py-2 text-slate-500">Isi dari data HRIS</td>
-                                        <td className="border border-slate-300 px-3 py-2 text-slate-500">Isi dari data HRIS</td>
-                                        <td className="border border-slate-300 px-3 py-2">
-                                            <span
-                                                className={
-                                                    `inline-flex rounded-full px-3 py-1 text-xs font-semibold ` +
-                                                    (exitPermit.eligible_for_meal
-                                                        ? 'bg-emerald-100 text-emerald-700'
-                                                        : 'bg-slate-100 text-slate-600')
-                                                }
-                                            >
-                                                {exitPermit.eligible_for_meal ? 'Y' : 'N'}
-                                            </span>
-                                        </td>
-                                    </tr>
+                                    {data.requestor_items.map((row, index) => (
+                                        <tr key={`requestor-row-${index}`}>
+                                            <td className="border border-slate-300 px-3 py-2 align-top font-semibold text-slate-700">{index + 1}.</td>
+                                            <td className="border border-slate-300 px-2 py-1">
+                                                <input
+                                                    type="text"
+                                                    className="w-full rounded border border-slate-300 px-2 py-1 text-xs outline-none focus:border-cyan-600 focus:ring-1 focus:ring-cyan-200 md:text-sm"
+                                                    value={row.name}
+                                                    disabled={formLocked}
+                                                    onChange={(e) => updateRequestorRow(index, 'name', e.target.value)}
+                                                    placeholder="Nama"
+                                                />
+                                            </td>
+                                            <td className="border border-slate-300 px-2 py-1">
+                                                <input
+                                                    type="text"
+                                                    className="w-full rounded border border-slate-300 px-2 py-1 text-xs outline-none focus:border-cyan-600 focus:ring-1 focus:ring-cyan-200 md:text-sm"
+                                                    value={row.employee_id}
+                                                    disabled={formLocked}
+                                                    onChange={(e) => updateRequestorRow(index, 'employee_id', e.target.value)}
+                                                    placeholder="Employee ID"
+                                                />
+                                            </td>
+                                            <td className="border border-slate-300 px-2 py-1">
+                                                <input
+                                                    type="text"
+                                                    className="w-full rounded border border-slate-300 px-2 py-1 text-xs outline-none focus:border-cyan-600 focus:ring-1 focus:ring-cyan-200 md:text-sm"
+                                                    value={row.position}
+                                                    disabled={formLocked}
+                                                    onChange={(e) => updateRequestorRow(index, 'position', e.target.value)}
+                                                    placeholder="Position"
+                                                />
+                                            </td>
+                                            <td className="border border-slate-300 px-2 py-1">
+                                                <input
+                                                    type="text"
+                                                    className="w-full rounded border border-slate-300 px-2 py-1 text-xs outline-none focus:border-cyan-600 focus:ring-1 focus:ring-cyan-200 md:text-sm"
+                                                    value={row.department}
+                                                    disabled={formLocked}
+                                                    onChange={(e) => updateRequestorRow(index, 'department', e.target.value)}
+                                                    placeholder="Department"
+                                                />
+                                            </td>
+                                            <td className="border border-slate-300 px-2 py-1">
+                                                <input
+                                                    type="text"
+                                                    className="w-full rounded border border-slate-300 px-2 py-1 text-xs uppercase outline-none focus:border-cyan-600 focus:ring-1 focus:ring-cyan-200 md:text-sm"
+                                                    value={row.reimburs_lunch_box}
+                                                    disabled={formLocked}
+                                                    onChange={(e) => updateRequestorRow(index, 'reimburs_lunch_box', e.target.value.toUpperCase())}
+                                                    placeholder="Y / N"
+                                                />
+                                            </td>
+                                        </tr>
+                                    ))}
                                 </tbody>
                             </table>
                         </div>
+
+                        <div className="flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+                            <p className="text-xs text-slate-600 md:text-sm">Data requestor tersimpan ke database dan dapat diubah selama request masih pending.</p>
+                            <div className="flex gap-2">
+                                <button
+                                    type="button"
+                                    onClick={addRequestorRow}
+                                    disabled={formLocked}
+                                    className="rounded bg-cyan-700 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                    + Tambah Baris
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => removeRequestorRow(data.requestor_items.length - 1)}
+                                    disabled={formLocked || data.requestor_items.length === 1}
+                                    className="rounded bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                    Hapus Baris Terakhir
+                                </button>
+                            </div>
+                        </div>
+                        <InputError message={errors.requestor_items} className="mt-2" />
 
                         <div className="grid gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 md:grid-cols-2">
                             <div>
@@ -214,7 +328,7 @@ export default function Edit({
                             </div>
                         </div>
 
-                        <div className="grid gap-4 md:grid-cols-2">
+                        <div>
                             <div>
                                 <label htmlFor="destination" className="text-sm font-semibold text-slate-800">Destination</label>
                                 <input
@@ -227,25 +341,6 @@ export default function Edit({
                                     onChange={(e) => setData('destination', e.target.value)}
                                 />
                                 <InputError message={errors.destination} className="mt-2" />
-                            </div>
-
-                            <div>
-                                <label htmlFor="reimbursement_amount" className="text-sm font-semibold text-slate-800">Reimbursement</label>
-                                <select
-                                    id="reimbursement_amount"
-                                    className={inputClass}
-                                    value={data.reimbursement_amount}
-                                    required
-                                    disabled={formLocked}
-                                    onChange={(e) => setData('reimbursement_amount', Number(e.target.value))}
-                                >
-                                    {reimbursementAmounts.map((amount) => (
-                                        <option key={amount} value={amount}>
-                                            Rp {currencyFormatter.format(amount)}
-                                        </option>
-                                    ))}
-                                </select>
-                                <InputError message={errors.reimbursement_amount} className="mt-2" />
                             </div>
                         </div>
 
@@ -293,22 +388,47 @@ export default function Edit({
                         </div>
 
                         {data.exit_type === 'business_trip' && (
-                            <div>
-                                <label htmlFor="vehicle_plate" className="text-sm font-semibold text-slate-800">1.3 No. Police Car</label>
-                                <input
-                                    id="vehicle_plate"
-                                    type="text"
-                                    className={`${inputClass} uppercase`}
-                                    value={data.vehicle_plate}
-                                    disabled={vehiclePlateLocked}
-                                    onChange={(e) => setData('vehicle_plate', e.target.value.toUpperCase())}
-                                />
-                                <InputError message={errors.vehicle_plate} className="mt-2" />
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <div>
+                                    <label htmlFor="vehicle_plate" className="text-sm font-semibold text-slate-800">1.3 No. Police Car</label>
+                                    <select
+                                        id="vehicle_plate"
+                                        className={inputClass}
+                                        value={data.car_id}
+                                        disabled={vehiclePlateLocked}
+                                        onChange={(e) => setData('car_id', e.target.value ? Number(e.target.value) : '')}
+                                        required
+                                    >
+                                        <option value="">Pilih no polisi dan spesifikasi kendaraan</option>
+                                        {carOptions.map((car) => (
+                                            <option key={car.id} value={car.id}>{car.police_no} - {car.spesification}</option>
+                                        ))}
+                                    </select>
+                                    <InputError message={errors.car_id || errors.vehicle_plate} className="mt-2" />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="driver_name" className="text-sm font-semibold text-slate-800">1.4 Nama Supir</label>
+                                    <select
+                                        id="driver_name"
+                                        className={inputClass}
+                                        value={data.driver_id}
+                                        disabled={vehiclePlateLocked}
+                                        onChange={(e) => setData('driver_id', e.target.value ? Number(e.target.value) : '')}
+                                        required
+                                    >
+                                        <option value="">Pilih supir</option>
+                                        {driverOptions.map((driver) => (
+                                            <option key={driver.id} value={driver.id}>{driver.name}</option>
+                                        ))}
+                                    </select>
+                                    <InputError message={errors.driver_id || errors.driver_name} className="mt-2" />
+                                </div>
                             </div>
                         )}
 
                         <div>
-                            <label htmlFor="reason" className="text-sm font-semibold text-slate-800">1.4 Detail the reasons</label>
+                            <label htmlFor="reason" className="text-sm font-semibold text-slate-800">1.5 Detail the reasons</label>
                             <textarea
                                 id="reason"
                                 className={inputClass}
@@ -322,7 +442,7 @@ export default function Edit({
                         </div>
 
                         <div>
-                            <label htmlFor="notes" className="text-sm font-semibold text-slate-800">1.5 Permitted by (Department/Section Head & HR/GA)</label>
+                            <label htmlFor="notes" className="text-sm font-semibold text-slate-800">1.6 Permitted by (Department/Section Head & HR/GA)</label>
                             <textarea
                                 id="notes"
                                 className={inputClass}
@@ -359,35 +479,92 @@ export default function Edit({
                             <InputError message={errors.attachment_photo} className="mt-2" />
                         </div>
 
-                        {canSubmitApproval && (
-                            <div>
-                                <label htmlFor="status" className="text-sm font-semibold text-slate-800">Approval Status</label>
-                                <select
-                                    id="status"
-                                    className={inputClass}
-                                    value={data.status}
-                                    onChange={(e) => setData('status', e.target.value)}
-                                >
-                                    <option value="approved">Approved</option>
-                                    <option value="rejected">Rejected</option>
-                                </select>
-                                <InputError message={errors.status} className="mt-2" />
-                            </div>
-                        )}
+                        {canSubmitApproval && <InputError message={errors.status} className="mt-2" />}
 
                         {canVerifyAttendance && (
                             <div>
-                                <label htmlFor="has_valid_checkin" className="text-sm font-semibold text-slate-800">Verifikasi Absensi Masuk</label>
-                                <select
-                                    id="has_valid_checkin"
-                                    className={inputClass}
-                                    value={data.has_valid_checkin ? '1' : '0'}
-                                    onChange={(e) => setData('has_valid_checkin', e.target.value === '1')}
-                                >
-                                    <option value="1">Ada absensi masuk (jalur meal jika kembali kantor)</option>
-                                    <option value="0">Tidak ada absensi masuk (jalur reimbursement)</option>
-                                </select>
-                                <InputError message={errors.has_valid_checkin} className="mt-2" />
+                                {exitPermit.exit_type === 'business_trip' ? (
+                                    <>
+                                        <label htmlFor="attendance_file" className="text-sm font-semibold text-slate-800">Upload Attendance (CSV/XLSX)</label>
+                                        <input
+                                            id="attendance_file"
+                                            type="file"
+                                            accept=".csv,.txt,.xlsx"
+                                            className={inputClass}
+                                            onChange={(e) => setData('attendance_file', e.target.files?.[0] ?? null)}
+                                        />
+                                        <p className="mt-1 text-xs text-slate-500">
+                                            Untuk tipe company (business trip), Sisca upload file attendance dari folder sharing (finger print), lalu sistem akan otomatis cocokkan ke list requestor (BIPO/Internship/Outsource).
+                                        </p>
+                                        <InputError message={errors.attendance_file} className="mt-2" />
+
+                                        <button
+                                            type="button"
+                                            disabled={processing}
+                                            onClick={previewAttendance}
+                                            className="mt-3 rounded-md border border-cyan-700 px-3 py-1.5 text-sm font-semibold text-cyan-700 transition hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-60"
+                                        >
+                                            Preview Matching Attendance
+                                        </button>
+
+                                        {attendancePreview && (
+                                            <div className="mt-4 rounded-lg border border-cyan-200 bg-cyan-50 p-3">
+                                                <p className="text-sm font-semibold text-cyan-900">Preview Hasil Matching</p>
+                                                <p className="mt-1 text-xs text-cyan-900">
+                                                    Sumber: {attendancePreview?.source?.file_name ?? '-'} | Import: {attendancePreview?.source?.loaded_at ?? '-'}
+                                                </p>
+                                                <p className="mt-1 text-xs text-cyan-900">
+                                                    Total requestor: {attendancePreview?.summary?.total_requestors ?? 0} | Matched: {attendancePreview?.summary?.matched_count ?? 0}
+                                                </p>
+
+                                                <div className="mt-3 overflow-x-auto rounded-md border border-cyan-200 bg-white">
+                                                    <table className="min-w-full border-collapse text-xs">
+                                                        <thead className="bg-cyan-100 text-cyan-900">
+                                                            <tr>
+                                                                <th className="border border-cyan-200 px-2 py-1 text-left">NO</th>
+                                                                <th className="border border-cyan-200 px-2 py-1 text-left">NAME</th>
+                                                                <th className="border border-cyan-200 px-2 py-1 text-left">EMPLOYEE ID</th>
+                                                                <th className="border border-cyan-200 px-2 py-1 text-left">DEPARTMENT</th>
+                                                                <th className="border border-cyan-200 px-2 py-1 text-left">MATCH</th>
+                                                                <th className="border border-cyan-200 px-2 py-1 text-left">REIMBURS LUNCH BOX</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {(attendancePreview?.items ?? []).map((item) => (
+                                                                <tr key={`attendance-preview-${item.id}`}>
+                                                                    <td className="border border-cyan-200 px-2 py-1">{item.row_number}</td>
+                                                                    <td className="border border-cyan-200 px-2 py-1">{item.name || '-'}</td>
+                                                                    <td className="border border-cyan-200 px-2 py-1">{item.employee_id || '-'}</td>
+                                                                    <td className="border border-cyan-200 px-2 py-1">{item.department || '-'}</td>
+                                                                    <td className="border border-cyan-200 px-2 py-1">
+                                                                        {item.matched ? `Ya (${item.matched_by || '-'})` : 'Tidak'}
+                                                                    </td>
+                                                                    <td className="border border-cyan-200 px-2 py-1 font-semibold">
+                                                                        {item.recommended_reimburs_lunch_box}
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    <>
+                                        <label htmlFor="has_valid_checkin" className="text-sm font-semibold text-slate-800">Verifikasi Absensi Masuk</label>
+                                        <select
+                                            id="has_valid_checkin"
+                                            className={inputClass}
+                                            value={data.has_valid_checkin ? '1' : '0'}
+                                            onChange={(e) => setData('has_valid_checkin', e.target.value === '1')}
+                                        >
+                                            <option value="1">Ada absensi masuk (jalur meal jika kembali kantor)</option>
+                                            <option value="0">Tidak ada absensi masuk (jalur reimbursement)</option>
+                                        </select>
+                                        <InputError message={errors.has_valid_checkin} className="mt-2" />
+                                    </>
+                                )}
 
                                 {exitPermit.attendance_checked_at && (
                                     <p className="mt-2 text-xs text-slate-500">
@@ -422,18 +599,36 @@ export default function Edit({
                         >
                             Kembali
                         </Link>
-                        {(canUpdateRequest || canSubmitApproval || canArrangeCar || canVerifyAttendance) && (
+                        {canSubmitApproval && (
+                            <div className="flex gap-2">
+                                <button
+                                    type="submit"
+                                    disabled={processing}
+                                    onClick={() => setData('status', 'rejected')}
+                                    className="rounded-md bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                    Reject
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={processing}
+                                    onClick={() => setData('status', 'approved')}
+                                    className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                    Approve
+                                </button>
+                            </div>
+                        )}
+                        {!canSubmitApproval && (canUpdateRequest || canArrangeCar || canVerifyAttendance) && (
                             <button
                                 type="submit"
                                 disabled={processing}
                                 className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
                             >
-                                {canSubmitApproval
-                                    ? 'Submit Approval'
-                                    : canArrangeCar
-                                        ? 'Simpan Arrange Car'
-                                        : canVerifyAttendance
-                                            ? 'Simpan Verifikasi Absensi'
+                                {canArrangeCar
+                                    ? 'Simpan Arrange Car'
+                                    : canVerifyAttendance
+                                        ? 'Simpan Verifikasi Absensi'
                                         : 'Update Exit Permit'}
                             </button>
                         )}

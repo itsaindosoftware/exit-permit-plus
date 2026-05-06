@@ -5,6 +5,7 @@ use App\Http\Controllers\ExitPermitController;
 use App\Http\Controllers\OrderMealController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReimbursementController;
+use App\Http\Controllers\ScheduleCarController;
 use Illuminate\Support\Facades\Route;
 
 // Route::get('/', function () {
@@ -19,8 +20,11 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', DashboardController::class)->middleware(['auth'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+    Route::get('schedule-cars', [ScheduleCarController::class, 'index'])->name('schedule-cars.index');
     Route::get('exit-permits/{exitPermit}/attachment', [ExitPermitController::class, 'attachment'])
         ->name('exit-permits.attachment');
+    Route::post('exit-permits/{exitPermit}/attendance-preview', [ExitPermitController::class, 'previewAttendance'])
+        ->name('exit-permits.attendance-preview');
     Route::resource('exit-permits', ExitPermitController::class);
     Route::resource('order-meals', OrderMealController::class)->except(['show']);
     Route::get('exit-permit-meals', [OrderMealController::class, 'indexExitPermit'])->name('exit-permit-meals.index');

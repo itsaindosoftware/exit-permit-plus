@@ -36,7 +36,7 @@ export default function Create({ eligibleExitPermits }) {
                 <div className="rounded-2xl border border-cyan-200 bg-gradient-to-r from-cyan-50 via-white to-slate-50 p-5">
                     <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">Reimbursement Form</p>
                     <p className="mt-2 text-sm text-slate-700">
-                        Pilih Exit Permit dengan jalur reimbursement untuk mengajukan claim ke alur approval.
+                        Pilih Exit Permit yang sudah diverifikasi Sisca untuk mengajukan claim reimbursement (bensin, tol, dan biaya terkait) ke alur approval.
                     </p>
                 </div>
 

@@ -30,9 +30,9 @@ export default function Login({ status, canResetPassword }) {
 
                     <p className="text-xs font-semibold uppercase tracking-[0.32em] text-cyan-100">Corporate Portal</p>
                     <h1 className="mt-4 text-3xl font-black leading-tight">
-                        Exit Permit
+                       ITSA Hub
                         <br />
-                        and Meal System
+                        {/* and Meal System */}
                     </h1>
                     <p className="mt-4 text-sm text-cyan-100/90">
                         Platform internal perusahaan untuk pengajuan izin keluar, order meal,

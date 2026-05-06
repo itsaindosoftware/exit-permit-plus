@@ -15,19 +15,29 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call([
+            CarSeeder::class,
+            DriverSeeder::class,
+        ]);
+
         Role::upsert([
             ['code' => 'user', 'name' => 'User'],
             ['code' => 'hr', 'name' => 'HR'],
+            ['code' => 'hr_manager', 'name' => 'HR Manager'],
             ['code' => 'manager', 'name' => 'Manager'],
             ['code' => 'md', 'name' => 'Managing Director'],
             ['code' => 'accounting', 'name' => 'Accounting'],
             ['code' => 'admin', 'name' => 'Administrator'],
         ], ['code'], ['name']);
 
+        $this->call([
+            HrManagerUserSeeder::class,
+        ]);
+
         // User::factory(10)->create();
 
         $rolesByCode = Role::query()
-            ->whereIn('code', ['user', 'hr', 'manager', 'md', 'accounting', 'admin'])
+            ->whereIn('code', ['user', 'hr', 'hr_manager', 'manager', 'md', 'accounting', 'admin', 'production'])
             ->pluck('id', 'code');
 
         $defaultUsers = [
@@ -81,6 +91,23 @@ class DatabaseSeeder extends Seeder
                 'email' => 'sisca.dewiyani@example.com',
                 'role_code' => 'hr',
             ],
+            // buat 1 akun admin setiap departemen untuk sebagi usernya
+            [
+                'name' => 'Indri',
+                'email' => 'indri@example.com',
+                'role_code' => 'production',
+            ],
+            [
+                'name' => 'Rydha',
+                'email' => 'rydha@example.com',
+                'role_code' => 'mtn_dies',
+            ],
+            [
+                'name' => 'Sakti',
+                'email' => 'sakti@example.com',
+                'role_code' => 'ppic',
+            ],
+
         ];
 
         foreach ($defaultUsers as $defaultUser) {

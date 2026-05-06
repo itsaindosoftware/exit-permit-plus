@@ -18,6 +18,8 @@ class ReimbursementController extends Controller
     public function index(): Response
     {
         $user = request()->user();
+        $isUserRole = $user?->role?->code === 'user';
+        $eligibleExitPermits = $isUserRole ? $this->eligibleExitPermitsForUser($user->id) : [];
         $query = Reimbursement::query()
             ->with(['user:id,name', 'exitPermit:id,permit_date,destination'])
             ->latest();
@@ -28,10 +30,8 @@ class ReimbursementController extends Controller
 
         return Inertia::render('Reimbursements/Index', [
             'viewerRole' => $user?->role?->code,
-            'canCreate' => $user?->role?->code === 'user',
-            'eligibleExitPermits' => $user?->role?->code === 'user'
-                ? $this->eligibleExitPermitsForUser($user->id)
-                : [],
+            'canCreate' => $isUserRole && count($eligibleExitPermits) > 0,
+            'eligibleExitPermits' => $eligibleExitPermits,
             'reimbursements' => $query
                 ->paginate(10)
                 ->through(fn(Reimbursement $reimbursement) => [
@@ -50,7 +50,7 @@ class ReimbursementController extends Controller
         ]);
     }
 
-    public function create(): Response
+    public function create(): Response|RedirectResponse
     {
         $user = request()->user();
 
@@ -58,8 +58,15 @@ class ReimbursementController extends Controller
             abort(403);
         }
 
+        $eligibleExitPermits = $this->eligibleExitPermitsForUser($user->id);
+
+        if (count($eligibleExitPermits) === 0) {
+            return redirect()->route('reimbursements.index')
+                ->with('warning', 'Form reimbursement hanya tersedia setelah Exit Permit diverifikasi Sisca.');
+        }
+
         return Inertia::render('Reimbursements/Create', [
-            'eligibleExitPermits' => $this->eligibleExitPermitsForUser($user->id),
+            'eligibleExitPermits' => $eligibleExitPermits,
         ]);
     }
 
@@ -211,7 +218,6 @@ class ReimbursementController extends Controller
             ->where('status', 'approved')
             ->whereNotNull('md_approved_at')
             ->whereNotNull('attendance_checked_at')
-            ->where('post_md_path', ExitPermit::POST_MD_PATH_REIMBURSEMENT)
             ->whereDoesntHave('reimbursements')
             ->latest('permit_date')
             ->get(['id', 'permit_date', 'destination'])
@@ -233,15 +239,14 @@ class ReimbursementController extends Controller
 
         $isEligible = $exitPermit->status === 'approved'
             && (bool) $exitPermit->md_approved_at
-            && (bool) $exitPermit->attendance_checked_at
-            && $exitPermit->post_md_path === ExitPermit::POST_MD_PATH_REIMBURSEMENT;
+            && (bool) $exitPermit->attendance_checked_at;
 
         if ($isEligible) {
             return;
         }
 
         throw ValidationException::withMessages([
-            'exit_permit_id' => 'Exit Permit belum memenuhi syarat jalur reimbursement (setelah verifikasi Sisca).',
+            'exit_permit_id' => 'Exit Permit belum memenuhi syarat reimbursement (setelah verifikasi Sisca).',
         ]);
     }
 

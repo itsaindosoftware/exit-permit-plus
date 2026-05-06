@@ -36,6 +36,7 @@ class ExitPermit extends Model
         'destination',
         'exit_type',
         'vehicle_plate',
+        'driver_name',
         'returned_to_office',
         'eligible_for_meal',
         'reimbursement_amount',
@@ -132,5 +133,10 @@ class ExitPermit extends Model
     public function orderMeals(): HasMany
     {
         return $this->hasMany(OrderMeal::class);
+    }
+
+    public function requestors(): HasMany
+    {
+        return $this->hasMany(ExitPermitRequestor::class)->orderBy('row_number');
     }
 }

@@ -5,10 +5,12 @@ import { Head, Link, useForm } from '@inertiajs/react';
 const inputClass =
     'mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-cyan-600 focus:ring-2 focus:ring-cyan-200';
 
-export default function Create({ mode, storeRouteName, indexRouteName }) {
+export default function Create({ mode, storeRouteName, indexRouteName, eligibleExitPermits = [] }) {
     const isExitPermitMode = mode === 'exit_permit';
+    const firstPermitId = eligibleExitPermits?.[0]?.id ?? '';
 
     const { data, setData, post, processing, errors } = useForm({
+        exit_permit_id: firstPermitId,
         meal_date: '',
         menu_name: '',
         quantity: 120,
@@ -109,6 +111,24 @@ export default function Create({ mode, storeRouteName, indexRouteName }) {
                     </div>
 
                     <div className="grid gap-4 md:grid-cols-2">
+                        {isExitPermitMode && (
+                            <div>
+                                <label htmlFor="exit_permit_id" className="text-sm font-semibold text-slate-800">Exit Permit (BIPO)</label>
+                                <select
+                                    id="exit_permit_id"
+                                    className={inputClass}
+                                    value={data.exit_permit_id}
+                                    onChange={(e) => setData('exit_permit_id', Number(e.target.value))}
+                                    required
+                                >
+                                    {eligibleExitPermits?.map((permit) => (
+                                        <option key={permit.id} value={permit.id}>{permit.label}</option>
+                                    ))}
+                                </select>
+                                <InputError message={errors.exit_permit_id} className="mt-2" />
+                            </div>
+                        )}
+
                         <div>
                             <label htmlFor="meal_date" className="text-sm font-semibold text-slate-800">Tanggal Makan</label>
                             <input
