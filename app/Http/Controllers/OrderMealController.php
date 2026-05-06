@@ -24,6 +24,7 @@ class OrderMealController extends Controller
 
     public function indexExitPermit(): Response
     {
+        $this->ensureSisca(request()->user());
         return $this->indexByScope(OrderMeal::SCOPE_EXIT_PERMIT);
     }
 
@@ -32,8 +33,9 @@ class OrderMealController extends Controller
         return $this->createByScope(OrderMeal::SCOPE_GENERAL);
     }
 
-    public function createExitPermit(): Response
+    public function createExitPermit(): Response|RedirectResponse
     {
+        $this->ensureSisca(request()->user());
         return $this->createByScope(OrderMeal::SCOPE_EXIT_PERMIT);
     }
 
@@ -44,6 +46,7 @@ class OrderMealController extends Controller
 
     public function storeExitPermit(Request $request): RedirectResponse
     {
+        $this->ensureSisca($request->user());
         return $this->storeByScope($request, OrderMeal::SCOPE_EXIT_PERMIT);
     }
 
@@ -52,9 +55,21 @@ class OrderMealController extends Controller
         return $this->editByScope($orderMeal, OrderMeal::SCOPE_GENERAL);
     }
 
+    public function show(OrderMeal $orderMeal): Response
+    {
+        return $this->showByScope($orderMeal, OrderMeal::SCOPE_GENERAL);
+    }
+
     public function editExitPermit(OrderMeal $orderMeal): Response
     {
+        $this->ensureSisca(request()->user());
         return $this->editByScope($orderMeal, OrderMeal::SCOPE_EXIT_PERMIT);
+    }
+
+    public function showExitPermit(OrderMeal $orderMeal): Response
+    {
+        $this->ensureSisca(request()->user());
+        return $this->showByScope($orderMeal, OrderMeal::SCOPE_EXIT_PERMIT);
     }
 
     public function update(Request $request, OrderMeal $orderMeal): RedirectResponse
@@ -64,6 +79,7 @@ class OrderMealController extends Controller
 
     public function updateExitPermit(Request $request, OrderMeal $orderMeal): RedirectResponse
     {
+        $this->ensureSisca($request->user());
         return $this->updateByScope($request, $orderMeal, OrderMeal::SCOPE_EXIT_PERMIT);
     }
 
@@ -74,12 +90,17 @@ class OrderMealController extends Controller
 
     public function destroyExitPermit(OrderMeal $orderMeal): RedirectResponse
     {
+        $this->ensureSisca(request()->user());
         return $this->destroyByScope($orderMeal, OrderMeal::SCOPE_EXIT_PERMIT);
     }
 
     private function indexByScope(string $scope): Response
     {
         $user = request()->user();
+
+        if ($scope === OrderMeal::SCOPE_EXIT_PERMIT) {
+            $this->ensureSisca($user);
+        }
         $query = OrderMeal::query()
             ->with('user:id,name')
             ->where('meal_type', 'lunch')
@@ -107,6 +128,7 @@ class OrderMealController extends Controller
             'mode' => $scope,
             'indexRouteName' => $this->routeName($scope, 'index'),
             'createRouteName' => $this->routeName($scope, 'create'),
+            'showRouteName' => $this->routeName($scope, 'show'),
             'editRouteName' => $this->routeName($scope, 'edit'),
             'destroyRouteName' => $this->routeName($scope, 'destroy'),
             'orderMeals' => $query
@@ -142,6 +164,7 @@ class OrderMealController extends Controller
         $eligibleExitPermits = [];
 
         if ($scope === OrderMeal::SCOPE_EXIT_PERMIT) {
+            $this->ensureSisca(request()->user());
             $eligibleExitPermits = $this->eligibleExitPermitsForMeal(request()->user());
 
             if (count($eligibleExitPermits) === 0) {
@@ -158,6 +181,68 @@ class OrderMealController extends Controller
         ]);
     }
 
+    private function showByScope(OrderMeal $orderMeal, string $scope): Response
+    {
+        if ($orderMeal->order_scope !== $scope) {
+            abort(404);
+        }
+
+        if ($scope === OrderMeal::SCOPE_EXIT_PERMIT) {
+            $this->ensureSisca(request()->user());
+        }
+
+        $this->authorizeUser($orderMeal);
+
+        $orderMeal->load([
+            'user:id,name,email',
+            'exitPermit:id,user_id,permit_date,destination,attendance_checked_at,has_valid_checkin,returned_to_office',
+            'exitPermit.user:id,name,email',
+            'exitPermit.requestors:id,exit_permit_id,row_number,name,employee_id,position,department,reimburs_lunch_box',
+        ]);
+
+        return Inertia::render('OrderMeals/Show', [
+            'mode' => $scope,
+            'indexRouteName' => $this->routeName($scope, 'index'),
+            'editRouteName' => $this->routeName($scope, 'edit'),
+            'orderMeal' => [
+                'id' => $orderMeal->id,
+                'employee_name' => $orderMeal->user?->name,
+                'employee_email' => $orderMeal->user?->email,
+                'meal_date' => $orderMeal->meal_date ? (string) $orderMeal->meal_date : null,
+                'meal_type' => $orderMeal->meal_type,
+                'menu_name' => $orderMeal->menu_name,
+                'quantity' => $orderMeal->quantity,
+                'actual_quantity' => $orderMeal->actual_quantity,
+                'visitor_count' => $orderMeal->visitor_count,
+                'remaining_quantity' => $orderMeal->remaining_quantity,
+                'schedule_type' => $orderMeal->schedule_type,
+                'notes' => $orderMeal->notes,
+                'status' => $orderMeal->status,
+            ],
+            'exitPermit' => $orderMeal->exitPermit ? [
+                'id' => $orderMeal->exitPermit->id,
+                'permit_date' => $orderMeal->exitPermit->permit_date ? (string) $orderMeal->exitPermit->permit_date : null,
+                'destination' => $orderMeal->exitPermit->destination,
+                'has_valid_checkin' => (bool) $orderMeal->exitPermit->has_valid_checkin,
+                'returned_to_office' => (bool) $orderMeal->exitPermit->returned_to_office,
+                'attendance_checked_at' => optional($orderMeal->exitPermit->attendance_checked_at)?->toDateTimeString(),
+                'owner_name' => $orderMeal->exitPermit->user?->name,
+                'owner_email' => $orderMeal->exitPermit->user?->email,
+                'requestors' => $orderMeal->exitPermit->requestors
+                    ->map(fn($requestor) => [
+                        'row_number' => $requestor->row_number,
+                        'name' => $requestor->name,
+                        'employee_id' => $requestor->employee_id,
+                        'position' => $requestor->position,
+                        'department' => $requestor->department,
+                        'reimburs_lunch_box' => $requestor->reimburs_lunch_box,
+                    ])
+                    ->values()
+                    ->all(),
+            ] : null,
+        ]);
+    }
+
     private function storeByScope(Request $request, string $scope): RedirectResponse
     {
         $validated = $this->validatedData($request, false, true, $scope);
@@ -167,6 +252,7 @@ class OrderMealController extends Controller
         $exitPermitId = null;
 
         if ($scope === OrderMeal::SCOPE_EXIT_PERMIT) {
+            $this->ensureSisca($request->user());
             $selectedExitPermitId = (int) ($validated['exit_permit_id'] ?? 0);
             $exitPermit = $this->resolveVerifiedExitPermitForMeal($request->user(), $selectedExitPermitId, $baseMealDate->toDateString());
             $exitPermitId = $exitPermit->id;
@@ -372,21 +458,17 @@ class OrderMealController extends Controller
             ]);
         }
 
-        if ($user?->role?->code === 'hr' && strtolower((string) $user?->email) === self::ATTENDANCE_VERIFIER_EMAIL) {
-            return $exitPermit;
-        }
+        $this->ensureSisca($user);
 
-        if ($user?->role?->code === 'user') {
-            return $exitPermit;
-        }
-
-        throw ValidationException::withMessages([
-            'exit_permit_id' => 'Akun ini tidak memiliki akses untuk submit Order Meal Exit Permit.',
-        ]);
+        return $exitPermit;
     }
 
     private function eligibleExitPermitsForMeal($user): array
     {
+        if (!$this->isSisca($user)) {
+            return [];
+        }
+
         $query = ExitPermit::query()
             ->where('status', 'approved')
             ->whereNotNull('md_approved_at')
@@ -397,20 +479,44 @@ class OrderMealController extends Controller
             ->whereHas('requestors', fn($q) => $q->whereRaw('UPPER(department) = ?', ['BIPO']))
             ->latest('permit_date');
 
-        if ($user?->role?->code === 'user') {
-            $query->where('user_id', $user?->id);
-        } elseif (!($user?->role?->code === 'hr' && strtolower((string) $user?->email) === self::ATTENDANCE_VERIFIER_EMAIL)) {
-            return [];
-        }
-
         return $query
-            ->get(['id', 'permit_date', 'destination'])
+            ->with([
+                'user:id,name,email',
+                'requestors:id,exit_permit_id,row_number,name,employee_id,position,department,reimburs_lunch_box',
+            ])
+            ->get(['id', 'user_id', 'permit_date', 'destination'])
             ->map(fn(ExitPermit $permit) => [
                 'id' => $permit->id,
                 'label' => sprintf('#%d | %s | %s', $permit->id, (string) $permit->permit_date, (string) $permit->destination),
+                'owner_name' => $permit->user?->name,
+                'owner_email' => $permit->user?->email,
+                'requestors' => $permit->requestors
+                    ->map(fn($requestor) => [
+                        'row_number' => $requestor->row_number,
+                        'name' => $requestor->name,
+                        'employee_id' => $requestor->employee_id,
+                        'position' => $requestor->position,
+                        'department' => $requestor->department,
+                        'reimburs_lunch_box' => $requestor->reimburs_lunch_box,
+                    ])
+                    ->values()
+                    ->all(),
             ])
             ->values()
             ->all();
+    }
+
+    private function ensureSisca($user): void
+    {
+        if (!$this->isSisca($user)) {
+            abort(403);
+        }
+    }
+
+    private function isSisca($user): bool
+    {
+        return $user?->role?->code === 'hr'
+            && strtolower((string) $user?->email) === self::ATTENDANCE_VERIFIER_EMAIL;
     }
 
     private function routeName(string $scope, string $action): string

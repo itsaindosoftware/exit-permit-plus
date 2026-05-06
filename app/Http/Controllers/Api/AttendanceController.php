@@ -28,6 +28,22 @@ class AttendanceController extends Controller
                     'date' => now()->toDateString(),
                     'check_in_at' => optional($todayAttendance?->check_in_at)?->toDateTimeString(),
                     'check_out_at' => optional($todayAttendance?->check_out_at)?->toDateTimeString(),
+                    'check_in_location' => [
+                        'latitude' => $todayAttendance?->check_in_latitude,
+                        'longitude' => $todayAttendance?->check_in_longitude,
+                        'street_area' => $todayAttendance?->check_in_street_area,
+                        'village' => $todayAttendance?->check_in_village,
+                        'district' => $todayAttendance?->check_in_district,
+                        'regency' => $todayAttendance?->check_in_regency,
+                    ],
+                    'check_out_location' => [
+                        'latitude' => $todayAttendance?->check_out_latitude,
+                        'longitude' => $todayAttendance?->check_out_longitude,
+                        'street_area' => $todayAttendance?->check_out_street_area,
+                        'village' => $todayAttendance?->check_out_village,
+                        'district' => $todayAttendance?->check_out_district,
+                        'regency' => $todayAttendance?->check_out_regency,
+                    ],
                 ],
             ],
         ]);
@@ -36,6 +52,14 @@ class AttendanceController extends Controller
     public function checkIn(Request $request): JsonResponse
     {
         $user = $request->user();
+        $validated = $request->validate([
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+            'street_area' => ['nullable', 'string', 'max:255'],
+            'village' => ['nullable', 'string', 'max:120'],
+            'district' => ['nullable', 'string', 'max:120'],
+            'regency' => ['nullable', 'string', 'max:120'],
+        ]);
         $attendance = $this->todayAttendance($user->id);
 
         if ($attendance?->check_in_at) {
@@ -53,6 +77,12 @@ class AttendanceController extends Controller
 
         $attendance->check_in_at = now();
         $attendance->check_in_ip = $request->ip();
+        $attendance->check_in_latitude = $validated['latitude'] ?? null;
+        $attendance->check_in_longitude = $validated['longitude'] ?? null;
+        $attendance->check_in_street_area = $validated['street_area'] ?? null;
+        $attendance->check_in_village = $validated['village'] ?? null;
+        $attendance->check_in_district = $validated['district'] ?? null;
+        $attendance->check_in_regency = $validated['regency'] ?? null;
         $attendance->save();
 
         return response()->json([
@@ -61,6 +91,14 @@ class AttendanceController extends Controller
                 'attendance_date' => (string) $attendance->attendance_date,
                 'check_in_at' => optional($attendance->check_in_at)->toDateTimeString(),
                 'check_out_at' => optional($attendance->check_out_at)->toDateTimeString(),
+                'check_in_location' => [
+                    'latitude' => $attendance->check_in_latitude,
+                    'longitude' => $attendance->check_in_longitude,
+                    'street_area' => $attendance->check_in_street_area,
+                    'village' => $attendance->check_in_village,
+                    'district' => $attendance->check_in_district,
+                    'regency' => $attendance->check_in_regency,
+                ],
             ],
         ]);
     }
@@ -68,6 +106,14 @@ class AttendanceController extends Controller
     public function checkOut(Request $request): JsonResponse
     {
         $user = $request->user();
+        $validated = $request->validate([
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+            'street_area' => ['nullable', 'string', 'max:255'],
+            'village' => ['nullable', 'string', 'max:120'],
+            'district' => ['nullable', 'string', 'max:120'],
+            'regency' => ['nullable', 'string', 'max:120'],
+        ]);
         $attendance = $this->todayAttendance($user->id);
 
         if (!$attendance?->check_in_at) {
@@ -84,6 +130,12 @@ class AttendanceController extends Controller
 
         $attendance->check_out_at = now();
         $attendance->check_out_ip = $request->ip();
+        $attendance->check_out_latitude = $validated['latitude'] ?? null;
+        $attendance->check_out_longitude = $validated['longitude'] ?? null;
+        $attendance->check_out_street_area = $validated['street_area'] ?? null;
+        $attendance->check_out_village = $validated['village'] ?? null;
+        $attendance->check_out_district = $validated['district'] ?? null;
+        $attendance->check_out_regency = $validated['regency'] ?? null;
         $attendance->save();
 
         return response()->json([
@@ -92,6 +144,14 @@ class AttendanceController extends Controller
                 'attendance_date' => (string) $attendance->attendance_date,
                 'check_in_at' => optional($attendance->check_in_at)->toDateTimeString(),
                 'check_out_at' => optional($attendance->check_out_at)->toDateTimeString(),
+                'check_out_location' => [
+                    'latitude' => $attendance->check_out_latitude,
+                    'longitude' => $attendance->check_out_longitude,
+                    'street_area' => $attendance->check_out_street_area,
+                    'village' => $attendance->check_out_village,
+                    'district' => $attendance->check_out_district,
+                    'regency' => $attendance->check_out_regency,
+                ],
             ],
         ]);
     }

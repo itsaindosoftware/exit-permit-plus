@@ -7,13 +7,14 @@ export default function AuthenticatedLayout({ header, children }) {
     const notifications = usePage().props.notifications ?? { unread: [], unread_count: 0 };
     const [showSidebar, setShowSidebar] = useState(false);
     const isRatna = String(user?.email ?? '').toLowerCase() === 'ratna@example.com';
+    const isSisca = String(user?.email ?? '').toLowerCase() === 'sisca.dewiyani@example.com';
 
     const menuItems = [
         { label: 'Dashboard', routeName: 'dashboard' },
         ...(isRatna ? [{ label: 'Schedule Car', routeName: 'schedule-cars.index' }] : []),
         { label: 'Exit Permit', routeName: 'exit-permits.index' },
         { label: 'Order Meal Umum', routeName: 'order-meals.index' },
-        { label: 'Order Meal Exit Permit', routeName: 'exit-permit-meals.index' },
+        ...(isSisca ? [{ label: 'Order Meal Exit Permit', routeName: 'exit-permit-meals.index' }] : []),
         { label: 'Reimbursement', routeName: 'reimbursements.index' },
         { label: 'Profile', routeName: 'profile.edit' },
     ];

@@ -8,9 +8,9 @@ return [
     'source_path' => env('ATTENDANCE_SOURCE_PATH', ''),
 
     // Only these departments are included in company attendance matching.
-    'company_departments' => [
-        'BIPO',
-        'INTERNSHIP',
-        'OUTSOURCE',
-    ],
+    // Can be overridden from .env with comma-separated values.
+    'company_departments' => array_values(array_filter(array_map(
+        fn(string $department) => strtoupper(trim($department)),
+        explode(',', (string) env('ATTENDANCE_COMPANY_DEPARTMENTS', 'BIPO,INTERNSHIP,OUTSOURCE,IT')),
+    ))),
 ];

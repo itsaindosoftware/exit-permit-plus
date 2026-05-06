@@ -37,7 +37,7 @@ function NotEatenChart({ title, points }) {
     );
 }
 
-export default function Index({ orderMeals, summary, notEatenCharts, mode, createRouteName, editRouteName, destroyRouteName }) {
+export default function Index({ orderMeals, summary, notEatenCharts, mode, createRouteName, showRouteName, editRouteName, destroyRouteName }) {
     const isExitPermitMode = mode === 'exit_permit';
 
     const todayLabel = new Intl.DateTimeFormat('id-ID', {
@@ -168,6 +168,12 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                         </td>
                                         <td className="px-4 py-3">
                                             <div className="flex gap-2">
+                                                <Link
+                                                    href={route(showRouteName, item.id)}
+                                                    className="rounded bg-slate-700 px-3 py-1 text-xs font-semibold text-white transition hover:bg-slate-600"
+                                                >
+                                                    Detail
+                                                </Link>
                                                 <Link
                                                     href={route(editRouteName, item.id)}
                                                     className="rounded bg-cyan-700 px-3 py-1 text-xs font-semibold text-white transition hover:bg-cyan-600"

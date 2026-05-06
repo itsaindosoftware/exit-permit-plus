@@ -8,6 +8,8 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Maatwebsite\Excel\Concerns\ToArray;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AttendanceMatchingService
 {
@@ -106,6 +108,11 @@ class AttendanceMatchingService
             ->where('attendance_date', $permitDate)
             ->values();
 
+        if ($attendanceForDate->isEmpty()) {
+            // Fallback to all rows so preview can still match by NIK or Name.
+            $attendanceForDate = $attendanceRows;
+        }
+
         $attendanceEmployeeIds = $attendanceForDate
             ->pluck('employee_id')
             ->filter()
@@ -133,7 +140,10 @@ class AttendanceMatchingService
                 $matchByEmployeeId = $normalizedEmployeeId && $attendanceEmployeeIds->contains($normalizedEmployeeId);
                 $matchByName = !$matchByEmployeeId && $normalizedName && $attendanceNames->contains($normalizedName);
 
-                $matched = $isCompanyDepartment && ($matchByEmployeeId || $matchByName);
+                // Temporary: disable department scope requirement.
+                // Keep $isCompanyDepartment for UI diagnostics (company_scope field).
+                // $matched = $isCompanyDepartment && ($matchByEmployeeId || $matchByName);
+                $matched = $matchByEmployeeId || $matchByName;
 
                 if ($matched) {
                     $matchedCount++;
@@ -149,6 +159,8 @@ class AttendanceMatchingService
                     'before_reimburs_lunch_box' => $requestor->reimburs_lunch_box,
                     'matched' => $matched,
                     'matched_by' => $matchByEmployeeId ? 'employee_id' : ($matchByName ? 'name' : null),
+                    'match_by_employee_id' => $matchByEmployeeId,
+                    'match_by_name' => $matchByName,
                     'recommended_reimburs_lunch_box' => $matched ? 'Y' : 'N',
                     'company_scope' => $isCompanyDepartment,
                 ];
@@ -202,8 +214,7 @@ class AttendanceMatchingService
     private function parseAttendanceFile(string $filePath, string $extension): Collection
     {
         $rawRows = match ($extension) {
-            'csv', 'txt' => $this->readCsvRows($filePath),
-            'xlsx' => $this->readXlsxRows($filePath),
+            'csv', 'txt', 'xlsx' => $this->readSpreadsheetRows($filePath, $extension),
             default => throw ValidationException::withMessages([
                 'attendance_file' => 'Format file attendance belum didukung. Gunakan CSV atau XLSX.',
             ]),
@@ -232,6 +243,7 @@ class AttendanceMatchingService
                 return $assoc;
             })
             ->filter(fn(array $row) => count(array_filter($row, fn($value) => $value !== '')) > 0)
+            ->reject(fn(array $row) => $this->isRepeatAttendanceRow($row))
             ->map(function (array $row) {
                 $employeeId = $this->firstFilled($row, [
                     'EMPLOYEEID',
@@ -246,12 +258,14 @@ class AttendanceMatchingService
 
                 $employeeName = $this->firstFilled($row, [
                     'NAME',
+                    'NAMA',
                     'EMPLOYEENAME',
                     'USER',
                     'USERNAME',
                 ]);
 
                 $dateTimeValue = $this->firstFilled($row, [
+                    'WAKTU',
                     'DATETIME',
                     'CHECKINTIME',
                     'CHECKTIME',
@@ -263,6 +277,7 @@ class AttendanceMatchingService
 
                 $dateValue = $this->firstFilled($row, [
                     'DATE',
+                    'TANGGAL',
                     'CHECKINDATE',
                     'ATTENDANCEDATE',
                     'TRANSACTIONDATE',
@@ -270,6 +285,7 @@ class AttendanceMatchingService
 
                 $timeValue = $this->firstFilled($row, [
                     'TIME',
+                    'JAM',
                     'CLOCKTIME',
                     'CHECKIN',
                     'INTIME',
@@ -287,6 +303,32 @@ class AttendanceMatchingService
             })
             ->filter(fn(array $row) => $row['attendance_date'] !== null)
             ->values();
+    }
+
+    private function isRepeatAttendanceRow(array $row): bool
+    {
+        $statusCandidates = [
+            $this->firstFilled($row, ['STATUS']),
+            $this->firstFilled($row, ['STATUSBARU', 'NEWSTATUS']),
+            $this->firstFilled($row, ['PENGECUALIAN', 'EXCEPTION']),
+        ];
+
+        foreach ($statusCandidates as $status) {
+            if ($this->containsRepeatMarker($status)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function containsRepeatMarker(?string $value): bool
+    {
+        if ($value === null) {
+            return false;
+        }
+
+        return str_contains(strtoupper($value), 'REPEAT');
     }
 
     private function readCsvRows(string $filePath): array
@@ -308,6 +350,26 @@ class AttendanceMatchingService
         }
 
         return $rows;
+    }
+
+    private function readSpreadsheetRows(string $filePath, string $extension): array
+    {
+        try {
+            $sheets = Excel::toArray(new class implements ToArray {
+                public function array(array $array): array
+                {
+                    return $array;
+                }
+            }, $filePath);
+
+            return $sheets[0] ?? [];
+        } catch (\Throwable $exception) {
+            return match ($extension) {
+                'csv', 'txt' => $this->readCsvRows($filePath),
+                'xlsx' => $this->readXlsxRows($filePath),
+                default => [],
+            };
+        }
     }
 
     private function readXlsxRows(string $filePath): array
@@ -379,6 +441,10 @@ class AttendanceMatchingService
                 if ($type === 's') {
                     $sharedIndex = (int) $value;
                     $value = $sharedStrings[$sharedIndex] ?? '';
+                } elseif ($type === 'inlineStr') {
+                    $value = $this->extractInlineStringValue($cell);
+                } elseif ($type === 'str') {
+                    $value = (string) ($cell->v ?? '');
                 }
 
                 $cells[$columnIndex] = trim((string) $value);
@@ -400,6 +466,25 @@ class AttendanceMatchingService
         }
 
         return $rows;
+    }
+
+    private function extractInlineStringValue(\SimpleXMLElement $cell): string
+    {
+        if (!isset($cell->is)) {
+            return '';
+        }
+
+        if (isset($cell->is->t)) {
+            return (string) $cell->is->t;
+        }
+
+        $text = '';
+
+        foreach ($cell->is->r as $run) {
+            $text .= (string) ($run->t ?? '');
+        }
+
+        return $text;
     }
 
     private function columnLettersToIndex(string $letters): int
@@ -473,6 +558,8 @@ class AttendanceMatchingService
         }
 
         $formats = [
+            'd-M-y g:i A',
+            'd-M-y H:i',
             'Y-m-d H:i:s',
             'Y-m-d H:i',
             'd/m/Y H:i:s',

@@ -17,6 +17,18 @@ class Attendance extends Model
         'check_out_at',
         'check_in_ip',
         'check_out_ip',
+        'check_in_latitude',
+        'check_in_longitude',
+        'check_in_street_area',
+        'check_in_village',
+        'check_in_district',
+        'check_in_regency',
+        'check_out_latitude',
+        'check_out_longitude',
+        'check_out_street_area',
+        'check_out_village',
+        'check_out_district',
+        'check_out_regency',
     ];
 
     protected function casts(): array
@@ -25,6 +37,10 @@ class Attendance extends Model
             'attendance_date' => 'date',
             'check_in_at' => 'datetime',
             'check_out_at' => 'datetime',
+            'check_in_latitude' => 'float',
+            'check_in_longitude' => 'float',
+            'check_out_latitude' => 'float',
+            'check_out_longitude' => 'float',
         ];
     }
 

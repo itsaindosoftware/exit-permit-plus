@@ -109,6 +109,23 @@ export default function Edit({
     const isRecapViewer = ['hr', 'admin'].includes(viewerRole);
     const selectedCar = carOptions.find((car) => car.id === data.car_id);
     const selectedDriver = driverOptions.find((driver) => driver.id === data.driver_id);
+    const getAttendanceMatchReason = (item) => {
+        if (item?.matched) {
+            return '-';
+        }
+
+        const reasons = [];
+
+        if (!item?.match_by_employee_id) {
+            reasons.push(item?.employee_id ? 'NIK tidak ditemukan' : 'NIK kosong');
+        }
+
+        if (!item?.match_by_name) {
+            reasons.push(item?.name ? 'Nama tidak ditemukan' : 'Nama kosong');
+        }
+
+        return reasons.length ? reasons.join(' | ') : 'Tidak cocok';
+    };
 
     return (
         <AuthenticatedLayout
@@ -494,7 +511,7 @@ export default function Edit({
                                             onChange={(e) => setData('attendance_file', e.target.files?.[0] ?? null)}
                                         />
                                         <p className="mt-1 text-xs text-slate-500">
-                                            Untuk tipe company (business trip), Sisca upload file attendance dari folder sharing (finger print), lalu sistem akan otomatis cocokkan ke list requestor (BIPO/Internship/Outsource).
+                                            Untuk tipe company (business trip), Sisca upload file attendance dari folder sharing (finger print), lalu sistem akan otomatis cocokkan ke list requestor sesuai scope department konfigurasi (default: BIPO/Internship/Outsource/IT).
                                         </p>
                                         <InputError message={errors.attendance_file} className="mt-2" />
 
@@ -516,6 +533,9 @@ export default function Edit({
                                                 <p className="mt-1 text-xs text-cyan-900">
                                                     Total requestor: {attendancePreview?.summary?.total_requestors ?? 0} | Matched: {attendancePreview?.summary?.matched_count ?? 0}
                                                 </p>
+                                                <p className="mt-1 text-xs text-cyan-900">
+                                                    Attendance rows (by date): {attendancePreview?.summary?.attendance_rows_for_date ?? 0}
+                                                </p>
 
                                                 <div className="mt-3 overflow-x-auto rounded-md border border-cyan-200 bg-white">
                                                     <table className="min-w-full border-collapse text-xs">
@@ -526,6 +546,8 @@ export default function Edit({
                                                                 <th className="border border-cyan-200 px-2 py-1 text-left">EMPLOYEE ID</th>
                                                                 <th className="border border-cyan-200 px-2 py-1 text-left">DEPARTMENT</th>
                                                                 <th className="border border-cyan-200 px-2 py-1 text-left">MATCH</th>
+                                                                <th className="border border-cyan-200 px-2 py-1 text-left">MATCH BY</th>
+                                                                <th className="border border-cyan-200 px-2 py-1 text-left">REASON</th>
                                                                 <th className="border border-cyan-200 px-2 py-1 text-left">REIMBURS LUNCH BOX</th>
                                                             </tr>
                                                         </thead>
@@ -538,6 +560,12 @@ export default function Edit({
                                                                     <td className="border border-cyan-200 px-2 py-1">{item.department || '-'}</td>
                                                                     <td className="border border-cyan-200 px-2 py-1">
                                                                         {item.matched ? `Ya (${item.matched_by || '-'})` : 'Tidak'}
+                                                                    </td>
+                                                                    <td className="border border-cyan-200 px-2 py-1">
+                                                                        {item.matched_by || '-'}
+                                                                    </td>
+                                                                    <td className="border border-cyan-200 px-2 py-1">
+                                                                        {getAttendanceMatchReason(item)}
                                                                     </td>
                                                                     <td className="border border-cyan-200 px-2 py-1 font-semibold">
                                                                         {item.recommended_reimburs_lunch_box}

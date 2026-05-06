@@ -22,6 +22,9 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
     });
 
     const totalProvided = Number(data.quantity || 0) + Number(data.visitor_count || 0);
+    const selectedPermit = isExitPermitMode
+        ? eligibleExitPermits.find((permit) => String(permit.id) === String(data.exit_permit_id))
+        : null;
 
     const submit = (e) => {
         e.preventDefault();
@@ -153,6 +156,41 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
                             <InputError message={errors.menu_name} className="mt-2" />
                         </div>
                     </div>
+
+                    {isExitPermitMode && selectedPermit && (
+                        <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                            <p className="text-sm font-semibold text-slate-900">Detail Exit Permit Terpilih</p>
+                            <div className="grid gap-3 text-sm text-slate-700 md:grid-cols-2">
+                                <p><span className="font-semibold">Pemohon:</span> {selectedPermit.owner_name || '-'}</p>
+                                <p><span className="font-semibold">Email:</span> {selectedPermit.owner_email || '-'}</p>
+                            </div>
+
+                            <div className="overflow-x-auto rounded-md border border-slate-200 bg-white">
+                                <table className="min-w-full border-collapse text-xs">
+                                    <thead className="bg-slate-100 text-slate-700">
+                                        <tr>
+                                            <th className="border border-slate-200 px-2 py-1 text-left">No</th>
+                                            <th className="border border-slate-200 px-2 py-1 text-left">Name</th>
+                                            <th className="border border-slate-200 px-2 py-1 text-left">Employee ID</th>
+                                            <th className="border border-slate-200 px-2 py-1 text-left">Position</th>
+                                            <th className="border border-slate-200 px-2 py-1 text-left">Department</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {(selectedPermit.requestors ?? []).map((requestor) => (
+                                            <tr key={`requestor-${selectedPermit.id}-${requestor.row_number}`}>
+                                                <td className="border border-slate-200 px-2 py-1">{requestor.row_number}</td>
+                                                <td className="border border-slate-200 px-2 py-1">{requestor.name || '-'}</td>
+                                                <td className="border border-slate-200 px-2 py-1">{requestor.employee_id || '-'}</td>
+                                                <td className="border border-slate-200 px-2 py-1">{requestor.position || '-'}</td>
+                                                <td className="border border-slate-200 px-2 py-1">{requestor.department || '-'}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="grid gap-4 md:grid-cols-3">
                         <div>
