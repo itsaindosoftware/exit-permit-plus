@@ -9,6 +9,10 @@ export default function Create({ targets = [], carOptions = [], driverOptions = 
         driver_id: '',
     });
 
+    const selectedTarget = targets.find((target) => Number(target.id) === Number(data.exit_permit_id));
+    const template = selectedTarget?.template ?? null;
+    const templateValue = (value) => (value && String(value).trim() ? value : '-');
+
     const submit = (e) => {
         e.preventDefault();
         post(route('schedule-cars.store'));
@@ -30,7 +34,7 @@ export default function Create({ targets = [], carOptions = [], driverOptions = 
                         Tidak ada Exit Permit yang belum di-arrange.
                     </div>
                 ) : (
-                    <form onSubmit={submit} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+                    <form onSubmit={submit} className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                         <div>
                             <label htmlFor="exit_permit_id" className="text-sm font-semibold text-slate-800">Exit Permit</label>
                             <select
@@ -45,6 +49,21 @@ export default function Create({ targets = [], carOptions = [], driverOptions = 
                                 ))}
                             </select>
                             <InputError message={errors.exit_permit_id} className="mt-1" />
+                        </div>
+
+                        <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-4">
+                            <p className="text-xs font-semibold uppercase tracking-wider text-cyan-700">Format Arrange Car (Ratna)</p>
+                            <div className="mt-3 grid gap-2 text-sm text-slate-900">
+                                <p><span className="inline-block min-w-[260px] font-semibold">Tanggal Dinas Luar</span>: {templateValue(template?.tanggal_dinas_luar)}</p>
+                                <p><span className="inline-block min-w-[260px] font-semibold">Estimasi Jam berangkat &amp; Pulang</span>: {templateValue(template?.estimasi_jam)}</p>
+                                <p><span className="inline-block min-w-[260px] font-semibold">Nama PT Tujuan</span>: {templateValue(template?.nama_pt_tujuan)}</p>
+                                <p><span className="inline-block min-w-[260px] font-semibold">Lokasi PT Tujuan</span>: {templateValue(template?.lokasi_pt_tujuan)}</p>
+                                <p><span className="inline-block min-w-[260px] font-semibold">User yang pergi</span>: {templateValue(template?.user_yang_pergi)}</p>
+                                <p><span className="inline-block min-w-[260px] font-semibold">Budget Dept &amp; Cost Center</span>: {templateValue(template?.budget_dept_cost_center)}</p>
+                                <p><span className="inline-block min-w-[260px] font-semibold">Alasan Pergi (Meeting / Delivery) dengan detail reason</span>: {templateValue(template?.alasan_pergi)}</p>
+                                <p><span className="inline-block min-w-[260px] font-semibold">Detail Barang Yang Dibawa jika Delivery (Part / Tooling)</span>: {templateValue(template?.detail_barang_delivery)}</p>
+                                <p><span className="inline-block min-w-[260px] font-semibold">Permintaan untuk kurangin order catering</span>: {templateValue(template?.permintaan_kurangi_catering)}</p>
+                            </div>
                         </div>
 
                         <div className="grid gap-4 md:grid-cols-2">

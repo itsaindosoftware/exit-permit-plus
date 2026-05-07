@@ -226,6 +226,10 @@ class ScheduleCarController extends Controller
     private function arrangeTargets(bool $onlyUnarranged = false): array
     {
         return ExitPermit::query()
+            ->with([
+                'user:id,name',
+                'requestors:id,exit_permit_id,name,department,reimburs_lunch_box',
+            ])
             ->where('exit_type', ExitPermit::EXIT_TYPE_BUSINESS_TRIP)
             ->where('order_car', true)
             ->where('status', 'pending')
@@ -234,20 +238,87 @@ class ScheduleCarController extends Controller
             }))
             ->orderBy('permit_date')
             ->orderBy('start_time')
-            ->get(['id', 'permit_date', 'start_time', 'end_time', 'destination'])
-            ->map(fn(ExitPermit $permit) => [
-                'id' => $permit->id,
-                'label' => sprintf(
-                    '#%d | %s | %s-%s | %s',
-                    $permit->id,
-                    $this->toDateOnly($permit->permit_date),
-                    $this->toHourMinute($permit->start_time) ?? '-',
-                    $this->toHourMinute($permit->end_time) ?? '-',
-                    $permit->destination,
-                ),
+            ->get([
+                'id',
+                'user_id',
+                'permit_date',
+                'start_time',
+                'end_time',
+                'destination',
+                'reason',
+                'notes',
             ])
+            ->map(function (ExitPermit $permit) {
+                $requestorNames = $permit->requestors
+                    ->pluck('name')
+                    ->filter()
+                    ->values();
+
+                $departmentLabels = $permit->requestors
+                    ->pluck('department')
+                    ->filter()
+                    ->map(fn(string $department) => trim($department))
+                    ->filter()
+                    ->unique()
+                    ->values();
+
+                return [
+                    'id' => $permit->id,
+                    'label' => sprintf(
+                        '#%d | %s | %s-%s | %s',
+                        $permit->id,
+                        $this->toDateOnly($permit->permit_date),
+                        $this->toHourMinute($permit->start_time) ?? '-',
+                        $this->toHourMinute($permit->end_time) ?? '-',
+                        $permit->destination,
+                    ),
+                    'template' => [
+                        'tanggal_dinas_luar' => $this->toDateOnly($permit->permit_date) ?? '-',
+                        'estimasi_jam' => sprintf(
+                            '%s - %s',
+                            $this->toHourMinuteDot($permit->start_time),
+                            $this->toHourMinuteDot($permit->end_time),
+                        ),
+                        'nama_pt_tujuan' => $permit->destination ?: '-',
+                        'lokasi_pt_tujuan' => $permit->destination ?: '-',
+                        'user_yang_pergi' => $requestorNames->isNotEmpty()
+                            ? $requestorNames->join(', ')
+                            : ($permit->user?->name ?: '-'),
+                        'budget_dept_cost_center' => $departmentLabels->isNotEmpty()
+                            ? $departmentLabels->map(fn(string $department) => sprintf('%s (Cost Center: -)', $department))->join('; ')
+                            : '-',
+                        'alasan_pergi' => $permit->reason ?: '-',
+                        'detail_barang_delivery' => $permit->notes ?: '-',
+                        'permintaan_kurangi_catering' => $this->cateringReductionSummary($permit),
+                    ],
+                ];
+            })
             ->values()
             ->all();
+    }
+
+    private function toHourMinuteDot(?string $time): string
+    {
+        return str_replace(':', '.', $this->toHourMinute($time) ?? '--.--');
+    }
+
+    private function cateringReductionSummary(ExitPermit $permit): string
+    {
+        $requestorsAskReduction = $permit->requestors
+            ->filter(fn($requestor) => strtoupper(trim((string) ($requestor->reimburs_lunch_box ?? 'N'))) === 'Y')
+            ->pluck('name')
+            ->filter()
+            ->values();
+
+        if ($requestorsAskReduction->isEmpty()) {
+            return 'Tidak ada permintaan pengurangan catering.';
+        }
+
+        return sprintf(
+            'Kurangi %d pax untuk: %s',
+            $requestorsAskReduction->count(),
+            $requestorsAskReduction->join(', '),
+        );
     }
 
     private function carOptions(): array
