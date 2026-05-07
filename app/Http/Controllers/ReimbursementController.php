@@ -83,7 +83,7 @@ class ReimbursementController extends Controller
                     'employee_name' => $reimbursement->user?->name,
                     'exit_permit_id' => $reimbursement->exit_permit_id,
                     'exit_permit_label' => $this->exitPermitLabel($reimbursement->exitPermit),
-                    'request_date' => $reimbursement->request_date ? (string) $reimbursement->request_date : null,
+                    'request_date' => $this->normalizeDateForInput($reimbursement->request_date),
                     'paid_to' => $reimbursement->paid_to,
                     'amount' => $reimbursement->amount,
                     'amount_order_meal' => (int) ($reimbursement->amount_order_meal ?? 0),
@@ -203,7 +203,7 @@ class ReimbursementController extends Controller
                 'id' => $reimbursement->id,
                 'exit_permit_id' => $reimbursement->exit_permit_id,
                 'exit_permit_label' => $this->exitPermitLabel($reimbursement->exitPermit),
-                'request_date' => $reimbursement->request_date ? (string) $reimbursement->request_date : null,
+                'request_date' => $this->normalizeDateForInput($reimbursement->request_date),
                 'paid_to' => $reimbursement->paid_to,
                 'amount' => $reimbursement->amount,
                 'amount_order_meal' => (int) ($reimbursement->amount_order_meal ?? $reimbursement->amount ?? 0),
@@ -507,7 +507,7 @@ class ReimbursementController extends Controller
             Reimbursement::STATUS_PENDING_MD => 'Menunggu Approval MD',
             Reimbursement::STATUS_PENDING_RATNA => 'Menunggu Ratna Check & Submit Accounting',
             Reimbursement::STATUS_SUBMITTED_TO_ACCOUNTING => 'Menunggu Proses Accounting',
-            Reimbursement::STATUS_FINISHED => 'Finished',
+            Reimbursement::STATUS_FINISHED => 'Sudah Dibayarkan oleh Accounting',
             Reimbursement::STATUS_REJECTED => 'Rejected',
             default => 'Pending',
         };
@@ -525,6 +525,21 @@ class ReimbursementController extends Controller
             $exitPermit->permit_date ? (string) $exitPermit->permit_date : '-',
             $exitPermit->destination,
         );
+    }
+
+    private function normalizeDateForInput(mixed $value): ?string
+    {
+        if (!$value) {
+            return null;
+        }
+
+        $timestamp = strtotime((string) $value);
+
+        if ($timestamp === false) {
+            return null;
+        }
+
+        return date('Y-m-d', $timestamp);
     }
 
     private function replaceAttachment(Reimbursement $reimbursement, UploadedFile $file): void

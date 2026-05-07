@@ -593,6 +593,10 @@ class ExitPermitController extends Controller
         $approverName = $exitPermit->hrApprover?->name ?? 'HR Approver';
 
         if ($exitPermit->status === 'approved') {
+            if ($exitPermit->exit_type !== ExitPermit::EXIT_TYPE_BUSINESS_TRIP) {
+                return 'Approved by HR Manager | Selesai (Diketahui Sisca)';
+            }
+
             if (!$exitPermit->attendance_checked_at) {
                 return 'Approved by HR Manager | Menunggu verifikasi absensi Sisca';
             }
@@ -633,6 +637,14 @@ class ExitPermitController extends Controller
 
     private function statusLabel(ExitPermit $exitPermit): string
     {
+        if (
+            $exitPermit->status === 'approved'
+            && $exitPermit->exit_type !== ExitPermit::EXIT_TYPE_BUSINESS_TRIP
+            && (bool) $exitPermit->hr_verified_at
+        ) {
+            return 'Diketahui Sisca (HRD)';
+        }
+
         if (
             $exitPermit->status === 'approved'
             && (bool) $exitPermit->attendance_checked_at
@@ -1381,6 +1393,7 @@ class ExitPermitController extends Controller
     {
         return $user?->role?->code === 'hr'
             && strtolower((string) $user?->email) === self::ATTENDANCE_VERIFIER_EMAIL
+            && $exitPermit->exit_type === ExitPermit::EXIT_TYPE_BUSINESS_TRIP
             && $exitPermit->status === 'approved'
             && (bool) $exitPermit->md_approved_at
             && (bool) $exitPermit->hr_verified_at;

@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 const currencyFormatter = new Intl.NumberFormat('id-ID');
 
-export default function Dashboard({ stats, mealTrend }) {
+export default function Dashboard({ stats, mealTrend, canViewMealAnalytics = false }) {
     const [hoveredBar, setHoveredBar] = useState(null);
     const chartWidth = 760;
     const chartHeight = 260;
@@ -34,12 +34,14 @@ export default function Dashboard({ stats, mealTrend }) {
                     </p>
                 </div>
 
-                <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-                    <p className="text-sm font-medium text-slate-500">Exit Permit Eligible Meal</p>
-                    <p className="mt-3 text-4xl font-bold text-slate-900">
-                        {stats.eligibleMealCount}
-                    </p>
-                </div>
+                {canViewMealAnalytics && (
+                    <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+                        <p className="text-sm font-medium text-slate-500">Exit Permit Eligible Meal</p>
+                        <p className="mt-3 text-4xl font-bold text-slate-900">
+                            {stats.eligibleMealCount}
+                        </p>
+                    </div>
+                )}
 
                 <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
                     <p className="text-sm font-medium text-slate-500">Total Reimbursement Approved</p>
@@ -48,45 +50,51 @@ export default function Dashboard({ stats, mealTrend }) {
                     </p>
                 </div>
 
-                <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-                    <p className="text-sm font-medium text-slate-500">Sisa Paket Makan Siang</p>
-                    <p className="mt-3 text-4xl font-bold text-emerald-600">
-                        {stats.remainingMealCount}
-                    </p>
-                </div>
+                {canViewMealAnalytics && (
+                    <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+                        <p className="text-sm font-medium text-slate-500">Sisa Paket Makan Siang</p>
+                        <p className="mt-3 text-4xl font-bold text-emerald-600">
+                            {stats.remainingMealCount}
+                        </p>
+                    </div>
+                )}
 
-                <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 xl:col-span-2">
-                    <p className="text-sm font-medium text-slate-500">Ringkasan Lunch Pack</p>
-                    <div className="mt-4 grid gap-4 sm:grid-cols-3">
-                        <div className="rounded-lg bg-slate-50 p-4">
-                            <p className="text-sm text-slate-500">Disediakan</p>
-                            <p className="mt-2 text-3xl font-bold text-slate-900">{stats.providedMealCount}</p>
-                        </div>
-                        <div className="rounded-lg bg-slate-50 p-4">
-                            <p className="text-sm text-slate-500">Realisasi</p>
-                            <p className="mt-2 text-3xl font-bold text-slate-900">{stats.actualMealCount}</p>
-                        </div>
-                        <div className="rounded-lg bg-emerald-50 p-4">
-                            <p className="text-sm text-emerald-700">Sisa</p>
-                            <p className="mt-2 text-3xl font-bold text-emerald-700">{stats.remainingMealCount}</p>
+                {canViewMealAnalytics && (
+                    <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 xl:col-span-2">
+                        <p className="text-sm font-medium text-slate-500">Ringkasan Lunch Pack</p>
+                        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                            <div className="rounded-lg bg-slate-50 p-4">
+                                <p className="text-sm text-slate-500">Disediakan</p>
+                                <p className="mt-2 text-3xl font-bold text-slate-900">{stats.providedMealCount}</p>
+                            </div>
+                            <div className="rounded-lg bg-slate-50 p-4">
+                                <p className="text-sm text-slate-500">Realisasi</p>
+                                <p className="mt-2 text-3xl font-bold text-slate-900">{stats.actualMealCount}</p>
+                            </div>
+                            <div className="rounded-lg bg-emerald-50 p-4">
+                                <p className="text-sm text-emerald-700">Sisa</p>
+                                <p className="mt-2 text-3xl font-bold text-emerald-700">{stats.remainingMealCount}</p>
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
 
-                <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 xl:col-span-2">
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div>
-                            <p className="text-sm font-medium text-slate-500">Trend Order Meal</p>
-                            <p className="mt-1 text-sm text-slate-700">
-                                Perbandingan paket disediakan, realita makan, dan sisa paket per hari.
-                            </p>
+                {canViewMealAnalytics && (
+                    <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 xl:col-span-2">
+                        <div className="flex flex-wrap items-center justify-between gap-4">
+                            <div>
+                                <p className="text-sm font-medium text-slate-500">Trend Order Meal</p>
+                                <p className="mt-1 text-sm text-slate-700">
+                                    Perbandingan paket disediakan, realita makan, dan sisa paket per hari.
+                                </p>
+                            </div>
+                            <div className="flex flex-wrap gap-4 text-xs text-slate-600">
+                                <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-slate-900" />Disediakan</span>
+                                <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-sky-500" />Realisasi</span>
+                                <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />Sisa</span>
+                            </div>
                         </div>
-                        <div className="flex flex-wrap gap-4 text-xs text-slate-600">
-                            <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-slate-900" />Disediakan</span>
-                            <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-sky-500" />Realisasi</span>
-                            <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />Sisa</span>
-                        </div>
-                    </div>
+                    
 
                     {mealTrend.length === 0 ? (
                         <div className="mt-6 rounded-lg border border-dashed border-slate-300 px-4 py-10 text-center text-sm text-slate-500">
@@ -228,7 +236,8 @@ export default function Dashboard({ stats, mealTrend }) {
                             </svg>
                         </div>
                     )}
-                </div>
+                    </div>
+                )}
             </div>
         </AuthenticatedLayout>
     );
