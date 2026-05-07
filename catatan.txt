@@ -1,6 +1,7 @@
 admin@example.com
 password
 
+nanti kedepannya kalau sudah setup .env ke server, masukkan file .env ke list .gitignore
 php artisan key:generate
 
 php artisan serve --port=8080
