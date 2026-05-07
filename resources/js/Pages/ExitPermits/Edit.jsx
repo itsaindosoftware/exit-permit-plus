@@ -46,6 +46,7 @@ export default function Edit({
         end_time: exitPermit.end_time ?? '',
         destination: exitPermit.destination ?? '',
         exit_type: exitPermit.exit_type ?? exitTypes[0] ?? 'sick',
+        order_car: !!exitPermit.order_car,
         car_id: exitPermit.car_id ?? '',
         driver_id: exitPermit.driver_id ?? '',
         vehicle_plate: exitPermit.vehicle_plate ?? '',
@@ -106,6 +107,7 @@ export default function Edit({
 
     const formLocked = !canUpdateRequest;
     const vehiclePlateLocked = !(canUpdateRequest || canArrangeCar);
+    const isCompanyExitType = data.exit_type === 'business_trip';
     const isRecapViewer = ['hr', 'admin'].includes(viewerRole);
     const selectedCar = carOptions.find((car) => car.id === data.car_id);
     const selectedDriver = driverOptions.find((driver) => driver.id === data.driver_id);
@@ -125,6 +127,15 @@ export default function Edit({
         }
 
         return reasons.length ? reasons.join(' | ') : 'Tidak cocok';
+    };
+
+    const setOrderCar = (value) => {
+        setData((prev) => ({
+            ...prev,
+            order_car: value,
+            car_id: value ? prev.car_id : '',
+            driver_id: value ? prev.driver_id : '',
+        }));
     };
 
     return (
@@ -210,7 +221,9 @@ export default function Edit({
                                         <th className="border border-slate-300 px-3 py-2 text-left font-semibold">EMPLOYEE ID</th>
                                         <th className="border border-slate-300 px-3 py-2 text-left font-semibold">POSITION</th>
                                         <th className="border border-slate-300 px-3 py-2 text-left font-semibold">DEPARTMENT</th>
-                                        <th className="border border-slate-300 px-3 py-2 text-left font-semibold">REIMBURS LUNCH BOX (Y/N)</th>
+                                        {isCompanyExitType && (
+                                            <th className="border border-slate-300 px-3 py-2 text-left font-semibold">REIMBURS LUNCH BOX (Y/N)</th>
+                                        )}
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -257,16 +270,18 @@ export default function Edit({
                                                     placeholder="Department"
                                                 />
                                             </td>
-                                            <td className="border border-slate-300 px-2 py-1">
-                                                <input
-                                                    type="text"
-                                                    className="w-full rounded border border-slate-300 px-2 py-1 text-xs uppercase outline-none focus:border-cyan-600 focus:ring-1 focus:ring-cyan-200 md:text-sm"
-                                                    value={row.reimburs_lunch_box}
-                                                    disabled={formLocked}
-                                                    onChange={(e) => updateRequestorRow(index, 'reimburs_lunch_box', e.target.value.toUpperCase())}
-                                                    placeholder="Y / N"
-                                                />
-                                            </td>
+                                            {isCompanyExitType && (
+                                                <td className="border border-slate-300 px-2 py-1">
+                                                    <input
+                                                        type="text"
+                                                        className="w-full rounded border border-slate-300 px-2 py-1 text-xs uppercase outline-none focus:border-cyan-600 focus:ring-1 focus:ring-cyan-200 md:text-sm"
+                                                        value={row.reimburs_lunch_box}
+                                                        disabled={formLocked}
+                                                        onChange={(e) => updateRequestorRow(index, 'reimburs_lunch_box', e.target.value.toUpperCase())}
+                                                        placeholder="Y / N"
+                                                    />
+                                                </td>
+                                            )}
                                         </tr>
                                     ))}
                                 </tbody>
@@ -404,10 +419,49 @@ export default function Edit({
                             </label>
                         </div>
 
-                        {data.exit_type === 'business_trip' && (
+                        {isCompanyExitType && !canArrangeCar && (
+                            <div>
+                                <label className="text-sm font-semibold text-slate-800">1.3 Order Car</label>
+                                <div className="mt-2 flex flex-wrap gap-3">
+                                    <label className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700">
+                                        <input
+                                            type="checkbox"
+                                            checked={data.order_car === true}
+                                            disabled={formLocked}
+                                            onChange={() => setOrderCar(true)}
+                                            className="rounded border-slate-300 text-cyan-700 focus:ring-cyan-500"
+                                        />
+                                        Yes
+                                    </label>
+                                    <label className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700">
+                                        <input
+                                            type="checkbox"
+                                            checked={data.order_car === false}
+                                            disabled={formLocked}
+                                            onChange={() => setOrderCar(false)}
+                                            className="rounded border-slate-300 text-cyan-700 focus:ring-cyan-500"
+                                        />
+                                        No
+                                    </label>
+                                </div>
+                                <p className="mt-1 text-xs text-slate-500">
+                                    Jika Yes, tim HR akan melakukan arrange mobil dan supir pada tahap berikutnya.
+                                </p>
+                                <InputError message={errors.order_car} className="mt-2" />
+
+                                {data.order_car && (data.vehicle_plate || data.driver_name) && (
+                                    <div className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+                                        <p><span className="font-semibold">No. Polisi:</span> {data.vehicle_plate || '-'}</p>
+                                        <p><span className="font-semibold">Supir:</span> {data.driver_name || '-'}</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {isCompanyExitType && canArrangeCar && (
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div>
-                                    <label htmlFor="vehicle_plate" className="text-sm font-semibold text-slate-800">1.3 No. Police Car</label>
+                                    <label htmlFor="vehicle_plate" className="text-sm font-semibold text-slate-800">Arrange No. Police Car</label>
                                     <select
                                         id="vehicle_plate"
                                         className={inputClass}
@@ -425,7 +479,7 @@ export default function Edit({
                                 </div>
 
                                 <div>
-                                    <label htmlFor="driver_name" className="text-sm font-semibold text-slate-800">1.4 Nama Supir</label>
+                                    <label htmlFor="driver_name" className="text-sm font-semibold text-slate-800">Arrange Nama Supir</label>
                                     <select
                                         id="driver_name"
                                         className={inputClass}
@@ -458,19 +512,7 @@ export default function Edit({
                             <InputError message={errors.reason} className="mt-2" />
                         </div>
 
-                        <div>
-                            <label htmlFor="notes" className="text-sm font-semibold text-slate-800">1.6 Permitted by (Department/Section Head & HR/GA)</label>
-                            <textarea
-                                id="notes"
-                                className={inputClass}
-                                rows="3"
-                                value={data.notes}
-                                required
-                                disabled={formLocked}
-                                onChange={(e) => setData('notes', e.target.value)}
-                            />
-                            <InputError message={errors.notes} className="mt-2" />
-                        </div>
+                        {/* 1.6 Permitted by (Department/Section Head & HR/GA) di-hide sementara */}
 
                         <div>
                             <label htmlFor="attachment_photo" className="text-sm font-semibold text-slate-800">Attachment Foto (Opsional, Max 2MB)</label>

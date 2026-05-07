@@ -1,8 +1,25 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 
+function translateConversionNotes(text) {
+    if (!text) {
+        return text;
+    }
+
+    const translatedFromLegacy = String(text).replace(
+        /\[AUTO-CONVERT\s+EP#(\d+)\s*-\s*(\d+)\]/g,
+        '[Pengalihan jatah lunch box ke uang reimbursement karyawan EP#$1: -$2 paket]',
+    );
+
+    return translatedFromLegacy.replace(
+        /\[Konversi\s+Lunch\s+Box\s+EP#(\d+):\s*-(\d+)\s*paket\]/g,
+        '[Pengalihan jatah lunch box ke uang reimbursement karyawan EP#$1: -$2 paket]',
+    );
+}
+
 export default function Show({ mode, orderMeal, exitPermit, indexRouteName, editRouteName }) {
     const isExitPermitMode = mode === 'exit_permit';
+    const readableNotes = translateConversionNotes(orderMeal.notes);
 
     return (
         <AuthenticatedLayout
@@ -28,10 +45,10 @@ export default function Show({ mode, orderMeal, exitPermit, indexRouteName, edit
                         <p><span className="font-semibold">Sisa:</span> {orderMeal.remaining_quantity ?? 0}</p>
                     </div>
 
-                    {orderMeal.notes && (
+                    {readableNotes && (
                         <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
                             <p className="font-semibold text-slate-900">Catatan</p>
-                            <p className="mt-1 whitespace-pre-line">{orderMeal.notes}</p>
+                            <p className="mt-1 whitespace-pre-line">{readableNotes}</p>
                         </div>
                     )}
                 </div>

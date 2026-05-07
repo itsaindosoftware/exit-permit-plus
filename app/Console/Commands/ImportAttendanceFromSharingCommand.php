@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\AttendanceImportLog;
 use App\Models\ExitPermit;
 use App\Services\AttendanceMatchingService;
+use App\Services\ExitPermitLunchConversionService;
 use Illuminate\Console\Command;
 
 class ImportAttendanceFromSharingCommand extends Command
@@ -13,8 +14,10 @@ class ImportAttendanceFromSharingCommand extends Command
 
     protected $description = 'Auto import attendance harian dari folder sharing untuk exit permit company yang sudah approved MD';
 
-    public function handle(AttendanceMatchingService $attendanceMatchingService): int
-    {
+    public function handle(
+        AttendanceMatchingService $attendanceMatchingService,
+        ExitPermitLunchConversionService $exitPermitLunchConversionService,
+    ): int {
         $targetDate = (string) ($this->option('date') ?: now()->toDateString());
         $dryRun = (bool) $this->option('dry-run');
 
@@ -78,6 +81,8 @@ class ImportAttendanceFromSharingCommand extends Command
                 ? ExitPermit::POST_MD_PATH_MEAL
                 : ExitPermit::POST_MD_PATH_REIMBURSEMENT;
             $permit->save();
+
+            $exitPermitLunchConversionService->applyIfEligible($permit->fresh(['requestors', 'user']));
 
             AttendanceImportLog::query()->create([
                 'exit_permit_id' => $permit->id,

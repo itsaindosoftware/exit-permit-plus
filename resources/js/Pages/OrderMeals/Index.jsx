@@ -137,7 +137,9 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Disediakan</th>
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Realisasi</th>
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Sisa</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Status</th>
+                                    {!isExitPermitMode && (
+                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Status</th>
+                                    )}
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Aksi</th>
                                 </tr>
                             </thead>
@@ -152,20 +154,22 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                         <td className="px-4 py-3 text-slate-700">{item.quantity}</td>
                                         <td className="px-4 py-3 text-slate-700">{item.actual_quantity}</td>
                                         <td className="px-4 py-3 font-semibold text-emerald-600">{item.remaining_quantity}</td>
-                                        <td className="px-4 py-3">
-                                            <span
-                                                className={
-                                                    `inline-flex rounded-full px-2.5 py-1 text-xs font-semibold uppercase ` +
-                                                    (item.status === 'approved'
-                                                        ? 'bg-emerald-100 text-emerald-700'
-                                                        : item.status === 'rejected'
-                                                            ? 'bg-rose-100 text-rose-700'
-                                                            : 'bg-amber-100 text-amber-700')
-                                                }
-                                            >
-                                                {item.status}
-                                            </span>
-                                        </td>
+                                        {!isExitPermitMode && (
+                                            <td className="px-4 py-3">
+                                                <span
+                                                    className={
+                                                        `inline-flex rounded-full px-2.5 py-1 text-xs font-semibold uppercase ` +
+                                                        (item.status === 'approved'
+                                                            ? 'bg-emerald-100 text-emerald-700'
+                                                            : item.status === 'rejected'
+                                                                ? 'bg-rose-100 text-rose-700'
+                                                                : 'bg-amber-100 text-amber-700')
+                                                    }
+                                                >
+                                                    {item.status}
+                                                </span>
+                                            </td>
+                                        )}
                                         <td className="px-4 py-3">
                                             <div className="flex gap-2">
                                                 <Link

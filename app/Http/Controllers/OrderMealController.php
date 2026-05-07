@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ExitPermit;
 use App\Models\OrderMeal;
+use App\Services\ExitPermitLunchConversionService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Http\RedirectResponse;
@@ -17,8 +18,13 @@ class OrderMealController extends Controller
 {
     private const ATTENDANCE_VERIFIER_EMAIL = 'sisca.dewiyani@example.com';
 
+    public function __construct(private readonly ExitPermitLunchConversionService $exitPermitLunchConversionService)
+    {
+    }
+
     public function index(): Response
     {
+        $this->ensureSisca(request()->user());
         return $this->indexByScope(OrderMeal::SCOPE_GENERAL);
     }
 
@@ -30,6 +36,7 @@ class OrderMealController extends Controller
 
     public function create(): Response
     {
+        $this->ensureSisca(request()->user());
         return $this->createByScope(OrderMeal::SCOPE_GENERAL);
     }
 
@@ -41,6 +48,7 @@ class OrderMealController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $this->ensureSisca($request->user());
         return $this->storeByScope($request, OrderMeal::SCOPE_GENERAL);
     }
 
@@ -52,11 +60,13 @@ class OrderMealController extends Controller
 
     public function edit(OrderMeal $orderMeal): Response
     {
+        $this->ensureSisca(request()->user());
         return $this->editByScope($orderMeal, OrderMeal::SCOPE_GENERAL);
     }
 
     public function show(OrderMeal $orderMeal): Response
     {
+        $this->ensureSisca(request()->user());
         return $this->showByScope($orderMeal, OrderMeal::SCOPE_GENERAL);
     }
 
@@ -74,6 +84,7 @@ class OrderMealController extends Controller
 
     public function update(Request $request, OrderMeal $orderMeal): RedirectResponse
     {
+        $this->ensureSisca($request->user());
         return $this->updateByScope($request, $orderMeal, OrderMeal::SCOPE_GENERAL);
     }
 
@@ -85,6 +96,7 @@ class OrderMealController extends Controller
 
     public function destroy(OrderMeal $orderMeal): RedirectResponse
     {
+        $this->ensureSisca(request()->user());
         return $this->destroyByScope($orderMeal, OrderMeal::SCOPE_GENERAL);
     }
 
@@ -97,6 +109,10 @@ class OrderMealController extends Controller
     private function indexByScope(string $scope): Response
     {
         $user = request()->user();
+
+        if ($scope === OrderMeal::SCOPE_GENERAL) {
+            $this->exitPermitLunchConversionService->applyPendingForDate(now()->toDateString());
+        }
 
         if ($scope === OrderMeal::SCOPE_EXIT_PERMIT) {
             $this->ensureSisca($user);
@@ -159,17 +175,17 @@ class OrderMealController extends Controller
         ]);
     }
 
-    private function createByScope(string $scope): Response|RedirectResponse
+    private function createByScope(string $scope): Response
     {
         $eligibleExitPermits = [];
+        $eligibilityWarning = null;
 
         if ($scope === OrderMeal::SCOPE_EXIT_PERMIT) {
             $this->ensureSisca(request()->user());
             $eligibleExitPermits = $this->eligibleExitPermitsForMeal(request()->user());
 
             if (count($eligibleExitPermits) === 0) {
-                return redirect()->route($this->routeName($scope, 'index'))
-                    ->with('warning', 'Order meal Exit Permit tersedia setelah verifikasi attendance Sisca untuk data BIPO yang kembali ke kantor.');
+                $eligibilityWarning = 'Order meal Exit Permit tersedia setelah Exit Permit berstatus Checked By HR Sisca, requestor hasil matching Y, dan kembali ke kantor.';
             }
         }
 
@@ -178,6 +194,7 @@ class OrderMealController extends Controller
             'indexRouteName' => $this->routeName($scope, 'index'),
             'storeRouteName' => $this->routeName($scope, 'store'),
             'eligibleExitPermits' => $eligibleExitPermits,
+            'eligibilityWarning' => $eligibilityWarning,
         ]);
     }
 
@@ -250,15 +267,24 @@ class OrderMealController extends Controller
         $repeatCount = (int) ($validated['repeat_count'] ?? 1);
         $baseMealDate = Carbon::parse((string) $validated['meal_date']);
         $exitPermitId = null;
+        $matchedRequestorCount = null;
 
         if ($scope === OrderMeal::SCOPE_EXIT_PERMIT) {
             $this->ensureSisca($request->user());
             $selectedExitPermitId = (int) ($validated['exit_permit_id'] ?? 0);
             $exitPermit = $this->resolveVerifiedExitPermitForMeal($request->user(), $selectedExitPermitId, $baseMealDate->toDateString());
             $exitPermitId = $exitPermit->id;
+            $matchedRequestorCount = $exitPermit->requestors()
+                ->whereRaw("UPPER(TRIM(COALESCE(reimburs_lunch_box, 'N'))) = ?", ['Y'])
+                ->count();
         }
 
         $baseQuantity = (int) $validated['quantity'];
+
+        if ($scope === OrderMeal::SCOPE_EXIT_PERMIT && $matchedRequestorCount !== null) {
+            $baseQuantity = max(1, (int) $matchedRequestorCount);
+        }
+
         $visitorCount = (int) $validated['visitor_count'];
         $totalQuantity = $baseQuantity + $visitorCount;
         $actualQuantity = $repeatCount > 1 ? 0 : (int) $validated['actual_quantity'];
@@ -269,6 +295,8 @@ class OrderMealController extends Controller
             ]);
         }
 
+        $appliedMealDates = [];
+
         for ($i = 0; $i < $repeatCount; $i++) {
             $mealDate = match ($scheduleType) {
                 'daily' => (clone $baseMealDate)->addDays($i),
@@ -276,11 +304,13 @@ class OrderMealController extends Controller
                 default => (clone $baseMealDate),
             };
 
+            $mealDateString = $mealDate->toDateString();
+
             OrderMeal::create([
                 'user_id' => $request->user()->id,
                 'order_scope' => $scope,
                 'exit_permit_id' => $scope === OrderMeal::SCOPE_EXIT_PERMIT ? $exitPermitId : null,
-                'meal_date' => $mealDate->toDateString(),
+                'meal_date' => $mealDateString,
                 'meal_type' => 'lunch',
                 'menu_name' => $validated['menu_name'],
                 'quantity' => $totalQuantity,
@@ -290,6 +320,14 @@ class OrderMealController extends Controller
                 'notes' => $validated['notes'] ?? null,
                 'status' => 'pending',
             ]);
+
+            $appliedMealDates[$mealDateString] = true;
+        }
+
+        if ($scope === OrderMeal::SCOPE_GENERAL) {
+            foreach (array_keys($appliedMealDates) as $mealDate) {
+                $this->exitPermitLunchConversionService->applyPendingForDate((string) $mealDate);
+            }
         }
 
         $successMessage = $repeatCount > 1
@@ -368,6 +406,10 @@ class OrderMealController extends Controller
 
         $orderMeal->save();
 
+        if ($scope === OrderMeal::SCOPE_GENERAL && $orderMeal->meal_date) {
+            $this->exitPermitLunchConversionService->applyPendingForDate((string) $orderMeal->meal_date);
+        }
+
         return redirect()->route($this->routeName($scope, 'index'))->with('success', 'Data order meal berhasil diperbarui.');
     }
 
@@ -440,15 +482,22 @@ class OrderMealController extends Controller
             ->whereNotNull('md_approved_at')
             ->whereNotNull('hr_verified_at')
             ->whereNotNull('attendance_checked_at')
+            ->whereHas('attendanceChecker', function ($query) {
+                $query->whereRaw('LOWER(email) = ?', [self::ATTENDANCE_VERIFIER_EMAIL]);
+            })
+            ->where(function ($query) {
+                $query->where('post_md_path', ExitPermit::POST_MD_PATH_MEAL)
+                    ->orWhereNull('post_md_path');
+            })
             ->where('has_valid_checkin', true)
             ->where('returned_to_office', true)
             ->whereDate('permit_date', $mealDate)
-            ->whereHas('requestors', fn($query) => $query->whereRaw('UPPER(department) = ?', ['BIPO']))
+            ->whereHas('requestors', fn($query) => $query->whereRaw("UPPER(TRIM(COALESCE(reimburs_lunch_box, 'N'))) = ?", ['Y']))
             ->first();
 
         if (!$exitPermit) {
             throw ValidationException::withMessages([
-                'exit_permit_id' => 'Order meal hanya bisa diajukan untuk Exit Permit BIPO yang sudah diverifikasi Sisca dan kembali ke kantor.',
+                'exit_permit_id' => 'Order meal hanya bisa diajukan untuk Exit Permit jalur meal yang sudah diverifikasi Sisca dan memiliki requestor dengan hasil matching Y.',
             ]);
         }
 
@@ -474,9 +523,16 @@ class OrderMealController extends Controller
             ->whereNotNull('md_approved_at')
             ->whereNotNull('hr_verified_at')
             ->whereNotNull('attendance_checked_at')
+            ->whereHas('attendanceChecker', function ($query) {
+                $query->whereRaw('LOWER(email) = ?', [self::ATTENDANCE_VERIFIER_EMAIL]);
+            })
+            ->where(function ($query) {
+                $query->where('post_md_path', ExitPermit::POST_MD_PATH_MEAL)
+                    ->orWhereNull('post_md_path');
+            })
             ->where('has_valid_checkin', true)
             ->where('returned_to_office', true)
-            ->whereHas('requestors', fn($q) => $q->whereRaw('UPPER(department) = ?', ['BIPO']))
+            ->whereHas('requestors', fn($q) => $q->whereRaw("UPPER(TRIM(COALESCE(reimburs_lunch_box, 'N'))) = ?", ['Y']))
             ->latest('permit_date');
 
         return $query
@@ -484,13 +540,21 @@ class OrderMealController extends Controller
                 'user:id,name,email',
                 'requestors:id,exit_permit_id,row_number,name,employee_id,position,department,reimburs_lunch_box',
             ])
-            ->get(['id', 'user_id', 'permit_date', 'destination'])
+            ->get(['id', 'user_id', 'permit_date', 'start_time', 'end_time', 'destination'])
             ->map(fn(ExitPermit $permit) => [
                 'id' => $permit->id,
-                'label' => sprintf('#%d | %s | %s', $permit->id, (string) $permit->permit_date, (string) $permit->destination),
+                'label' => sprintf(
+                    '#%d | %s | %s-%s | %s',
+                    $permit->id,
+                    (string) $permit->permit_date,
+                    substr((string) $permit->start_time, 0, 5),
+                    substr((string) $permit->end_time, 0, 5),
+                    (string) $permit->destination,
+                ),
                 'owner_name' => $permit->user?->name,
                 'owner_email' => $permit->user?->email,
                 'requestors' => $permit->requestors
+                    ->filter(fn($requestor) => strtoupper(trim((string) ($requestor->reimburs_lunch_box ?? 'N'))) === 'Y')
                     ->map(fn($requestor) => [
                         'row_number' => $requestor->row_number,
                         'name' => $requestor->name,

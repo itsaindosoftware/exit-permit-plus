@@ -36,7 +36,7 @@ function formatDate(date) {
     return localDateString(date);
 }
 
-export default function Index({ events, filters }) {
+export default function Index({ events, filters, arrangeItems = [] }) {
     const selectedView = filters?.view ?? 'week';
     const selectedDate = filters?.date ?? localDateString();
     const selectedFilterDate = filters?.filter_date ?? '';
@@ -92,6 +92,50 @@ export default function Index({ events, filters }) {
             <Head title="Schedule Car" />
 
             <div className="space-y-6">
+                <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-5 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-700">Arrange Order Car</p>
+                    <p className="mt-2 text-sm text-indigo-900">
+                        Hanya Exit Permit tipe company dengan Order Car = Yes. Buat jadwal baru lewat halaman Create, lalu revisi lewat halaman Edit.
+                    </p>
+
+                    <div className="mt-3 flex justify-end">
+                        <Link
+                            href={route('schedule-cars.create')}
+                            className="rounded-md bg-indigo-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-600"
+                        >
+                            Create Arrange Order Car
+                        </Link>
+                    </div>
+
+                    {arrangeItems.length === 0 ? (
+                        <p className="mt-3 rounded-md border border-indigo-200 bg-white px-3 py-2 text-sm text-indigo-800">
+                            Tidak ada Exit Permit yang perlu di-arrange saat ini.
+                        </p>
+                    ) : (
+                        <div className="mt-4 space-y-2">
+                            {arrangeItems.map((item) => (
+                                <div key={item.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-indigo-200 bg-white px-3 py-2">
+                                    <div>
+                                        <p className="text-sm font-semibold text-slate-900">{item.label}</p>
+                                        <span className={
+                                            `inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ` +
+                                            (item.is_arranged ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700')
+                                        }>
+                                            {item.is_arranged ? 'Sudah Arrange' : 'Belum Arrange'}
+                                        </span>
+                                    </div>
+                                    <Link
+                                        href={route('schedule-cars.edit', item.id)}
+                                        className="rounded-md border border-indigo-300 px-3 py-1.5 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-100"
+                                    >
+                                        Edit Arrange
+                                    </Link>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
                 <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                     <div className="flex flex-wrap items-end gap-3">
                         <div>
@@ -211,7 +255,13 @@ export default function Index({ events, filters }) {
                                                     href={route('exit-permits.show', event.id)}
                                                     className="block rounded bg-cyan-100 px-2 py-1 text-[11px] text-cyan-900 transition hover:bg-cyan-200"
                                                 >
-                                                    {event.start_time ?? '--:--'} {event.vehicle_plate ?? '-'}
+                                                    <span>{event.start_time ?? '--:--'} {event.vehicle_plate ?? '-'}</span>
+                                                    <span className={
+                                                        `ml-1 inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-semibold ` +
+                                                        (event.is_arranged ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700')
+                                                    }>
+                                                        {event.is_arranged ? 'Sudah' : 'Belum'}
+                                                    </span>
                                                 </Link>
                                             ))}
                                             {dayEvents.length > 3 && (
@@ -276,6 +326,12 @@ export default function Index({ events, filters }) {
                                                             <p className="font-semibold">{event.start_time ?? '--:--'} - {event.end_time ?? '--:--'}</p>
                                                             <p className="truncate">{event.destination}</p>
                                                             <p className="truncate">{event.vehicle_plate ?? '-'} | {event.driver_name ?? '-'}</p>
+                                                            <p className={
+                                                                `inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-semibold ` +
+                                                                (event.is_arranged ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700')
+                                                            }>
+                                                                {event.is_arranged ? 'Sudah Arrange' : 'Belum Arrange'}
+                                                            </p>
                                                             <p className="truncate">{exitTypeLabel[event.exit_type] ?? event.exit_type}</p>
                                                         </Link>
                                                     );

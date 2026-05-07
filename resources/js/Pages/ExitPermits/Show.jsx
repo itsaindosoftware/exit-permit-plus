@@ -43,7 +43,7 @@ export default function Show({ exitPermit, approvalStage }) {
                 <div className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:grid-cols-3">
                     <InfoItem label="Karyawan" value={exitPermit.employee_name} />
                     <InfoItem label="Email" value={exitPermit.employee_email} />
-                    <InfoItem label="Status" value={exitPermit.status?.toUpperCase()} />
+                    <InfoItem label="Status" value={exitPermit.status_label ?? exitPermit.status?.toUpperCase()} />
                     <InfoItem label="Tanggal Permit" value={exitPermit.permit_date} />
                     <InfoItem label="Jam Keluar" value={exitPermit.start_time} />
                     <InfoItem label="Jam Kembali" value={exitPermit.end_time} />

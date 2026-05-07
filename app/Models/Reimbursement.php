@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Reimbursement extends Model
 {
@@ -35,8 +36,18 @@ class Reimbursement extends Model
         'exit_permit_id',
         'user_id',
         'request_date',
+        'paid_to',
         'amount',
+        'amount_order_meal',
+        'amount_fuel',
+        'amount_toll',
+        'amount_in_words',
+        'expense_type',
+        'purpose',
+        'ref_document',
         'description',
+        'attachment_path',
+        'attachment_original_name',
         'status',
         'manager_approved_by',
         'manager_approved_at',
@@ -53,6 +64,9 @@ class Reimbursement extends Model
         return [
             'request_date' => 'date',
             'amount' => 'integer',
+            'amount_order_meal' => 'integer',
+            'amount_fuel' => 'integer',
+            'amount_toll' => 'integer',
             'manager_approved_at' => 'datetime',
             'md_approved_at' => 'datetime',
             'ratna_submitted_at' => 'datetime',
@@ -88,5 +102,10 @@ class Reimbursement extends Model
     public function accountingProcessor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'accounting_processed_by');
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(ReimbursementDocument::class)->orderBy('sort_order')->orderBy('id');
     }
 }

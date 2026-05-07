@@ -2,11 +2,28 @@ import InputError from '@/Components/InputError';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 
+function translateConversionNotes(text) {
+    if (!text) {
+        return text;
+    }
+
+    const translatedFromLegacy = String(text).replace(
+        /\[AUTO-CONVERT\s+EP#(\d+)\s*-\s*(\d+)\]/g,
+        '[Pengalihan jatah lunch box ke uang reimbursement karyawan EP#$1: -$2 paket]',
+    );
+
+    return translatedFromLegacy.replace(
+        /\[Konversi\s+Lunch\s+Box\s+EP#(\d+):\s*-(\d+)\s*paket\]/g,
+        '[Pengalihan jatah lunch box ke uang reimbursement karyawan EP#$1: -$2 paket]',
+    );
+}
+
 const inputClass =
     'mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-cyan-600 focus:ring-2 focus:ring-cyan-200';
 
 export default function Edit({ orderMeal, canApprove, mode, indexRouteName, updateRouteName }) {
     const isExitPermitMode = mode === 'exit_permit';
+    const readableNotes = translateConversionNotes(orderMeal.notes ?? '');
 
     const { data, setData, put, processing, errors } = useForm({
         meal_date: orderMeal.meal_date ?? '',
@@ -14,7 +31,7 @@ export default function Edit({ orderMeal, canApprove, mode, indexRouteName, upda
         quantity: orderMeal.quantity ?? 1,
         actual_quantity: orderMeal.actual_quantity ?? 0,
         visitor_count: orderMeal.visitor_count ?? 0,
-        notes: orderMeal.notes ?? '',
+        notes: readableNotes,
         status: orderMeal.status ?? 'pending',
     });
 

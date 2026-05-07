@@ -21,10 +21,18 @@ Route::get('/', DashboardController::class)->middleware(['auth'])->name('dashboa
 
 Route::middleware('auth')->group(function () {
     Route::get('schedule-cars', [ScheduleCarController::class, 'index'])->name('schedule-cars.index');
+    Route::get('schedule-cars/create', [ScheduleCarController::class, 'create'])->name('schedule-cars.create');
+    Route::post('schedule-cars', [ScheduleCarController::class, 'store'])->name('schedule-cars.store');
+    Route::get('schedule-cars/{exitPermit}/edit', [ScheduleCarController::class, 'edit'])->name('schedule-cars.edit');
+    Route::put('schedule-cars/{exitPermit}', [ScheduleCarController::class, 'update'])->name('schedule-cars.update');
     Route::get('exit-permits/{exitPermit}/attachment', [ExitPermitController::class, 'attachment'])
         ->name('exit-permits.attachment');
     Route::post('exit-permits/{exitPermit}/attendance-preview', [ExitPermitController::class, 'previewAttendance'])
         ->name('exit-permits.attendance-preview');
+    Route::get('reimbursements/{reimbursement}/attachment', [ReimbursementController::class, 'attachment'])
+        ->name('reimbursements.attachment');
+    Route::get('reimbursement-documents/{document}/attachment', [ReimbursementController::class, 'documentAttachment'])
+        ->name('reimbursement-documents.attachment');
     Route::resource('exit-permits', ExitPermitController::class);
     Route::resource('order-meals', OrderMealController::class)->except([]);
     Route::get('exit-permit-meals', [OrderMealController::class, 'indexExitPermit'])->name('exit-permit-meals.index');

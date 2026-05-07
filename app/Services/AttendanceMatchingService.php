@@ -504,7 +504,8 @@ class AttendanceMatchingService
 
     private function normalizeHeader(string $header): string
     {
-        return strtoupper(preg_replace('/[^A-Z0-9]/', '', trim($header)) ?? '');
+        $normalized = strtoupper(trim($header));
+        return preg_replace('/[^A-Z0-9]/', '', $normalized) ?? '';
     }
 
     private function firstFilled(array $row, array $keys): ?string

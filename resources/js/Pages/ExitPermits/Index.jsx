@@ -109,14 +109,16 @@ export default function Index({ exitPermits, canCreate }) {
                                             <span
                                                 className={
                                                     `inline-flex rounded-full px-2.5 py-1 text-xs font-semibold uppercase ` +
-                                                    (item.status === 'approved'
+                                                    (item.is_attendance_checked
+                                                        ? 'bg-cyan-100 text-cyan-700'
+                                                        : item.status === 'approved'
                                                         ? 'bg-emerald-100 text-emerald-700'
                                                         : item.status === 'rejected'
                                                             ? 'bg-rose-100 text-rose-700'
                                                             : 'bg-amber-100 text-amber-700')
                                                 }
                                             >
-                                                {item.status}
+                                                {item.status_label ?? item.status}
                                             </span>
                                         </td>
                                         <td className="px-4 py-3 text-xs font-semibold text-cyan-700">{item.approval_stage}</td>

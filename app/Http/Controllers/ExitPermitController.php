@@ -9,6 +9,7 @@ use App\Models\ExitPermit;
 use App\Models\User;
 use App\Notifications\ArrangeCarDriverRequested;
 use App\Services\AttendanceMatchingService;
+use App\Services\ExitPermitLunchConversionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -34,8 +35,10 @@ class ExitPermitController extends Controller
         'sisca.dewiyani@example.com',
     ];
 
-    public function __construct(private readonly AttendanceMatchingService $attendanceMatchingService)
-    {
+    public function __construct(
+        private readonly AttendanceMatchingService $attendanceMatchingService,
+        private readonly ExitPermitLunchConversionService $exitPermitLunchConversionService,
+    ) {
     }
 
     public function index(): Response
@@ -78,6 +81,8 @@ class ExitPermitController extends Controller
                     'reimbursement_amount' => $exitPermit->reimbursement_amount,
                     'reason' => $exitPermit->reason,
                     'status' => $exitPermit->status,
+                    'status_label' => $this->statusLabel($exitPermit),
+                    'is_attendance_checked' => (bool) $exitPermit->attendance_checked_at,
                     'post_md_path' => $exitPermit->post_md_path,
                     'approval_stage' => $this->approvalStageLabel($exitPermit),
                     'can_update_request' => $this->canOwnerUpdate($exitPermit, $user),
@@ -124,6 +129,7 @@ class ExitPermitController extends Controller
                 'end_time' => $this->toHourMinute($exitPermit->end_time),
                 'destination' => $exitPermit->destination,
                 'exit_type' => $exitPermit->exit_type,
+                'order_car' => (bool) $exitPermit->order_car,
                 'vehicle_plate' => $exitPermit->vehicle_plate,
                 'driver_name' => $exitPermit->driver_name,
                 'returned_to_office' => (bool) $exitPermit->returned_to_office,
@@ -146,6 +152,7 @@ class ExitPermitController extends Controller
                     ? route('exit-permits.attachment', $exitPermit)
                     : null,
                 'status' => $exitPermit->status,
+                'status_label' => $this->statusLabel($exitPermit),
                 'manager_approved_by_name' => $exitPermit->managerApprover?->name,
                 'manager_approved_at' => optional($exitPermit->manager_approved_at)?->toDateTimeString(),
                 'md_approved_by_name' => $exitPermit->mdApprover?->name,
@@ -167,6 +174,8 @@ class ExitPermitController extends Controller
         $attachmentPhoto = $request->file('attachment_photo');
         unset($validated['attachment_photo']);
 
+        $orderCar = (bool) ($validated['order_car'] ?? false);
+
         $exitPermit = new ExitPermit([
             ...$validated,
             'user_id' => $request->user()->id,
@@ -183,7 +192,7 @@ class ExitPermitController extends Controller
 
         $exitPermit->load('user:id,name');
 
-        if ($exitPermit->exit_type === ExitPermit::EXIT_TYPE_BUSINESS_TRIP) {
+        if ($exitPermit->exit_type === ExitPermit::EXIT_TYPE_BUSINESS_TRIP && $orderCar) {
             $ratna = User::query()
                 ->where('email', self::CAR_DRIVER_COORDINATOR_EMAIL)
                 ->first();
@@ -214,6 +223,7 @@ class ExitPermitController extends Controller
                 'end_time' => $this->toHourMinute($exitPermit->end_time),
                 'destination' => $exitPermit->destination,
                 'exit_type' => $exitPermit->exit_type,
+                'order_car' => (bool) $exitPermit->order_car,
                 'vehicle_plate' => $exitPermit->vehicle_plate,
                 'driver_name' => $exitPermit->driver_name,
                 'car_id' => Car::query()
@@ -491,6 +501,10 @@ class ExitPermitController extends Controller
 
         $exitPermit->save();
 
+        if ($this->canVerifyAttendance($exitPermit, $user)) {
+            $this->exitPermitLunchConversionService->applyIfEligible($exitPermit->fresh(['requestors', 'user']));
+        }
+
         return redirect()->route('exit-permits.index')->with('success', 'Data exit permit berhasil diperbarui.');
     }
 
@@ -617,6 +631,19 @@ class ExitPermitController extends Controller
         return 'Pending';
     }
 
+    private function statusLabel(ExitPermit $exitPermit): string
+    {
+        if (
+            $exitPermit->status === 'approved'
+            && (bool) $exitPermit->attendance_checked_at
+            && (bool) $exitPermit->has_valid_checkin
+        ) {
+            return 'Checked By HR: Sisca';
+        }
+
+        return strtoupper((string) $exitPermit->status);
+    }
+
     private function validatedData(Request $request, bool $allowStatus = false): array
     {
         $validated = $request->validate([
@@ -631,20 +658,13 @@ class ExitPermitController extends Controller
             'requestor_items.*.position' => ['nullable', 'string', 'max:120'],
             'requestor_items.*.department' => ['nullable', 'string', 'max:120'],
             'requestor_items.*.reimburs_lunch_box' => ['nullable', 'string', 'max:10'],
-            'car_id' => [
-                Rule::requiredIf(fn() => $request->input('exit_type') === ExitPermit::EXIT_TYPE_BUSINESS_TRIP),
-                'integer',
-                'exists:cars,id',
-            ],
-            'driver_id' => [
-                Rule::requiredIf(fn() => $request->input('exit_type') === ExitPermit::EXIT_TYPE_BUSINESS_TRIP),
-                'integer',
-                'exists:drivers,id',
-            ],
+            'order_car' => ['nullable', 'boolean'],
+            'car_id' => ['nullable', 'integer', 'exists:cars,id'],
+            'driver_id' => ['nullable', 'integer', 'exists:drivers,id'],
             'returned_to_office' => ['required', 'boolean'],
             'reimbursement_amount' => ['nullable'],
             'reason' => ['required', 'string'],
-            'notes' => ['required', 'string'],
+            'notes' => ['nullable', 'string'],
             'attachment_photo' => ['nullable', 'image', 'max:2048'],
             'status' => $allowStatus ? ['nullable', Rule::in(['pending', 'approved', 'rejected'])] : ['nullable'],
         ]);
@@ -653,9 +673,15 @@ class ExitPermitController extends Controller
             unset($validated['status']);
         }
 
+        $validated['order_car'] = $request->boolean('order_car');
         $validated['returned_to_office'] = $request->boolean('returned_to_office');
 
-        if ($validated['exit_type'] === ExitPermit::EXIT_TYPE_BUSINESS_TRIP) {
+        if (
+            $validated['exit_type'] === ExitPermit::EXIT_TYPE_BUSINESS_TRIP
+            && $validated['order_car']
+            && !empty($validated['car_id'])
+            && !empty($validated['driver_id'])
+        ) {
             $selectedCar = Car::query()->find((int) ($validated['car_id'] ?? 0));
             $selectedDriver = Driver::query()->find((int) ($validated['driver_id'] ?? 0));
 
@@ -665,6 +691,9 @@ class ExitPermitController extends Controller
             $validated['vehicle_plate'] = null;
             $validated['driver_name'] = null;
         }
+
+        // Field Permitted by/notes dinonaktifkan sementara dari alur form.
+        $validated['notes'] = null;
 
         $validated['reimbursement_amount'] = 0;
 
@@ -676,7 +705,7 @@ class ExitPermitController extends Controller
                 'position' => filled($item['position'] ?? null) ? (string) $item['position'] : null,
                 'department' => filled($item['department'] ?? null) ? (string) $item['department'] : null,
                 'reimburs_lunch_box' => filled($item['reimburs_lunch_box'] ?? null)
-                    ? strtoupper((string) $item['reimburs_lunch_box'])
+                    ? strtoupper(trim((string) $item['reimburs_lunch_box']))
                     : null,
             ])
             ->values()
@@ -1128,7 +1157,8 @@ class ExitPermitController extends Controller
 
     private function normalizeHeader(string $header): string
     {
-        return strtoupper(preg_replace('/[^A-Z0-9]/', '', trim($header)) ?? '');
+        $normalized = strtoupper(trim($header));
+        return preg_replace('/[^A-Z0-9]/', '', $normalized) ?? '';
     }
 
     private function firstFilled(array $row, array $keys): ?string
@@ -1343,6 +1373,7 @@ class ExitPermitController extends Controller
         return $user?->role?->code === 'hr'
             && strtolower((string) $user?->email) === self::CAR_DRIVER_COORDINATOR_EMAIL
             && $exitPermit->exit_type === ExitPermit::EXIT_TYPE_BUSINESS_TRIP
+            && (bool) $exitPermit->order_car
             && $exitPermit->status === 'pending';
     }
 

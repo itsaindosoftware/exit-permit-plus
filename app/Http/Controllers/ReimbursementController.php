@@ -4,16 +4,60 @@ namespace App\Http\Controllers;
 
 use App\Models\ExitPermit;
 use App\Models\Reimbursement;
+use App\Models\ReimbursementDocument;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReimbursementController extends Controller
 {
     private const RATNA_EMAIL = 'ratna@example.com';
+
+    public function attachment(Reimbursement $reimbursement): StreamedResponse
+    {
+        $this->authorizeUser($reimbursement);
+
+        if (!$reimbursement->attachment_path || !Storage::exists($reimbursement->attachment_path)) {
+            abort(404);
+        }
+
+        return Storage::response(
+            $reimbursement->attachment_path,
+            $reimbursement->attachment_original_name ?: basename($reimbursement->attachment_path),
+            [
+                'Content-Disposition' => 'inline',
+            ],
+        );
+    }
+
+    public function documentAttachment(ReimbursementDocument $document): StreamedResponse
+    {
+        $reimbursement = $document->reimbursement;
+
+        if (!$reimbursement) {
+            abort(404);
+        }
+
+        $this->authorizeUser($reimbursement);
+
+        if (!$document->attachment_path || !Storage::exists($document->attachment_path)) {
+            abort(404);
+        }
+
+        return Storage::response(
+            $document->attachment_path,
+            $document->attachment_original_name ?: basename($document->attachment_path),
+            [
+                'Content-Disposition' => 'inline',
+            ],
+        );
+    }
 
     public function index(): Response
     {
@@ -40,7 +84,15 @@ class ReimbursementController extends Controller
                     'exit_permit_id' => $reimbursement->exit_permit_id,
                     'exit_permit_label' => $this->exitPermitLabel($reimbursement->exitPermit),
                     'request_date' => $reimbursement->request_date ? (string) $reimbursement->request_date : null,
+                    'paid_to' => $reimbursement->paid_to,
                     'amount' => $reimbursement->amount,
+                    'amount_order_meal' => (int) ($reimbursement->amount_order_meal ?? 0),
+                    'amount_fuel' => (int) ($reimbursement->amount_fuel ?? 0),
+                    'amount_toll' => (int) ($reimbursement->amount_toll ?? 0),
+                    'amount_in_words' => $reimbursement->amount_in_words,
+                    'expense_type' => $reimbursement->expense_type,
+                    'purpose' => $reimbursement->purpose,
+                    'ref_document' => $reimbursement->ref_document,
                     'description' => $reimbursement->description,
                     'status' => $reimbursement->status,
                     'approval_stage' => $this->approvalStageLabel($reimbursement),
@@ -81,8 +133,19 @@ class ReimbursementController extends Controller
         $validated = $request->validate([
             'exit_permit_id' => ['required', 'integer', 'exists:exit_permits,id'],
             'request_date' => ['required', 'date'],
-            'amount' => ['required', 'integer', 'min:0'],
+            'paid_to' => ['required', 'string', 'max:255'],
+            'amount_order_meal' => ['required', 'integer', 'min:0'],
+            'amount_fuel' => ['required', 'integer', 'min:0'],
+            'amount_toll' => ['required', 'integer', 'min:0'],
+            'amount_in_words' => ['required', 'string', 'max:255'],
+            'expense_type' => ['required', 'string', 'max:255'],
+            'purpose' => ['required', 'string'],
+            'ref_document' => ['nullable', 'string', 'max:255'],
+            'documents' => ['nullable', 'array', 'max:30'],
+            'documents.*.ref_document' => ['nullable', 'string', 'max:255'],
+            'documents.*.attachment_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:4096'],
             'description' => ['nullable', 'string'],
+            'attachment_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:4096'],
         ]);
 
         $exitPermit = ExitPermit::query()->findOrFail($validated['exit_permit_id']);
@@ -98,14 +161,31 @@ class ReimbursementController extends Controller
             ]);
         }
 
-        Reimbursement::create([
+        $amountOrderMeal = (int) $validated['amount_order_meal'];
+        $amountFuel = (int) $validated['amount_fuel'];
+        $amountToll = (int) $validated['amount_toll'];
+        $totalAmount = $amountOrderMeal + $amountFuel + $amountToll;
+
+        $reimbursement = Reimbursement::create([
             'exit_permit_id' => $exitPermit->id,
             'user_id' => $user->id,
             'request_date' => $validated['request_date'],
-            'amount' => $validated['amount'],
+            'paid_to' => $validated['paid_to'],
+            'amount' => $totalAmount,
+            'amount_order_meal' => $amountOrderMeal,
+            'amount_fuel' => $amountFuel,
+            'amount_toll' => $amountToll,
+            'amount_in_words' => $validated['amount_in_words'],
+            'expense_type' => $validated['expense_type'],
+            'purpose' => $validated['purpose'],
+            'ref_document' => $validated['ref_document'] ?? null,
             'description' => $validated['description'] ?? null,
             'status' => Reimbursement::STATUS_PENDING_MANAGER,
         ]);
+
+        $this->syncDocumentsFromRequest($request, $reimbursement);
+
+        $this->syncLegacyDocumentSnapshot($reimbursement);
 
         return redirect()->route('reimbursements.index')->with('success', 'Form reimbursement berhasil diajukan.');
     }
@@ -113,6 +193,7 @@ class ReimbursementController extends Controller
     public function edit(Reimbursement $reimbursement): Response
     {
         $this->authorizeUser($reimbursement);
+        $reimbursement->load('documents');
 
         $user = request()->user();
 
@@ -123,10 +204,33 @@ class ReimbursementController extends Controller
                 'exit_permit_id' => $reimbursement->exit_permit_id,
                 'exit_permit_label' => $this->exitPermitLabel($reimbursement->exitPermit),
                 'request_date' => $reimbursement->request_date ? (string) $reimbursement->request_date : null,
+                'paid_to' => $reimbursement->paid_to,
                 'amount' => $reimbursement->amount,
+                'amount_order_meal' => (int) ($reimbursement->amount_order_meal ?? $reimbursement->amount ?? 0),
+                'amount_fuel' => (int) ($reimbursement->amount_fuel ?? 0),
+                'amount_toll' => (int) ($reimbursement->amount_toll ?? 0),
+                'amount_in_words' => $reimbursement->amount_in_words,
+                'expense_type' => $reimbursement->expense_type,
+                'purpose' => $reimbursement->purpose,
+                'ref_document' => $reimbursement->ref_document,
                 'description' => $reimbursement->description,
+                'attachment_original_name' => $reimbursement->attachment_original_name,
+                'attachment_url' => $reimbursement->attachment_path
+                    ? route('reimbursements.attachment', $reimbursement)
+                    : null,
                 'status' => $reimbursement->status,
                 'approval_stage' => $this->approvalStageLabel($reimbursement),
+                'documents' => $reimbursement->documents
+                    ->map(fn(ReimbursementDocument $document) => [
+                        'id' => $document->id,
+                        'ref_document' => $document->ref_document,
+                        'attachment_original_name' => $document->attachment_original_name,
+                        'attachment_url' => $document->attachment_path
+                            ? route('reimbursement-documents.attachment', $document)
+                            : null,
+                    ])
+                    ->values()
+                    ->all(),
             ],
             'canUpdateRequest' => $this->canOwnerUpdate($reimbursement, $user),
             'canApproveManager' => $this->canApproveManager($reimbursement, $user),
@@ -152,12 +256,39 @@ class ReimbursementController extends Controller
 
             $validated = $request->validate([
                 'request_date' => ['required', 'date'],
-                'amount' => ['required', 'integer', 'min:0'],
+                'paid_to' => ['required', 'string', 'max:255'],
+                'amount_order_meal' => ['required', 'integer', 'min:0'],
+                'amount_fuel' => ['required', 'integer', 'min:0'],
+                'amount_toll' => ['required', 'integer', 'min:0'],
+                'amount_in_words' => ['required', 'string', 'max:255'],
+                'expense_type' => ['required', 'string', 'max:255'],
+                'purpose' => ['required', 'string'],
+                'ref_document' => ['nullable', 'string', 'max:255'],
+                'documents' => ['nullable', 'array', 'max:30'],
+                'documents.*.id' => ['nullable', 'integer'],
+                'documents.*.ref_document' => ['nullable', 'string', 'max:255'],
+                'documents.*.attachment_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:4096'],
                 'description' => ['nullable', 'string'],
+                'attachment_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:4096'],
             ]);
 
-            $reimbursement->fill($validated);
+            $amountOrderMeal = (int) $validated['amount_order_meal'];
+            $amountFuel = (int) $validated['amount_fuel'];
+            $amountToll = (int) $validated['amount_toll'];
+            $totalAmount = $amountOrderMeal + $amountFuel + $amountToll;
+
+            $reimbursement->fill([
+                ...$validated,
+                'amount' => $totalAmount,
+                'amount_order_meal' => $amountOrderMeal,
+                'amount_fuel' => $amountFuel,
+                'amount_toll' => $amountToll,
+            ]);
+
+            $this->syncDocumentsFromRequest($request, $reimbursement);
+
             $reimbursement->save();
+            $this->syncLegacyDocumentSnapshot($reimbursement);
 
             return redirect()->route('reimbursements.index')->with('success', 'Form reimbursement berhasil diperbarui.');
         }
@@ -220,11 +351,57 @@ class ReimbursementController extends Controller
             ->whereNotNull('attendance_checked_at')
             ->whereDoesntHave('reimbursements')
             ->latest('permit_date')
-            ->get(['id', 'permit_date', 'destination'])
-            ->map(fn(ExitPermit $exitPermit) => [
-                'id' => $exitPermit->id,
-                'label' => $this->exitPermitLabel($exitPermit),
-            ])
+            ->with(['user:id,name', 'requestors:id,exit_permit_id,name,row_number,reimburs_lunch_box'])
+            ->get(['id', 'user_id', 'permit_date', 'destination', 'reimbursement_amount'])
+            ->map(function (ExitPermit $exitPermit): array {
+                $requestorNames = $exitPermit->requestors
+                    ->filter(fn($requestor) => strtoupper(trim((string) ($requestor->reimburs_lunch_box ?? 'N'))) === 'Y')
+                    ->sortBy('row_number')
+                    ->pluck('name')
+                    ->filter()
+                    ->values()
+                    ->all();
+
+                $requestorCount = count($requestorNames);
+                $unitAmount = (int) ($exitPermit->reimbursement_amount ?? 0);
+
+                if ($unitAmount <= 0) {
+                    $unitAmount = 12000;
+                }
+
+                $namePreview = implode(', ', array_slice($requestorNames, 0, 8));
+                if ($requestorCount > 8) {
+                    $namePreview .= ', ...';
+                }
+
+                return [
+                    'id' => $exitPermit->id,
+                    'label' => $this->exitPermitLabel($exitPermit),
+                    'permit_date' => $exitPermit->permit_date ? (string) $exitPermit->permit_date : null,
+                    'requestor_count' => $requestorCount,
+                    'requestor_names' => $requestorNames,
+                    'unit_amount' => $unitAmount,
+                    'suggested_amount' => $unitAmount * $requestorCount,
+                    'amount_order_meal_default' => $unitAmount * $requestorCount,
+                    'amount_fuel_default' => 0,
+                    'amount_toll_default' => 0,
+                    'paid_to_default' => $exitPermit->user?->name ?? '',
+                    'expense_type_default' => 'Reimbursement Exit Permit',
+                    'purpose_default' => sprintf(
+                        'Konversi lunch box untuk %d requestor (Exit Permit #%d). Requestor: %s',
+                        $requestorCount,
+                        $exitPermit->id,
+                        $namePreview !== '' ? $namePreview : '-'
+                    ),
+                    'ref_document_default' => 'AUTO-LUNCH-EP-' . $exitPermit->id,
+                    'description_default' => sprintf(
+                        'Jatah lunch box dikonversi menjadi reimbursement untuk %d requestor x Rp %d.',
+                        $requestorCount,
+                        $unitAmount
+                    ),
+                ];
+            })
+            ->filter(fn(array $item) => (int) ($item['requestor_count'] ?? 0) > 0)
             ->values()
             ->all();
     }
@@ -239,7 +416,8 @@ class ReimbursementController extends Controller
 
         $isEligible = $exitPermit->status === 'approved'
             && (bool) $exitPermit->md_approved_at
-            && (bool) $exitPermit->attendance_checked_at;
+            && (bool) $exitPermit->attendance_checked_at
+            && ($exitPermit->post_md_path === ExitPermit::POST_MD_PATH_REIMBURSEMENT || $exitPermit->post_md_path === ExitPermit::POST_MD_PATH_MEAL || $exitPermit->post_md_path === null);
 
         if ($isEligible) {
             return;
@@ -252,6 +430,10 @@ class ReimbursementController extends Controller
 
     private function validateStatus(Request $request, array $allowedStatuses): string
     {
+        if (!$request->filled('status')) {
+            return (string) ($allowedStatuses[0] ?? '');
+        }
+
         $validated = $request->validate([
             'status' => ['required', Rule::in($allowedStatuses)],
         ]);
@@ -323,7 +505,7 @@ class ReimbursementController extends Controller
         return match ($reimbursement->status) {
             Reimbursement::STATUS_PENDING_MANAGER => 'Menunggu Approval Manager',
             Reimbursement::STATUS_PENDING_MD => 'Menunggu Approval MD',
-            Reimbursement::STATUS_PENDING_RATNA => 'Menunggu Ratna Submit Accounting',
+            Reimbursement::STATUS_PENDING_RATNA => 'Menunggu Ratna Check & Submit Accounting',
             Reimbursement::STATUS_SUBMITTED_TO_ACCOUNTING => 'Menunggu Proses Accounting',
             Reimbursement::STATUS_FINISHED => 'Finished',
             Reimbursement::STATUS_REJECTED => 'Rejected',
@@ -343,5 +525,116 @@ class ReimbursementController extends Controller
             $exitPermit->permit_date ? (string) $exitPermit->permit_date : '-',
             $exitPermit->destination,
         );
+    }
+
+    private function replaceAttachment(Reimbursement $reimbursement, UploadedFile $file): void
+    {
+        if ($reimbursement->attachment_path && Storage::exists($reimbursement->attachment_path)) {
+            Storage::delete($reimbursement->attachment_path);
+        }
+
+        $reimbursement->attachment_path = $file->store('reimbursement-attachments');
+        $reimbursement->attachment_original_name = $file->getClientOriginalName();
+    }
+
+    private function syncDocumentsFromRequest(Request $request, Reimbursement $reimbursement): void
+    {
+        $rows = $request->input('documents', []);
+
+        if (!is_array($rows) || count($rows) === 0) {
+            if ($request->filled('ref_document') || $request->file('attachment_file')) {
+                $rows = [
+                    [
+                        'ref_document' => (string) $request->input('ref_document', ''),
+                    ]
+                ];
+            } else {
+                return;
+            }
+        }
+
+        $uploadedRows = $request->file('documents', []);
+        if (!is_array($uploadedRows)) {
+            $uploadedRows = [];
+        }
+
+        $legacyAttachmentFile = $request->file('attachment_file');
+        $existingDocuments = $reimbursement->documents()->get()->keyBy('id');
+        $keptDocumentIds = [];
+
+        foreach (array_values($rows) as $index => $row) {
+            $documentId = isset($row['id']) ? (int) $row['id'] : null;
+            $refDocument = isset($row['ref_document']) ? trim((string) $row['ref_document']) : null;
+            $uploadedFile = $uploadedRows[$index]['attachment_file'] ?? null;
+
+            if (!$uploadedFile && $index === 0 && $legacyAttachmentFile instanceof UploadedFile) {
+                $uploadedFile = $legacyAttachmentFile;
+            }
+
+            if ($documentId && $existingDocuments->has($documentId)) {
+                /** @var ReimbursementDocument $document */
+                $document = $existingDocuments->get($documentId);
+
+                $document->ref_document = $refDocument !== '' ? $refDocument : null;
+
+                if ($uploadedFile instanceof UploadedFile) {
+                    if ($document->attachment_path && Storage::exists($document->attachment_path)) {
+                        Storage::delete($document->attachment_path);
+                    }
+
+                    $document->attachment_path = $uploadedFile->store('reimbursement-attachments');
+                    $document->attachment_original_name = $uploadedFile->getClientOriginalName();
+                }
+
+                if (!$document->ref_document && !$document->attachment_path) {
+                    $document->delete();
+                    continue;
+                }
+
+                $document->sort_order = $index + 1;
+                $document->save();
+                $keptDocumentIds[] = $document->id;
+                continue;
+            }
+
+            if ($refDocument === '' && !($uploadedFile instanceof UploadedFile)) {
+                continue;
+            }
+
+            $newDocument = new ReimbursementDocument([
+                'sort_order' => $index + 1,
+                'ref_document' => $refDocument !== '' ? $refDocument : null,
+            ]);
+
+            if ($uploadedFile instanceof UploadedFile) {
+                $newDocument->attachment_path = $uploadedFile->store('reimbursement-attachments');
+                $newDocument->attachment_original_name = $uploadedFile->getClientOriginalName();
+            }
+
+            $reimbursement->documents()->save($newDocument);
+            $keptDocumentIds[] = $newDocument->id;
+        }
+
+        $documentsToDelete = $reimbursement->documents()
+            ->whereNotIn('id', $keptDocumentIds)
+            ->get();
+
+        foreach ($documentsToDelete as $document) {
+            if ($document->attachment_path && Storage::exists($document->attachment_path)) {
+                Storage::delete($document->attachment_path);
+            }
+
+            $document->delete();
+        }
+    }
+
+    private function syncLegacyDocumentSnapshot(Reimbursement $reimbursement): void
+    {
+        $firstDocument = $reimbursement->documents()->orderBy('sort_order')->orderBy('id')->first();
+
+        $reimbursement->ref_document = $firstDocument?->ref_document;
+        $reimbursement->attachment_path = $firstDocument?->attachment_path;
+        $reimbursement->attachment_original_name = $firstDocument?->attachment_original_name;
+        $reimbursement->save();
     }
 }

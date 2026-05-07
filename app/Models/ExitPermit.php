@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\ScheduleCarArrangementLog;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -35,6 +36,7 @@ class ExitPermit extends Model
         'end_time',
         'destination',
         'exit_type',
+        'order_car',
         'vehicle_plate',
         'driver_name',
         'returned_to_office',
@@ -61,6 +63,7 @@ class ExitPermit extends Model
     {
         return [
             'permit_date' => 'date',
+            'order_car' => 'boolean',
             'returned_to_office' => 'boolean',
             'eligible_for_meal' => 'boolean',
             'manager_approved_at' => 'datetime',
@@ -138,5 +141,10 @@ class ExitPermit extends Model
     public function requestors(): HasMany
     {
         return $this->hasMany(ExitPermitRequestor::class)->orderBy('row_number');
+    }
+
+    public function scheduleCarArrangementLogs(): HasMany
+    {
+        return $this->hasMany(ScheduleCarArrangementLog::class)->latest('arranged_at');
     }
 }

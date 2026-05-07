@@ -32,6 +32,7 @@ export default function Create({ exitTypes, carOptions = [], driverOptions = [] 
         end_time: '',
         destination: '',
         exit_type: exitTypes[0] ?? 'sick',
+        order_car: false,
         car_id: '',
         driver_id: '',
         returned_to_office: false,
@@ -78,6 +79,17 @@ export default function Create({ exitTypes, carOptions = [], driverOptions = [] 
         );
     };
 
+    const isCompanyExitType = data.exit_type === 'business_trip';
+
+    const setOrderCar = (value) => {
+        setData((prev) => ({
+            ...prev,
+            order_car: value,
+            car_id: value ? prev.car_id : '',
+            driver_id: value ? prev.driver_id : '',
+        }));
+    };
+
     return (
         <AuthenticatedLayout
             header={
@@ -121,7 +133,9 @@ export default function Create({ exitTypes, carOptions = [], driverOptions = [] 
                                         <th className="border border-slate-300 px-3 py-2 text-left font-semibold">EMPLOYEE ID</th>
                                         <th className="border border-slate-300 px-3 py-2 text-left font-semibold">POSITION</th>
                                         <th className="border border-slate-300 px-3 py-2 text-left font-semibold">DEPARTMENT</th>
-                                        <th className="border border-slate-300 px-3 py-2 text-left font-semibold">REIMBURS LUNCH BOX (Y/N)</th>
+                                        {isCompanyExitType && (
+                                            <th className="border border-slate-300 px-3 py-2 text-left font-semibold">REIMBURS LUNCH BOX (Y/N)</th>
+                                        )}
                                         <th className="border border-slate-300 px-3 py-2 text-left font-semibold">AKSI</th>
                                     </tr>
                                 </thead>
@@ -165,15 +179,17 @@ export default function Create({ exitTypes, carOptions = [], driverOptions = [] 
                                                     placeholder="Department"
                                                 />
                                             </td>
-                                            <td className="border border-slate-300 px-2 py-1">
-                                                <input
-                                                    type="text"
-                                                    className="w-full rounded border border-slate-300 px-2 py-1 text-xs uppercase outline-none focus:border-cyan-600 focus:ring-1 focus:ring-cyan-200 md:text-sm"
-                                                    value={row.reimburs_lunch_box}
-                                                    onChange={(e) => updateRequestorRow(index, 'reimburs_lunch_box', e.target.value.toUpperCase())}
-                                                    placeholder="Y / N"
-                                                />
-                                            </td>
+                                            {isCompanyExitType && (
+                                                <td className="border border-slate-300 px-2 py-1">
+                                                    <input
+                                                        type="text"
+                                                        className="w-full rounded border border-slate-300 px-2 py-1 text-xs uppercase outline-none focus:border-cyan-600 focus:ring-1 focus:ring-cyan-200 md:text-sm"
+                                                        value={row.reimburs_lunch_box}
+                                                        onChange={(e) => updateRequestorRow(index, 'reimburs_lunch_box', e.target.value.toUpperCase())}
+                                                        placeholder="Y / N"
+                                                    />
+                                                </td>
+                                            )}
                                             <td className="border border-slate-300 px-2 py-1">
                                                 <button
                                                     type="button"
@@ -216,7 +232,7 @@ export default function Create({ exitTypes, carOptions = [], driverOptions = [] 
                             </div>
 
                             <div>
-                                <label className="text-sm font-semibold text-slate-800">Reason</label>
+                                <label className="text-sm font-semibold text-slate-800">Tipe Exit Permit</label>
                                 <div className="mt-1 grid grid-cols-2 gap-2 text-sm">
                                     <button
                                         type="button"
@@ -303,47 +319,39 @@ export default function Create({ exitTypes, carOptions = [], driverOptions = [] 
                             </label>
                         </div>
 
-                        {data.exit_type === 'business_trip' && (
-                            <div className="grid gap-4 md:grid-cols-2">
-                                <div>
-                                    <label htmlFor="vehicle_plate" className="text-sm font-semibold text-slate-800">1.3 No. Police Car</label>
-                                    <select
-                                        id="vehicle_plate"
-                                        className={inputClass}
-                                        value={data.car_id}
-                                        onChange={(e) => setData('car_id', e.target.value ? Number(e.target.value) : '')}
-                                        required
-                                    >
-                                        <option value="">Pilih no polisi dan spesifikasi kendaraan</option>
-                                        {carOptions.map((car) => (
-                                            <option key={car.id} value={car.id}>{car.police_no} - {car.spesification}</option>
-                                        ))}
-                                    </select>
-                                    <InputError message={errors.car_id || errors.vehicle_plate} className="mt-2" />
+                        {isCompanyExitType && (
+                            <div>
+                                <label className="text-sm font-semibold text-slate-800">1.3 Order Car</label>
+                                <div className="mt-2 flex flex-wrap gap-3">
+                                    <label className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700">
+                                        <input
+                                            type="checkbox"
+                                            checked={data.order_car === true}
+                                            onChange={() => setOrderCar(true)}
+                                            className="rounded border-slate-300 text-cyan-700 focus:ring-cyan-500"
+                                        />
+                                        Yes
+                                    </label>
+                                    <label className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700">
+                                        <input
+                                            type="checkbox"
+                                            checked={data.order_car === false}
+                                            onChange={() => setOrderCar(false)}
+                                            className="rounded border-slate-300 text-cyan-700 focus:ring-cyan-500"
+                                        />
+                                        No
+                                    </label>
                                 </div>
-
-                                <div>
-                                    <label htmlFor="driver_name" className="text-sm font-semibold text-slate-800">1.4 Nama Supir</label>
-                                    <select
-                                        id="driver_name"
-                                        className={inputClass}
-                                        value={data.driver_id}
-                                        onChange={(e) => setData('driver_id', e.target.value ? Number(e.target.value) : '')}
-                                        required
-                                    >
-                                        <option value="">Pilih supir</option>
-                                        {driverOptions.map((driver) => (
-                                            <option key={driver.id} value={driver.id}>{driver.name}</option>
-                                        ))}
-                                    </select>
-                                    <InputError message={errors.driver_id || errors.driver_name} className="mt-2" />
-                                </div>
+                                <p className="mt-1 text-xs text-slate-500">
+                                    Jika Yes, tim HR akan melakukan arrange mobil dan supir pada tahap berikutnya.
+                                </p>
+                                <InputError message={errors.order_car} className="mt-2" />
                             </div>
                         )}
 
-                        {data.exit_type !== 'business_trip' && (
+                        {!isCompanyExitType && (
                             <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-                                Field nomor polisi dan supir hanya wajib untuk Assignment / Company.
+                                Field Order Car hanya untuk Tipe Exit Permit Assignment / Company.
                             </div>
                         )}
 
@@ -361,19 +369,7 @@ export default function Create({ exitTypes, carOptions = [], driverOptions = [] 
                             <InputError message={errors.reason} className="mt-2" />
                         </div>
 
-                        <div>
-                            <label htmlFor="notes" className="text-sm font-semibold text-slate-800">1.5 Permitted by (Department/Section Head & HR/GA)</label>
-                            <textarea
-                                id="notes"
-                                className={inputClass}
-                                rows="3"
-                                value={data.notes}
-                                required
-                                onChange={(e) => setData('notes', e.target.value)}
-                                placeholder="Catatan approval internal / instruksi tambahan"
-                            />
-                            <InputError message={errors.notes} className="mt-2" />
-                        </div>
+                        {/* 1.5 Permitted by (Department/Section Head & HR/GA) di-hide sementara */}
 
                         <div>
                             <label htmlFor="attachment_photo" className="text-sm font-semibold text-slate-800">Attachment Foto (Opsional, Max 2MB)</label>

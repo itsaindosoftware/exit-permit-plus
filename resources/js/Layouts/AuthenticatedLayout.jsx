@@ -13,8 +13,7 @@ export default function AuthenticatedLayout({ header, children }) {
         { label: 'Dashboard', routeName: 'dashboard' },
         ...(isRatna ? [{ label: 'Schedule Car', routeName: 'schedule-cars.index' }] : []),
         { label: 'Exit Permit', routeName: 'exit-permits.index' },
-        { label: 'Order Meal Umum', routeName: 'order-meals.index' },
-        ...(isSisca ? [{ label: 'Order Meal Exit Permit', routeName: 'exit-permit-meals.index' }] : []),
+        ...(isSisca ? [{ label: 'Order Meal Umum', routeName: 'order-meals.index' }] : []),
         { label: 'Reimbursement', routeName: 'reimbursements.index' },
         { label: 'Profile', routeName: 'profile.edit' },
     ];
@@ -100,22 +99,7 @@ export default function AuthenticatedLayout({ header, children }) {
                     </header>
 
                     <main className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
-                        {notifications.unread_count > 0 && (
-                            <div className="mb-4 rounded-lg border border-cyan-200 bg-cyan-50 px-4 py-3">
-                                <p className="text-sm font-semibold text-cyan-900">
-                                    Notifikasi ({notifications.unread_count})
-                                </p>
-                                <div className="mt-2 space-y-2">
-                                    {notifications.unread.map((notification) => (
-                                        <div key={notification.id} className="rounded-md border border-cyan-200 bg-white px-3 py-2">
-                                            <p className="text-sm font-semibold text-slate-900">{notification.title}</p>
-                                            <p className="text-sm text-slate-700">{notification.message}</p>
-                                            <p className="mt-1 text-xs text-slate-500">{notification.created_at}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                        {/* Notifikasi sementara di-hide */}
 
                         {flash?.success && (
                             <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
