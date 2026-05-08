@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1365" height="768" viewBox="0 0 1365 768" fill="none">
+  <defs>
+    <style>
+      .l { stroke:#111; stroke-width:2; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+      .t { font-family:"Courier New", monospace; font-size:12px; fill:#111; }
+      .th { font-family:"Courier New", monospace; font-size:17px; font-weight:700; fill:#111; }
+      .ts { font-family:"Courier New", monospace; font-size:10px; fill:#111; }
+    </style>
+  </defs>
+
+  <rect x="4" y="4" width="1357" height="760" class="l"/>
+
+  <!-- Sidebar -->
+  <rect x="4" y="4" width="126" height="760" class="l"/>
+  <text x="14" y="28" class="th">Exit Permit+</text>
+  <text x="14" y="40" class="ts">Operational Management Portal</text>
+  <line x1="12" y1="48" x2="118" y2="48" class="l"/>
+  <text x="16" y="76" class="t">Dashboard</text>
+  <text x="16" y="98" class="t">Exit Permit</text>
+  <text x="16" y="120" class="t">Reimbursement</text>
+  <text x="16" y="142" class="t">Profile</text>
+
+  <rect x="14" y="202" width="100" height="46" rx="6" class="l"/>
+  <circle cx="28" cy="214" r="7" class="l"/>
+  <text x="40" y="215" class="ts">Indri</text>
+  <text x="40" y="227" class="ts">indri@example.com</text>
+  <rect x="18" y="232" width="22" height="10" rx="2" class="l"/>
+  <text x="21" y="239" class="ts">USR</text>
+
+  <!-- Topbar -->
+  <rect x="130" y="4" width="1231" height="30" class="l"/>
+  <text x="488" y="24" class="th">Detail Exit Permit</text>
+  <rect x="952" y="9" width="54" height="20" rx="3" class="l"/>
+  <circle cx="964" cy="19" r="5" class="l"/>
+  <text x="974" y="23" class="ts">Indri</text>
+
+  <!-- Content area -->
+  <rect x="130" y="34" width="1231" height="730" class="l"/>
+
+  <!-- Header summary -->
+  <rect x="458" y="46" width="548" height="74" rx="8" class="l"/>
+  <text x="468" y="62" class="ts">EXIT PERMIT DETAIL</text>
+  <text x="468" y="76" class="ts">Ringkasan data pegawai dan informasi kendaraan</text>
+  <rect x="468" y="84" width="182" height="16" rx="8" class="l"/>
+  <text x="474" y="95" class="ts">APPROVED BY HR MANAGER | JALUR MEAL</text>
+
+  <!-- Info grid card -->
+  <rect x="458" y="134" width="548" height="110" rx="8" class="l"/>
+  <line x1="640" y1="134" x2="640" y2="244" class="l"/>
+  <line x1="822" y1="134" x2="822" y2="244" class="l"/>
+
+  <text x="466" y="150" class="ts">KARYAWAN</text>
+  <text x="466" y="162" class="t">Indri</text>
+  <text x="466" y="176" class="ts">TANGGAL PERMIT</text>
+  <text x="466" y="188" class="t">2026-05-08</text>
+  <text x="466" y="202" class="ts">JENIS EXIT</text>
+  <text x="466" y="214" class="t">Perjalanan Dinas</text>
+
+  <text x="648" y="150" class="ts">EMAIL</text>
+  <text x="648" y="162" class="t">indri@example.com</text>
+  <text x="648" y="176" class="ts">JAM KELUAR</text>
+  <text x="648" y="188" class="t">11:16</text>
+  <text x="648" y="202" class="ts">TUJUAN</text>
+  <text x="648" y="214" class="t">Ke GIIC</text>
+
+  <text x="830" y="150" class="ts">STATUS</text>
+  <text x="830" y="162" class="t">Checked by HR: Sisca</text>
+  <text x="830" y="176" class="ts">JAM KEMBALI</text>
+  <text x="830" y="188" class="t">17:16</text>
+  <text x="830" y="202" class="ts">ELIGIBLE MEAL</text>
+  <text x="830" y="214" class="t">Tidak</text>
+
+  <!-- Reason/notes card -->
+  <rect x="458" y="258" width="548" height="36" rx="6" class="l"/>
+  <line x1="732" y1="258" x2="732" y2="294" class="l"/>
+  <text x="466" y="274" class="ts">ALASAN</text>
+  <text x="466" y="286" class="t">ya</text>
+  <text x="740" y="274" class="ts">CATATAN</text>
+  <text x="740" y="286" class="t">-</text>
+
+  <!-- Requestor table -->
+  <rect x="458" y="306" width="548" height="68" rx="8" class="l"/>
+  <text x="466" y="321" class="ts">REQUESTOR DETAIL</text>
+  <rect x="468" y="330" width="528" height="34" class="l"/>
+  <line x1="468" y1="346" x2="996" y2="346" class="l"/>
+  <line x1="492" y1="330" x2="492" y2="364" class="l"/>
+  <line x1="590" y1="330" x2="590" y2="364" class="l"/>
+  <line x1="678" y1="330" x2="678" y2="364" class="l"/>
+  <line x1="744" y1="330" x2="744" y2="364" class="l"/>
+  <line x1="834" y1="330" x2="834" y2="364" class="l"/>
+  <text x="472" y="342" class="ts">NO</text>
+  <text x="500" y="342" class="ts">NAME</text>
+  <text x="598" y="342" class="ts">EMPLOYEE ID</text>
+  <text x="686" y="342" class="ts">POSITION</text>
+  <text x="752" y="342" class="ts">DEPARTMENT</text>
+  <text x="842" y="342" class="ts">LUNCH (Y/N)</text>
+
+  <!-- Attachment -->
+  <rect x="458" y="386" width="548" height="224" rx="8" class="l"/>
+  <text x="466" y="402" class="ts">ATTACHMENT FOTO</text>
+  <rect x="468" y="408" width="528" height="174" rx="4" class="l"/>
+  <rect x="668" y="410" width="130" height="170" class="l"/>
+  <rect x="468" y="588" width="172" height="14" rx="3" class="l"/>
+  <text x="472" y="598" class="ts">Buka Ukuran Penuh (filename.jpg)</text>
+
+  <!-- Audit card -->
+  <rect x="458" y="620" width="548" height="112" rx="8" class="l"/>
+  <line x1="640" y1="620" x2="640" y2="732" class="l"/>
+  <line x1="822" y1="620" x2="822" y2="732" class="l"/>
+  <text x="466" y="636" class="ts">MANAGER APPROVED BY</text>
+  <text x="466" y="648" class="t">Wida Mustika Sari</text>
+  <text x="466" y="662" class="ts">MD APPROVED AT</text>
+  <text x="466" y="674" class="t">2026-05-08</text>
+  <text x="466" y="688" class="ts">HAS VALID CHECK-IN</text>
+  <text x="466" y="700" class="t">Ya</text>
+
+  <text x="648" y="636" class="ts">MANAGER APPROVED AT</text>
+  <text x="648" y="648" class="t">2026-05-08 04:19:31</text>
+  <text x="648" y="662" class="ts">PIC HR</text>
+  <text x="648" y="674" class="t">HR Manager</text>
+  <text x="648" y="688" class="ts">POST MD PATH</text>
+  <text x="648" y="700" class="t">Meal</text>
+
+  <text x="830" y="636" class="ts">MD APPROVED BY</text>
+  <text x="830" y="648" class="t">Managing Director</text>
+  <text x="830" y="662" class="ts">HR VERIFIED BY</text>
+  <text x="830" y="674" class="t">HR Manager</text>
+  <text x="830" y="688" class="ts">ATTENDANCE CHECKED AT</text>
+  <text x="830" y="700" class="t">2026-05-08 04:25:30</text>
+
+  <!-- Back button -->
+  <rect x="968" y="744" width="36" height="14" rx="3" class="l"/>
+  <text x="975" y="754" class="ts">Kembali</text>
+
+  <text x="14" y="760" class="ts">Wireframe show/detail exit permit - low fidelity black/white sketch</text>
+</svg>

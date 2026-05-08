@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1430" height="790" viewBox="0 0 1430 790" fill="none">
+  <defs>
+    <style>
+      .l { stroke:#111; stroke-width:2; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+      .t { font-family:"Courier New", monospace; font-size:12px; fill:#111; }
+      .th { font-family:"Courier New", monospace; font-size:18px; font-weight:700; fill:#111; }
+      .ts { font-family:"Courier New", monospace; font-size:10px; fill:#111; }
+    </style>
+  </defs>
+
+  <rect x="4" y="4" width="1422" height="782" class="l"/>
+  <rect x="4" y="4" width="232" height="782" class="l"/>
+  <text x="20" y="28" class="ts">INTERNAL SYSTEM</text>
+  <text x="20" y="58" class="th" style="font-size:38px;">Exit Permit+</text>
+  <text x="20" y="76" class="t">Operational Management Portal</text>
+  <line x1="18" y1="100" x2="214" y2="100" class="l"/>
+  <text x="26" y="144" class="t">Dashboard</text>
+  <text x="26" y="176" class="t">List Exit Permit</text>
+  <text x="26" y="208" class="t">Exit Permit</text>
+  <text x="26" y="240" class="t">Exit Permit Approval</text>
+  <rect x="14" y="264" width="176" height="28" rx="6" class="l"/>
+  <text x="26" y="282" class="t">Order Meal Umum</text>
+  <text x="26" y="314" class="t">Reimbursement</text>
+  <text x="26" y="346" class="t">Profile</text>
+
+  <rect x="16" y="392" width="200" height="82" rx="10" class="l"/>
+  <circle cx="34" cy="418" r="10" class="l"/>
+  <text x="50" y="416" class="t">Sisca Dewiyani</text>
+  <text x="50" y="434" class="ts">sisca.dewiyani@example.com</text>
+  <rect x="26" y="446" width="30" height="16" rx="8" class="l"/>
+  <text x="34" y="457" class="ts">HR</text>
+
+  <rect x="236" y="4" width="1190" height="46" class="l"/>
+  <text x="390" y="34" class="th">Order Meal Umum</text>
+  <rect x="1152" y="10" width="140" height="34" rx="6" class="l"/>
+  <circle cx="1174" cy="27" r="10" class="l"/>
+  <text x="1192" y="31" class="t">Sisca Dewiyani</text>
+
+  <rect x="236" y="50" width="1190" height="736" class="l"/>
+
+  <rect x="390" y="78" width="900" height="98" rx="12" class="l"/>
+  <text x="408" y="104" class="ts">MEAL OPERATIONS</text>
+  <text x="408" y="134" class="th" style="font-size:40px;">Order Meal Umum</text>
+  <text x="408" y="156" class="t">Pantau distribusi paket umum, realisasi konsumsi, dan additional visitor.</text>
+  <rect x="1012" y="112" width="120" height="46" rx="8" class="l"/>
+  <text x="1024" y="130" class="ts">TODAY</text>
+  <text x="1024" y="148" class="t">Jumat, 08 Mei</text>
+  <rect x="1142" y="118" width="132" height="34" rx="8" class="l"/>
+  <text x="1154" y="140" class="t">+ Tambah Order Meal</text>
+
+  <rect x="390" y="196" width="292" height="80" rx="10" class="l"/>
+  <rect x="694" y="196" width="292" height="80" rx="10" class="l"/>
+  <rect x="998" y="196" width="292" height="80" rx="10" class="l"/>
+  <text x="406" y="220" class="t">PAKET DISEDIAKAN</text>
+  <text x="406" y="256" class="th" style="font-size:44px;">424</text>
+  <text x="710" y="220" class="t">REALISASI MAKAN</text>
+  <text x="710" y="256" class="th" style="font-size:44px;">283</text>
+  <text x="1014" y="220" class="t">SISA PAKET</text>
+  <text x="1014" y="256" class="th" style="font-size:44px;">141</text>
+
+  <rect x="390" y="296" width="292" height="138" rx="10" class="l"/>
+  <rect x="694" y="296" width="292" height="138" rx="10" class="l"/>
+  <rect x="998" y="296" width="292" height="138" rx="10" class="l"/>
+  <text x="402" y="320" class="th">Grafik Harian</text>
+  <text x="706" y="320" class="th">Grafik Mingguan</text>
+  <text x="1010" y="320" class="th">Grafik Bulanan</text>
+  <line x1="404" y1="366" x2="670" y2="366" class="l"/>
+  <line x1="404" y1="392" x2="670" y2="392" class="l"/>
+  <line x1="404" y1="418" x2="670" y2="418" class="l"/>
+  <line x1="708" y1="366" x2="974" y2="366" class="l"/>
+  <line x1="708" y1="392" x2="974" y2="392" class="l"/>
+  <line x1="1012" y1="366" x2="1278" y2="366" class="l"/>
+
+  <rect x="390" y="454" width="900" height="250" rx="12" class="l"/>
+  <text x="404" y="478" class="th">Daftar Order Meal</text>
+  <text x="404" y="494" class="ts">Total data: 3</text>
+  <line x1="390" y1="504" x2="1290" y2="504" class="l"/>
+  <line x1="390" y1="548" x2="1290" y2="548" class="l"/>
+  <line x1="390" y1="602" x2="1290" y2="602" class="l"/>
+  <line x1="390" y1="656" x2="1290" y2="656" class="l"/>
+
+  <line x1="482" y1="504" x2="482" y2="704" class="l"/>
+  <line x1="566" y1="504" x2="566" y2="704" class="l"/>
+  <line x1="640" y1="504" x2="640" y2="704" class="l"/>
+  <line x1="696" y1="504" x2="696" y2="704" class="l"/>
+  <line x1="744" y1="504" x2="744" y2="704" class="l"/>
+  <line x1="804" y1="504" x2="804" y2="704" class="l"/>
+  <line x1="864" y1="504" x2="864" y2="704" class="l"/>
+  <line x1="942" y1="504" x2="942" y2="704" class="l"/>
+  <line x1="1018" y1="504" x2="1018" y2="704" class="l"/>
+  <line x1="1100" y1="504" x2="1100" y2="704" class="l"/>
+  <line x1="1148" y1="504" x2="1148" y2="704" class="l"/>
+
+  <text x="402" y="532" class="ts">KARYAWAN</text>
+  <text x="490" y="532" class="ts">TANGGAL</text>
+  <text x="574" y="532" class="ts">MENU</text>
+  <text x="648" y="532" class="ts">DAY</text>
+  <text x="704" y="532" class="ts">OT</text>
+  <text x="752" y="532" class="ts">NIGHT</text>
+  <text x="812" y="532" class="ts">OT N</text>
+  <text x="872" y="532" class="ts">SEDIA</text>
+  <text x="950" y="532" class="ts">REAL</text>
+  <text x="1026" y="532" class="ts">SISA</text>
+  <text x="1108" y="532" class="ts">AMOUNT</text>
+  <text x="1156" y="532" class="ts">AKSI</text>
+
+  <rect x="1148" y="560" width="40" height="22" rx="4" class="l"/>
+  <rect x="1192" y="560" width="34" height="22" rx="4" class="l"/>
+  <rect x="1230" y="560" width="40" height="22" rx="4" class="l"/>
+
+  <text x="10" y="784" class="ts">Wireframe order meal umum list - low fidelity black/white sketch</text>
+</svg>

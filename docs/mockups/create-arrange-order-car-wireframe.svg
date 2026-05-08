@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1210" height="800" viewBox="0 0 1210 800" fill="none">
+  <defs>
+    <style>
+      .l { stroke:#111; stroke-width:2; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+      .t { font-family:"Courier New", monospace; font-size:13px; fill:#111; }
+      .th { font-family:"Courier New", monospace; font-size:30px; font-weight:700; fill:#111; }
+      .ts { font-family:"Courier New", monospace; font-size:11px; fill:#111; }
+    </style>
+  </defs>
+
+  <rect x="6" y="6" width="1198" height="788" class="l"/>
+  <rect x="6" y="6" width="1198" height="36" class="l"/>
+  <text x="236" y="31" class="th" style="font-size:30px;">Create Arrange Order Car</text>
+  <rect x="940" y="12" width="110" height="24" rx="4" class="l"/>
+  <circle cx="955" cy="24" r="8" class="l"/>
+  <text x="970" y="28" class="ts">Ratna</text>
+
+  <!-- Main -->
+  <rect x="236" y="42" width="810" height="752" class="l"/>
+
+  <rect x="236" y="50" width="810" height="34" rx="8" class="l"/>
+  <text x="254" y="71" class="t">Pilih Exit Permit yang Order Car = Yes lalu tentukan no police car dan supir.</text>
+
+  <rect x="236" y="96" width="810" height="668" rx="10" class="l"/>
+  <text x="250" y="120" class="t">Exit Permit</text>
+  <rect x="250" y="128" width="782" height="24" rx="4" class="l"/>
+  <text x="258" y="145" class="ts">#12 | 2026-05-08 | 15:48-21:48 | Ke Cikarang</text>
+
+  <rect x="250" y="164" width="782" height="500" rx="6" class="l"/>
+  <text x="260" y="182" class="ts">FORMAT ARRANGE CAR (RATNA)</text>
+  <text x="260" y="198" class="ts">Data otomatis terisi dari Exit Permit.</text>
+
+  <text x="260" y="218" class="t">Tanggal Dinas Luar</text>
+  <text x="632" y="218" class="t">Estimasi Jam berangkat &amp; Pulang</text>
+  <rect x="260" y="226" width="360" height="24" rx="4" class="l"/>
+  <rect x="632" y="226" width="400" height="24" rx="4" class="l"/>
+
+  <text x="260" y="276" class="t">Nama PT Tujuan</text>
+  <text x="632" y="276" class="t">Lokasi PT Tujuan</text>
+  <rect x="260" y="284" width="360" height="24" rx="4" class="l"/>
+  <rect x="632" y="284" width="400" height="24" rx="4" class="l"/>
+
+  <text x="260" y="334" class="t">User yang pergi</text>
+  <rect x="260" y="342" width="772" height="24" rx="4" class="l"/>
+
+  <text x="260" y="392" class="t">Budget Dept &amp; Cost Center</text>
+  <rect x="260" y="400" width="772" height="24" rx="4" class="l"/>
+
+  <text x="260" y="450" class="t">Alasan Pergi (Meeting / Delivery) dengan detail reason</text>
+  <rect x="260" y="458" width="772" height="52" rx="4" class="l"/>
+
+  <text x="260" y="538" class="t">Detail Barang Yang Dibawa jika Delivery (Part / Tooling)</text>
+  <rect x="260" y="546" width="772" height="52" rx="4" class="l"/>
+
+  <text x="260" y="626" class="t">Permintaan untuk kurangi order catering</text>
+  <rect x="260" y="634" width="772" height="52" rx="4" class="l"/>
+
+  <text x="250" y="696" class="t">No Police Car</text>
+  <text x="632" y="696" class="t">Supir</text>
+  <rect x="250" y="704" width="370" height="24" rx="4" class="l"/>
+  <rect x="632" y="704" width="400" height="24" rx="4" class="l"/>
+
+  <rect x="886" y="738" width="54" height="24" rx="4" class="l"/>
+  <text x="901" y="754" class="ts">Kembali</text>
+  <rect x="946" y="738" width="86" height="24" rx="4" class="l"/>
+  <text x="958" y="754" class="ts">Simpan Arrange</text>
+
+  <text x="14" y="790" class="ts">Wireframe create arrange order car - low fidelity black/white sketch</text>
+</svg>

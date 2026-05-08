@@ -1,7 +1,7 @@
 import InputError from '@/Components/InputError';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 const inputClass =
     'mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-cyan-600 focus:ring-2 focus:ring-cyan-200';
@@ -39,30 +39,9 @@ export default function Edit({
         reimburs_lunch_box: '',
     });
 
-    const normalizeRequestorRow = (row = {}) => ({
-        name: (row.name ?? '').toString(),
-        employee_id: (row.employee_id ?? '').toString(),
-        position: (row.position ?? '').toString(),
-        department: (row.department ?? '').toString(),
-        reimburs_lunch_box: (row.reimburs_lunch_box ?? '').toString(),
-    });
-
-    const sanitizeRequestorItems = (rows = []) => {
-        const normalizedRows = rows.map((row) => normalizeRequestorRow(row));
-        const nonEmptyRows = normalizedRows.filter((row) => (
-            row.name.trim() !== ''
-            || row.employee_id.trim() !== ''
-            || row.position.trim() !== ''
-            || row.department.trim() !== ''
-            || row.reimburs_lunch_box.trim() !== ''
-        ));
-
-        return nonEmptyRows.length > 0 ? nonEmptyRows : [createEmptyRequestorRow()];
-    };
-
-    const { data, setData, transform, post, processing, errors } = useForm({
+    const { data, setData, put, post, processing, errors } = useForm({
         requestor_items: exitPermit.requestor_items?.length
-            ? exitPermit.requestor_items.map((row) => normalizeRequestorRow(row))
+            ? exitPermit.requestor_items
             : [createEmptyRequestorRow()],
         permit_date: exitPermit.permit_date ?? '',
         start_time: exitPermit.start_time ?? '',
@@ -131,34 +110,15 @@ export default function Edit({
         );
     };
 
-    const findRequestorOptionInList = (options, field, value) => {
+    const findRequestorOption = (field, value) => {
         const keyword = value.trim().toLowerCase();
 
         if (!keyword) {
             return null;
         }
 
-        const normalize = (text) => (text || '').trim().toLowerCase();
-        const exactMatch = options.find((option) => normalize(option[field]) === keyword);
-
-        if (exactMatch) {
-            return exactMatch;
-        }
-
-        const startsWithMatches = options.filter((option) => normalize(option[field]).startsWith(keyword));
-        if (startsWithMatches.length === 1) {
-            return startsWithMatches[0];
-        }
-
-        const includesMatches = options.filter((option) => normalize(option[field]).includes(keyword));
-        if (includesMatches.length === 1) {
-            return includesMatches[0];
-        }
-
-        return null;
+        return requestorOptions.find((option) => (option[field] || '').trim().toLowerCase() === keyword) || null;
     };
-
-    const findRequestorOption = (field, value) => findRequestorOptionInList(requestorOptions, field, value);
 
     const fetchRequestorOptions = async (keyword = '') => {
         setIsLoadingRequestorOptions(true);
@@ -182,113 +142,17 @@ export default function Edit({
             });
 
             if (!response.ok) {
-                return [];
+                return;
             }
 
             const payload = await response.json();
-            const items = Array.isArray(payload.items) ? payload.items : [];
-            setRequestorOptions(items);
-
-            return items;
+            setRequestorOptions(Array.isArray(payload.items) ? payload.items : []);
         } catch {
             setRequestorOptions([]);
-            return [];
         } finally {
             setIsLoadingRequestorOptions(false);
         }
     };
-
-    const fetchRequestorOptionsRaw = async (keyword = '') => {
-        try {
-            const baseUrl = route(requestorLookupRouteName);
-            const params = new URLSearchParams();
-
-            if (keyword.trim()) {
-                params.set('q', keyword.trim());
-            }
-
-            params.set('limit', '20');
-
-            const response = await fetch(`${baseUrl}?${params.toString()}`, {
-                headers: {
-                    Accept: 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                credentials: 'same-origin',
-            });
-
-            if (!response.ok) {
-                return [];
-            }
-
-            const payload = await response.json();
-            return Array.isArray(payload.items) ? payload.items : [];
-        } catch {
-            return [];
-        }
-    };
-
-    useEffect(() => {
-        let isCancelled = false;
-
-        const hydrateRequestorRows = async () => {
-            const currentRows = data.requestor_items.map((row) => normalizeRequestorRow(row));
-
-            const hydratedRows = await Promise.all(currentRows.map(async (row) => {
-                const hasCompleteIdentity = row.name.trim() !== '' && row.employee_id.trim() !== '';
-                const hasCompleteOrg = row.position.trim() !== '' && row.department.trim() !== '';
-
-                if (hasCompleteIdentity && hasCompleteOrg) {
-                    return row;
-                }
-
-                const keyword = row.employee_id || row.name;
-                if (!keyword.trim()) {
-                    return row;
-                }
-
-                const options = await fetchRequestorOptionsRaw(keyword);
-                const matchByEmployeeId = row.employee_id
-                    ? findRequestorOptionInList(options, 'employee_id', row.employee_id)
-                    : null;
-                const matchByName = row.name
-                    ? findRequestorOptionInList(options, 'name', row.name)
-                    : null;
-                const matched = matchByEmployeeId || matchByName || options[0] || null;
-
-                if (!matched) {
-                    return row;
-                }
-
-                return normalizeRequestorRow({
-                    ...row,
-                    name: matched.name || row.name,
-                    employee_id: matched.employee_id || row.employee_id,
-                    position: matched.position || row.position,
-                    department: matched.department || row.department,
-                });
-            }));
-
-            if (isCancelled) {
-                return;
-            }
-
-            const before = JSON.stringify(currentRows);
-            const after = JSON.stringify(hydratedRows);
-
-            if (before !== after) {
-                setData('requestor_items', hydratedRows);
-            }
-        };
-
-        hydrateRequestorRows();
-
-        return () => {
-            isCancelled = true;
-        };
-        // Run once on initial edit page load.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
 
     const submit = (e) => {
         e.preventDefault();
@@ -297,13 +161,7 @@ export default function Edit({
             return;
         }
 
-        transform((currentData) => ({
-            ...currentData,
-            _method: 'put',
-            requestor_items: sanitizeRequestorItems(currentData.requestor_items),
-        }));
-
-        post(route('exit-permits.update', exitPermit.id), { forceFormData: true });
+        put(route('exit-permits.update', exitPermit.id), { forceFormData: true });
     };
 
     const previewAttendance = () => {
@@ -469,22 +327,6 @@ export default function Edit({
                                                             applyRequestorOption(index, matched);
                                                         }
                                                     }}
-                                                    onBlur={async (e) => {
-                                                        if (formLocked) {
-                                                            return;
-                                                        }
-
-                                                        const value = e.target.value;
-                                                        if (!value.trim()) {
-                                                            return;
-                                                        }
-
-                                                        const latestOptions = await fetchRequestorOptions(value);
-                                                        const matched = findRequestorOptionInList(latestOptions, 'name', value);
-                                                        if (matched) {
-                                                            applyRequestorOption(index, matched);
-                                                        }
-                                                    }}
                                                     placeholder="Nama"
                                                 />
                                             </td>
@@ -510,22 +352,6 @@ export default function Edit({
                                                         }
 
                                                         const matched = findRequestorOption('employee_id', value);
-                                                        if (matched) {
-                                                            applyRequestorOption(index, matched);
-                                                        }
-                                                    }}
-                                                    onBlur={async (e) => {
-                                                        if (formLocked) {
-                                                            return;
-                                                        }
-
-                                                        const value = e.target.value;
-                                                        if (!value.trim()) {
-                                                            return;
-                                                        }
-
-                                                        const latestOptions = await fetchRequestorOptions(value);
-                                                        const matched = findRequestorOptionInList(latestOptions, 'employee_id', value);
                                                         if (matched) {
                                                             applyRequestorOption(index, matched);
                                                         }

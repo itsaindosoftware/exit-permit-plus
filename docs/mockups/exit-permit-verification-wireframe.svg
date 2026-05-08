@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1510" height="800" viewBox="0 0 1510 800" fill="none">
+  <defs>
+    <style>
+      .l { stroke:#111; stroke-width:2; fill:none; stroke-linejoin:round; stroke-linecap:round; }
+      .t { font-family:"Courier New", monospace; font-size:11px; fill:#111; }
+      .th { font-family:"Courier New", monospace; font-size:18px; font-weight:700; fill:#111; }
+      .ts { font-family:"Courier New", monospace; font-size:9px; fill:#111; }
+    </style>
+  </defs>
+  <rect x="4" y="4" width="1502" height="792" class="l"/>
+  <rect x="4" y="4" width="92" height="792" class="l"/>
+  <text x="10" y="54" class="ts">Dashboard</text>
+  <text x="10" y="74" class="ts">List Exit Permit</text>
+  <text x="10" y="94" class="ts">Exit Permit</text>
+  <text x="10" y="114" class="ts">Exit Permit Approval</text>
+  <text x="10" y="134" class="ts">Order Meal Umum</text>
+  <text x="10" y="154" class="ts">Reimbursement</text>
+  <text x="10" y="174" class="ts">Profile</text>
+  <rect x="8" y="210" width="78" height="42" rx="6" class="l"/>
+  <text x="12" y="228" class="ts">Sisca Dewiyani</text>
+
+  <rect x="96" y="4" width="1410" height="38" class="l"/>
+  <text x="628" y="28" class="th">Exit Permit Form</text>
+  <rect x="992" y="10" width="68" height="24" rx="4" class="l"/>
+  <circle cx="1004" cy="22" r="6" class="l"/>
+  <text x="1014" y="25" class="ts">Sisca Dewiyani</text>
+
+  <rect x="96" y="42" width="1410" height="754" class="l"/>
+
+  <rect x="628" y="54" width="430" height="40" rx="8" class="l"/>
+  <line x1="772" y1="54" x2="772" y2="94" class="l"/>
+  <line x1="914" y1="54" x2="914" y2="94" class="l"/>
+  <text x="636" y="68" class="ts">CURRENT ELIGIBILITY</text>
+  <text x="636" y="80" class="ts">Ya, memenuhi ketentuan meal</text>
+  <text x="780" y="68" class="ts">KENDARAAN</text>
+  <text x="780" y="80" class="ts">Toyota Avanza - Aldin</text>
+  <text x="922" y="68" class="ts">APPROVAL STAGE</text>
+  <rect x="922" y="72" width="128" height="14" rx="7" class="l"/>
+  <text x="928" y="82" class="ts">APPROVED BY HR MANAGER</text>
+
+  <rect x="628" y="104" width="430" height="18" rx="4" class="l"/>
+  <text x="634" y="116" class="ts">Mode rekap HR/Administrator: data ditampilkan read-only untuk monitoring alur approval.</text>
+  <rect x="628" y="130" width="430" height="18" rx="4" class="l"/>
+  <text x="634" y="142" class="ts">Verifikasi absensi Sisca: tentukan apakah ada absensi masuk karyawan.</text>
+
+  <rect x="628" y="156" width="430" height="572" rx="8" class="l"/>
+  <rect x="628" y="156" width="430" height="34" class="l"/>
+  <text x="800" y="168" class="ts">OFFICIAL DOCUMENT</text>
+  <text x="782" y="184" class="th">EXIT PERMIT FORM</text>
+  <rect x="628" y="190" width="430" height="12" class="l"/>
+  <rect x="628" y="190" width="14" height="12" class="l"/>
+  <text x="632" y="199" class="ts">1</text>
+  <text x="648" y="199" class="ts">FOR REQUESTOR</text>
+
+  <rect x="636" y="208" width="414" height="44" class="l"/>
+  <line x1="636" y1="222" x2="1050" y2="222" class="l"/>
+  <line x1="654" y1="208" x2="654" y2="252" class="l"/>
+  <line x1="726" y1="208" x2="726" y2="252" class="l"/>
+  <line x1="796" y1="208" x2="796" y2="252" class="l"/>
+  <line x1="866" y1="208" x2="866" y2="252" class="l"/>
+  <line x1="936" y1="208" x2="936" y2="252" class="l"/>
+  <text x="640" y="218" class="ts">NO</text>
+  <text x="660" y="218" class="ts">NAME</text>
+  <text x="734" y="218" class="ts">EMPLOYEE ID</text>
+  <text x="804" y="218" class="ts">POSITION</text>
+  <text x="874" y="218" class="ts">DEPARTMENT</text>
+  <text x="944" y="218" class="ts">LUNCH</text>
+
+  <rect x="636" y="260" width="414" height="16" rx="3" class="l"/>
+  <rect x="992" y="262" width="24" height="10" rx="2" class="l"/>
+  <rect x="1018" y="262" width="30" height="10" rx="2" class="l"/>
+
+  <rect x="636" y="282" width="414" height="30" rx="4" class="l"/>
+  <line x1="842" y1="282" x2="842" y2="312" class="l"/>
+
+  <rect x="636" y="320" width="414" height="14" rx="3" class="l"/>
+  <rect x="636" y="340" width="136" height="16" rx="3" class="l"/>
+  <rect x="774" y="340" width="136" height="16" rx="3" class="l"/>
+  <rect x="912" y="340" width="138" height="24" rx="4" class="l"/>
+
+  <rect x="636" y="372" width="414" height="22" rx="4" class="l"/>
+  <rect x="636" y="400" width="414" height="40" rx="4" class="l"/>
+
+  <rect x="636" y="446" width="414" height="16" rx="3" class="l"/>
+  <rect x="636" y="468" width="414" height="14" rx="3" class="l"/>
+  <rect x="636" y="488" width="414" height="14" rx="3" class="l"/>
+  <rect x="636" y="508" width="74" height="14" rx="3" class="l"/>
+
+  <rect x="636" y="528" width="414" height="18" rx="4" class="l"/>
+  <text x="642" y="540" class="ts">Please fill in properly, this document is attachment reimbursement.</text>
+
+  <rect x="628" y="552" width="430" height="12" class="l"/>
+  <rect x="628" y="552" width="14" height="12" class="l"/>
+  <text x="632" y="561" class="ts">2</text>
+  <text x="648" y="561" class="ts">SPECIAL FULFILL BY SECURITY</text>
+  <rect x="636" y="570" width="204" height="28" rx="4" class="l"/>
+  <rect x="846" y="570" width="204" height="28" rx="4" class="l"/>
+
+  <rect x="972" y="708" width="34" height="14" rx="3" class="l"/>
+  <text x="978" y="718" class="ts">Kembali</text>
+  <rect x="1008" y="706" width="42" height="18" rx="4" class="l"/>
+  <text x="1012" y="719" class="ts">Simpan Verifikasi</text>
+
+  <text x="8" y="792" class="ts">Wireframe exit permit verification form - low fidelity black/white sketch</text>
+</svg>

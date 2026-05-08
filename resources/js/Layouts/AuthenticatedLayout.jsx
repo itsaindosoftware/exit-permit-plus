@@ -59,7 +59,7 @@ export default function AuthenticatedLayout({ header, children }) {
                 >
                     <div className="mb-10 border-b border-slate-700 pb-6">
                         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">Internal System</p>
-                        <h1 className="mt-2 text-2xl font-black tracking-wide text-white">Exit Permit+</h1>
+                        <h1 className="mt-2 text-2xl font-black tracking-wide text-white">ITSA HUB</h1>
                         <p className="mt-1 text-sm text-slate-300">Operational Management Portal</p>
                     </div>
 

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1366" height="768" viewBox="0 0 1366 768" fill="none">
+  <defs><style>.l{stroke:#111;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}.t{font-family:"Courier New",monospace;font-size:12px;fill:#111}.th{font-family:"Courier New",monospace;font-size:18px;font-weight:700;fill:#111}.ts{font-family:"Courier New",monospace;font-size:10px;fill:#111}</style></defs>
+  <rect x="4" y="4" width="1358" height="760" class="l"/>
+  <rect x="4" y="4" width="184" height="760" class="l"/>
+  <text x="26" y="18" class="th">Exit Permit</text>
+  <text x="26" y="48" class="t">Reimbursement</text>
+  <text x="26" y="78" class="t">Profile</text>
+  <rect x="16" y="116" width="154" height="72" rx="8" class="l"/>
+  <circle cx="36" cy="140" r="10" class="l"/><text x="52" y="138" class="t">Ratna</text><text x="52" y="154" class="ts">ratna@example.com</text><rect x="26" y="162" width="28" height="16" rx="8" class="l"/><text x="34" y="173" class="ts">HR</text>
+  <rect x="188" y="4" width="1174" height="42" class="l"/>
+  <text x="418" y="30" class="th">Detail Reimbursement</text>
+  <rect x="1120" y="10" width="84" height="28" rx="4" class="l"/><circle cx="1136" cy="24" r="8" class="l"/><text x="1150" y="28" class="t">Ratna</text>
+  <rect x="188" y="46" width="1174" height="718" class="l"/>
+  <rect x="418" y="46" width="788" height="714" rx="10" class="l"/>
+  <line x1="810" y1="46" x2="810" y2="760" class="l"/>
+  <text x="430" y="66" class="t">Biaya Order Meal</text><text x="822" y="66" class="t">Biaya Bensin</text><rect x="430" y="70" width="372" height="24" rx="4" class="l"/><rect x="822" y="70" width="366" height="24" rx="4" class="l"/>
+  <text x="430" y="114" class="t">Biaya Tol</text><text x="822" y="114" class="t">Jumlah / Amount (Total Otomatis)</text><rect x="430" y="122" width="372" height="24" rx="4" class="l"/><rect x="822" y="122" width="366" height="24" rx="4" class="l"/>
+  <text x="430" y="182" class="t">Terbilang / Stated</text><rect x="430" y="190" width="372" height="24" rx="4" class="l"/>
+  <text x="430" y="234" class="t">Jenis Biaya / Expense Type</text><rect x="430" y="244" width="758" height="24" rx="4" class="l"/>
+  <text x="430" y="288" class="t">Tujuan / Purpose</text><rect x="430" y="300" width="758" height="50" rx="4" class="l"/>
+  <text x="430" y="372" class="t">Dok Ref / Attachment</text>
+  <rect x="430" y="386" width="758" height="74" rx="8" class="l"/><line x1="806" y1="386" x2="806" y2="460" class="l"/><rect x="440" y="412" width="358" height="24" rx="4" class="l"/><rect x="814" y="424" width="356" height="28" rx="4" class="l"/>
+  <rect x="430" y="470" width="758" height="74" rx="8" class="l"/><line x1="806" y1="470" x2="806" y2="544" class="l"/><rect x="440" y="496" width="358" height="24" rx="4" class="l"/><rect x="814" y="508" width="356" height="28" rx="4" class="l"/>
+  <text x="430" y="568" class="t">Catatan Tambahan</text><rect x="430" y="578" width="758" height="62" rx="4" class="l"/>
+  <text x="430" y="664" class="t">Action</text><rect x="430" y="672" width="758" height="24" rx="4" class="l"/>
+  <rect x="1020" y="720" width="58" height="24" rx="4" class="l"/><text x="1034" y="736" class="t">Kembali</text>
+  <rect x="1086" y="720" width="102" height="24" rx="4" class="l"/><text x="1094" y="736" class="t">Submit Accounting</text>
+  <text x="8" y="764" class="ts">Wireframe reimbursement detail (submit accounting) - low fidelity black/white sketch</text>
+</svg>

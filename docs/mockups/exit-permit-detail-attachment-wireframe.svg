@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1366" height="768" viewBox="0 0 1366 768" fill="none">
+  <defs><style>.l{stroke:#111;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}.t{font-family:"Courier New",monospace;font-size:12px;fill:#111}.th{font-family:"Courier New",monospace;font-size:18px;font-weight:700;fill:#111}.ts{font-family:"Courier New",monospace;font-size:10px;fill:#111}</style></defs>
+  <rect x="4" y="4" width="1358" height="760" class="l"/>
+  <rect x="4" y="4" width="180" height="760" class="l"/>
+  <rect x="16" y="16" width="150" height="70" rx="8" class="l"/>
+  <text x="26" y="34" class="t">Indri</text>
+  <text x="26" y="50" class="ts">indri@example.com</text>
+  <rect x="26" y="58" width="30" height="16" rx="8" class="l"/><text x="34" y="69" class="ts">USER</text>
+
+  <rect x="184" y="4" width="1178" height="46" class="l"/>
+  <text x="408" y="34" class="th">Detail Exit Permit</text>
+  <rect x="1102" y="12" width="74" height="30" rx="5" class="l"/><circle cx="1120" cy="27" r="8" class="l"/><text x="1134" y="31" class="t">Indri</text>
+
+  <rect x="184" y="50" width="1178" height="714" class="l"/>
+  <rect x="408" y="68" width="770" height="50" rx="10" class="l"/>
+  <line x1="790" y1="68" x2="790" y2="118" class="l"/>
+  <text x="420" y="88" class="ts">ALASAN</text><text x="420" y="102" class="t">Ke Cikarang</text>
+  <text x="800" y="88" class="ts">CATATAN</text><text x="800" y="102" class="t">-</text>
+
+  <rect x="408" y="136" width="770" height="114" rx="10" class="l"/>
+  <text x="420" y="154" class="ts">REQUESTOR DETAIL</text>
+  <rect x="420" y="166" width="746" height="68" class="l"/>
+  <line x1="420" y1="188" x2="1166" y2="188" class="l"/>
+  <line x1="462" y1="166" x2="462" y2="234" class="l"/>
+  <line x1="566" y1="166" x2="566" y2="234" class="l"/>
+  <line x1="668" y1="166" x2="668" y2="234" class="l"/>
+  <line x1="806" y1="166" x2="806" y2="234" class="l"/>
+  <line x1="966" y1="166" x2="966" y2="234" class="l"/>
+  <text x="428" y="182" class="ts">NO</text><text x="470" y="182" class="ts">NAME</text><text x="574" y="182" class="ts">EMPLOYEE ID</text><text x="676" y="182" class="ts">POSITION</text><text x="814" y="182" class="ts">DEPARTMENT</text><text x="974" y="182" class="ts">LUNCH BOX</text>
+
+  <rect x="408" y="268" width="770" height="312" rx="10" class="l"/>
+  <text x="420" y="288" class="ts">ATTACHMENT FOTO</text>
+  <rect x="420" y="296" width="746" height="242" rx="6" class="l"/>
+  <rect x="702" y="296" width="182" height="242" class="l"/>
+  <rect x="420" y="546" width="248" height="20" rx="4" class="l"/>
+  <text x="430" y="560" class="ts">Buka Ukuran Penuh (whatsapp-image.jpg)</text>
+
+  <rect x="408" y="594" width="770" height="156" rx="10" class="l"/>
+  <line x1="664" y1="594" x2="664" y2="750" class="l"/>
+  <line x1="918" y1="594" x2="918" y2="750" class="l"/>
+  <text x="420" y="616" class="ts">MANAGER APPROVED BY</text><text x="420" y="632" class="t">Wida Mustika Sari</text>
+  <text x="420" y="654" class="ts">MD APPROVED AT</text><text x="420" y="670" class="t">2026-05-08</text>
+  <text x="420" y="692" class="ts">HAS VALID CHECK-IN</text><text x="420" y="708" class="t">Ya</text>
+
+  <text x="676" y="616" class="ts">MANAGER APPROVED AT</text><text x="676" y="632" class="t">2026-05-08 16:03</text>
+  <text x="676" y="654" class="ts">PIC HR</text><text x="676" y="670" class="t">HR Manager</text>
+  <text x="676" y="692" class="ts">POST MD PATH</text><text x="676" y="708" class="t">Meal</text>
+
+  <text x="930" y="616" class="ts">MD APPROVED BY</text><text x="930" y="632" class="t">Managing Director</text>
+  <text x="930" y="654" class="ts">HR VERIFIED BY</text><text x="930" y="670" class="t">HR Manager</text>
+  <text x="930" y="692" class="ts">ATTENDANCE CHECKED AT</text><text x="930" y="708" class="t">2026-05-08 16:33</text>
+
+  <text x="8" y="764" class="ts">Wireframe exit permit detail attachment section - low fidelity black/white sketch</text>
+</svg>

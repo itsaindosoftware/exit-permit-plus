@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1839" height="768" viewBox="0 0 1839 768" fill="none">
+  <defs>
+    <style>
+      .l { stroke:#111; stroke-width:2; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+      .t { font-family:"Courier New", monospace; font-size:12px; fill:#111; }
+      .th { font-family:"Courier New", monospace; font-size:18px; font-weight:700; fill:#111; }
+      .ts { font-family:"Courier New", monospace; font-size:10px; fill:#111; }
+    </style>
+  </defs>
+
+  <rect x="4" y="4" width="1831" height="760" class="l"/>
+  <rect x="4" y="4" width="236" height="760" class="l"/>
+  <text x="20" y="30" class="ts">INTERNAL SYSTEM</text>
+  <text x="20" y="60" class="th" style="font-size:36px;">Exit Permit+</text>
+  <text x="20" y="82" class="t">Operational Management Portal</text>
+  <line x1="20" y1="110" x2="216" y2="110" class="l"/>
+  <text x="34" y="160" class="t">Dashboard</text>
+  <text x="34" y="198" class="t">List Exit Permit</text>
+  <text x="34" y="236" class="t">Exit Permit</text>
+  <text x="34" y="274" class="t">Exit Permit Approval</text>
+  <text x="34" y="312" class="t">Order Meal Umum</text>
+  <text x="34" y="350" class="t">Reimbursement</text>
+  <text x="34" y="388" class="t">Profile</text>
+
+  <rect x="20" y="436" width="196" height="92" rx="10" class="l"/>
+  <circle cx="38" cy="464" r="12" class="l"/>
+  <text x="56" y="460" class="t">Sisca Dewiyani</text>
+  <text x="56" y="478" class="ts">sisca.dewiyani@example.com</text>
+  <rect x="32" y="492" width="30" height="18" rx="9" class="l"/>
+  <text x="40" y="504" class="ts">HR</text>
+
+  <rect x="240" y="4" width="1595" height="52" class="l"/>
+  <text x="540" y="36" class="th" style="font-size:34px;">Detail Order Meal Umum</text>
+  <rect x="1384" y="12" width="152" height="38" rx="6" class="l"/>
+  <circle cx="1406" cy="31" r="10" class="l"/>
+  <text x="1424" y="35" class="t">Sisca Dewiyani</text>
+
+  <rect x="240" y="56" width="1595" height="708" class="l"/>
+  <rect x="540" y="86" width="994" height="304" rx="12" class="l"/>
+
+  <line x1="874" y1="86" x2="874" y2="390" class="l"/>
+  <line x1="1196" y1="86" x2="1196" y2="390" class="l"/>
+
+  <text x="560" y="116" class="t">Karyawan: Sisca Dewiyani</text>
+  <text x="560" y="146" class="t">Menu: Nasi Ayam + Sayur</text>
+  <text x="560" y="176" class="t">Day Shift: 95</text>
+  <text x="560" y="206" class="t">Overtime Night Shift: 10</text>
+  <text x="560" y="236" class="t">Sisa: 17</text>
+  <text x="560" y="266" class="t">Service Tax: 2%</text>
+  <text x="560" y="296" class="t">Nominal Service Tax: Rp 50.700</text>
+
+  <text x="894" y="116" class="t">Email: sisca.dewiyani@example.com</text>
+  <text x="894" y="146" class="t">Schedule: daily</text>
+  <text x="894" y="176" class="t">Overtime Day Shift: 20</text>
+  <text x="894" y="206" class="t">Paket Disediakan: 195</text>
+  <text x="894" y="236" class="t">Amount / Porsi: Rp 13.000</text>
+  <text x="894" y="266" class="t">Subtotal: Rp 2.535.000</text>
+  <text x="894" y="296" class="t">Grand Total: Rp 2.737.800</text>
+
+  <text x="1216" y="116" class="t">Tanggal Makan: 2026-05-11</text>
+  <text x="1216" y="146" class="t">Status: pending</text>
+  <text x="1216" y="176" class="t">Night Shift: 70</text>
+  <text x="1216" y="206" class="t">Realisasi: 178</text>
+  <text x="1216" y="236" class="t">Local Tax: 10%</text>
+  <text x="1216" y="266" class="t">Nominal Local Tax: Rp 253.500</text>
+
+  <rect x="560" y="312" width="954" height="56" rx="6" class="l"/>
+  <text x="572" y="334" class="th">Catatan</text>
+  <text x="572" y="354" class="t">ok</text>
+
+  <rect x="1410" y="410" width="70" height="30" rx="6" class="l"/>
+  <text x="1426" y="430" class="t">Kembali</text>
+  <rect x="1488" y="410" width="46" height="30" rx="6" class="l"/>
+  <text x="1502" y="430" class="t">Edit</text>
+
+  <text x="10" y="762" class="ts">Wireframe order meal umum detail - low fidelity black/white sketch</text>
+</svg>

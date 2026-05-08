@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="800" viewBox="0 0 1800 800" fill="none">
+  <defs>
+    <style>
+      .l { stroke:#111; stroke-width:2; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+      .t { font-family:"Courier New", monospace; font-size:14px; fill:#111; }
+      .th { font-family:"Courier New", monospace; font-size:42px; font-weight:700; fill:#111; }
+      .ts { font-family:"Courier New", monospace; font-size:12px; fill:#111; }
+    </style>
+  </defs>
+
+  <rect x="6" y="6" width="1788" height="788" class="l"/>
+
+  <!-- Sidebar -->
+  <rect x="6" y="6" width="260" height="788" class="l"/>
+  <text x="24" y="42" class="ts">INTERNAL SYSTEM</text>
+  <text x="24" y="74" class="th" style="font-size:44px;">Exit Permit+</text>
+  <text x="24" y="102" class="t">Operational Management Portal</text>
+  <line x1="22" y1="124" x2="244" y2="124" class="l"/>
+
+  <text x="38" y="184" class="t">Dashboard</text>
+  <text x="38" y="226" class="t">Exit Permit</text>
+  <rect x="22" y="248" width="222" height="34" rx="8" class="l"/>
+  <text x="38" y="271" class="t">Exit Permit Approval</text>
+  <text x="38" y="326" class="t">Reimbursement</text>
+  <text x="38" y="368" class="t">Profile</text>
+
+  <rect x="22" y="464" width="222" height="102" rx="12" class="l"/>
+  <circle cx="48" cy="496" r="16" class="l"/>
+  <text x="68" y="492" class="t">Wida Mustika Sari</text>
+  <text x="68" y="514" class="ts">wida.mustika.sari@example.com</text>
+  <rect x="38" y="528" width="72" height="24" rx="10" class="l"/>
+  <text x="48" y="544" class="ts">MANAGER</text>
+
+  <!-- Topbar -->
+  <rect x="266" y="6" width="1528" height="58" class="l"/>
+  <text x="524" y="45" class="th" style="font-size:40px;">Exit Permit Approval</text>
+  <rect x="1430" y="14" width="190" height="44" rx="8" class="l"/>
+  <circle cx="1460" cy="36" r="14" class="l"/>
+  <text x="1484" y="42" class="t">Wida Mustika Sari</text>
+
+  <!-- Main area -->
+  <rect x="266" y="64" width="1528" height="730" class="l"/>
+
+  <!-- Hero -->
+  <rect x="524" y="156" width="1088" height="124" rx="14" class="l"/>
+  <text x="548" y="190" class="ts">APPROVAL WORKFLOW</text>
+  <text x="548" y="226" class="th" style="font-size:44px;">EXIT PERMIT APPROVAL MONITORING</text>
+  <text x="548" y="252" class="t">Menu khusus approver untuk review, approval, dan verifikasi absensi.</text>
+
+  <!-- Stats -->
+  <rect x="524" y="304" width="336" height="92" rx="12" class="l"/>
+  <rect x="874" y="304" width="364" height="92" rx="12" class="l"/>
+  <rect x="1254" y="304" width="358" height="92" rx="12" class="l"/>
+  <text x="544" y="334" class="t">TOTAL DATA</text>
+  <text x="544" y="370" class="th" style="font-size:54px;">1</text>
+  <text x="894" y="334" class="t">APPROVED</text>
+  <text x="894" y="370" class="th" style="font-size:54px;">0</text>
+  <text x="1274" y="334" class="t">ELIGIBLE MEAL</text>
+  <text x="1274" y="370" class="th" style="font-size:54px;">1</text>
+
+  <!-- Table -->
+  <rect x="524" y="420" width="1088" height="82" rx="12" class="l"/>
+  <line x1="524" y1="456" x2="1612" y2="456" class="l"/>
+  <line x1="642" y1="420" x2="642" y2="502" class="l"/>
+  <line x1="770" y1="420" x2="770" y2="502" class="l"/>
+  <line x1="924" y1="420" x2="924" y2="502" class="l"/>
+  <line x1="1048" y1="420" x2="1048" y2="502" class="l"/>
+  <line x1="1152" y1="420" x2="1152" y2="502" class="l"/>
+  <line x1="1276" y1="420" x2="1276" y2="502" class="l"/>
+  <line x1="1460" y1="420" x2="1460" y2="502" class="l"/>
+
+  <text x="540" y="444" class="ts">KARYAWAN</text>
+  <text x="660" y="444" class="ts">TANGGAL</text>
+  <text x="786" y="444" class="ts">JENIS</text>
+  <text x="940" y="444" class="ts">TUJUAN</text>
+  <text x="1064" y="444" class="ts">MEAL</text>
+  <text x="1168" y="444" class="ts">STATUS</text>
+  <text x="1292" y="444" class="ts">TAHAP APPROVAL</text>
+  <text x="1476" y="444" class="ts">AKSI</text>
+
+  <text x="540" y="484" class="t">Indri</text>
+  <text x="660" y="484" class="t">2026-05-08</text>
+  <text x="786" y="484" class="t">Perjalanan Dinas</text>
+  <text x="940" y="484" class="t">Ke Cikarang</text>
+  <rect x="1060" y="468" width="60" height="24" rx="12" class="l"/>
+  <text x="1072" y="484" class="ts">Eligible</text>
+  <rect x="1162" y="468" width="68" height="24" rx="12" class="l"/>
+  <text x="1174" y="484" class="ts">PENDING</text>
+  <text x="1292" y="484" class="ts">Waiting Manager Approval</text>
+  <rect x="1462" y="468" width="112" height="24" rx="6" class="l"/>
+  <text x="1474" y="484" class="ts">Detail &amp; Approval</text>
+
+  <text x="20" y="786" class="ts">Wireframe exit permit approval - low fidelity black/white sketch</text>
+</svg>

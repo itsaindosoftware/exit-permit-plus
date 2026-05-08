@@ -76,15 +76,34 @@ export default function Create({
         );
     };
 
-    const findRequestorOption = (field, value) => {
+    const findRequestorOptionInList = (options, field, value) => {
         const keyword = value.trim().toLowerCase();
 
         if (!keyword) {
             return null;
         }
 
-        return requestorOptions.find((option) => (option[field] || '').trim().toLowerCase() === keyword) || null;
+        const normalize = (text) => (text || '').trim().toLowerCase();
+        const exactMatch = options.find((option) => normalize(option[field]) === keyword);
+
+        if (exactMatch) {
+            return exactMatch;
+        }
+
+        const startsWithMatches = options.filter((option) => normalize(option[field]).startsWith(keyword));
+        if (startsWithMatches.length === 1) {
+            return startsWithMatches[0];
+        }
+
+        const includesMatches = options.filter((option) => normalize(option[field]).includes(keyword));
+        if (includesMatches.length === 1) {
+            return includesMatches[0];
+        }
+
+        return null;
     };
+
+    const findRequestorOption = (field, value) => findRequestorOptionInList(requestorOptions, field, value);
 
     const fetchRequestorOptions = async (keyword = '') => {
         setIsLoadingRequestorOptions(true);
@@ -108,13 +127,17 @@ export default function Create({
             });
 
             if (!response.ok) {
-                return;
+                return [];
             }
 
             const payload = await response.json();
-            setRequestorOptions(Array.isArray(payload.items) ? payload.items : []);
+            const items = Array.isArray(payload.items) ? payload.items : [];
+            setRequestorOptions(items);
+
+            return items;
         } catch {
             setRequestorOptions([]);
+            return [];
         } finally {
             setIsLoadingRequestorOptions(false);
         }
@@ -229,11 +252,23 @@ export default function Create({
                                                         const value = e.target.value;
                                                         updateRequestorRow(index, 'name', value);
 
-                                                        if (value.trim().length >= 2) {
+                                                        if (value.trim().length >= 1) {
                                                             fetchRequestorOptions(value);
                                                         }
 
                                                         const matched = findRequestorOption('name', value);
+                                                        if (matched) {
+                                                            applyRequestorOption(index, matched);
+                                                        }
+                                                    }}
+                                                    onBlur={async (e) => {
+                                                        const value = e.target.value;
+                                                        if (!value.trim()) {
+                                                            return;
+                                                        }
+
+                                                        const latestOptions = await fetchRequestorOptions(value);
+                                                        const matched = findRequestorOptionInList(latestOptions, 'name', value);
                                                         if (matched) {
                                                             applyRequestorOption(index, matched);
                                                         }
@@ -253,11 +288,23 @@ export default function Create({
                                                         const value = e.target.value;
                                                         updateRequestorRow(index, 'employee_id', value);
 
-                                                        if (value.trim().length >= 2) {
+                                                        if (value.trim().length >= 1) {
                                                             fetchRequestorOptions(value);
                                                         }
 
                                                         const matched = findRequestorOption('employee_id', value);
+                                                        if (matched) {
+                                                            applyRequestorOption(index, matched);
+                                                        }
+                                                    }}
+                                                    onBlur={async (e) => {
+                                                        const value = e.target.value;
+                                                        if (!value.trim()) {
+                                                            return;
+                                                        }
+
+                                                        const latestOptions = await fetchRequestorOptions(value);
+                                                        const matched = findRequestorOptionInList(latestOptions, 'employee_id', value);
                                                         if (matched) {
                                                             applyRequestorOption(index, matched);
                                                         }

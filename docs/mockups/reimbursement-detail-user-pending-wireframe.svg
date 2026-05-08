@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1366" height="768" viewBox="0 0 1366 768" fill="none">
+  <defs>
+    <style>
+      .l{stroke:#111;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+      .t{font-family:"Courier New",monospace;font-size:12px;fill:#111}
+      .th{font-family:"Courier New",monospace;font-size:18px;font-weight:700;fill:#111}
+      .ts{font-family:"Courier New",monospace;font-size:10px;fill:#111}
+    </style>
+  </defs>
+  <rect x="4" y="4" width="1358" height="760" class="l"/>
+  <rect x="4" y="4" width="180" height="760" class="l"/>
+  <text x="22" y="24" class="t">Operational Management Portal</text>
+  <line x1="16" y1="40" x2="166" y2="40" class="l"/>
+  <text x="26" y="80" class="t">Dashboard</text>
+  <text x="26" y="108" class="t">Exit Permit</text>
+  <text x="26" y="136" class="t">Reimbursement</text>
+  <text x="26" y="164" class="t">Profile</text>
+  <rect x="16" y="202" width="150" height="70" rx="8" class="l"/>
+  <circle cx="36" cy="224" r="10" class="l"/>
+  <text x="54" y="222" class="t">Indri</text>
+  <text x="54" y="238" class="ts">indri@example.com</text>
+  <rect x="26" y="246" width="30" height="16" rx="8" class="l"/>
+  <text x="34" y="257" class="ts">USER</text>
+
+  <rect x="184" y="4" width="1178" height="46" class="l"/>
+  <text x="408" y="34" class="th">Detail Reimbursement</text>
+  <rect x="1102" y="12" width="70" height="30" rx="5" class="l"/>
+  <circle cx="1120" cy="27" r="8" class="l"/>
+  <text x="1134" y="31" class="t">Indri</text>
+
+  <rect x="184" y="50" width="1178" height="714" class="l"/>
+  <rect x="408" y="50" width="764" height="26" rx="6" class="l"/>
+  <rect x="420" y="54" width="150" height="16" rx="8" class="l"/>
+  <text x="428" y="65" class="ts">MENUNGGU APPROVAL MANAGER</text>
+
+  <rect x="408" y="92" width="764" height="662" rx="10" class="l"/>
+  <line x1="788" y1="92" x2="788" y2="754" class="l"/>
+  <text x="420" y="116" class="ts">EXIT PERMIT</text>
+  <text x="420" y="128" class="t">#12 | 2026-05-08 | Ke Cikarang</text>
+  <text x="800" y="116" class="ts">STATUS</text>
+  <text x="800" y="128" class="t">pending_manager</text>
+
+  <text x="420" y="154" class="t">Tgl Bayar / Payment Date</text>
+  <text x="800" y="154" class="t">Dibayar Kepada / Paid To</text>
+  <rect x="420" y="162" width="360" height="24" rx="4" class="l"/>
+  <rect x="800" y="162" width="360" height="24" rx="4" class="l"/>
+
+  <text x="420" y="206" class="t">Biaya Order Meal</text>
+  <text x="800" y="206" class="t">Biaya Bensin</text>
+  <rect x="420" y="214" width="360" height="24" rx="4" class="l"/>
+  <rect x="800" y="214" width="360" height="24" rx="4" class="l"/>
+
+  <text x="420" y="258" class="t">Biaya Tol</text>
+  <text x="800" y="258" class="t">Jumlah / Amount (Total Otomatis)</text>
+  <rect x="420" y="266" width="360" height="24" rx="4" class="l"/>
+  <rect x="800" y="266" width="360" height="24" rx="4" class="l"/>
+
+  <text x="420" y="322" class="t">Terbilang / Stated</text>
+  <rect x="420" y="330" width="360" height="24" rx="4" class="l"/>
+
+  <text x="420" y="374" class="t">Jenis Biaya / Expense Type</text>
+  <rect x="420" y="384" width="740" height="24" rx="4" class="l"/>
+
+  <text x="420" y="426" class="t">Tujuan / Purpose</text>
+  <rect x="420" y="438" width="740" height="50" rx="4" class="l"/>
+
+  <text x="420" y="512" class="t">Dok Ref / Attachment</text>
+  <rect x="420" y="528" width="740" height="72" rx="8" class="l"/>
+  <line x1="770" y1="528" x2="770" y2="600" class="l"/>
+  <text x="430" y="546" class="ts">DOK REF</text>
+  <text x="780" y="546" class="ts">ATTACHMENT (JPG/PNG/PDF)</text>
+  <rect x="430" y="552" width="330" height="24" rx="4" class="l"/>
+  <rect x="780" y="552" width="320" height="24" rx="4" class="l"/>
+  <rect x="1112" y="560" width="38" height="20" rx="4" class="l"/>
+  <text x="1120" y="574" class="ts">Hapus</text>
+
+  <rect x="420" y="610" width="740" height="72" rx="8" class="l"/>
+  <line x1="770" y1="610" x2="770" y2="682" class="l"/>
+  <text x="430" y="628" class="ts">DOK REF</text>
+  <text x="780" y="628" class="ts">ATTACHMENT (JPG/PNG/PDF)</text>
+  <rect x="430" y="634" width="330" height="24" rx="4" class="l"/>
+  <rect x="780" y="634" width="320" height="24" rx="4" class="l"/>
+  <rect x="1112" y="642" width="38" height="20" rx="4" class="l"/>
+  <text x="1120" y="656" class="ts">Hapus</text>
+
+  <text x="420" y="706" class="t">Catatan Tambahan</text>
+  <rect x="420" y="714" width="740" height="34" rx="4" class="l"/>
+  <text x="10" y="764" class="ts">Wireframe reimbursement detail (user pending manager) - low fidelity black/white sketch</text>
+</svg>

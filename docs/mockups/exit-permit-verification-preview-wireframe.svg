@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1207" height="803" viewBox="0 0 1207 803" fill="none">
+  <defs>
+    <style>
+      .l { stroke:#111; stroke-width:2; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+      .t { font-family:"Courier New", monospace; font-size:11px; fill:#111; }
+      .th { font-family:"Courier New", monospace; font-size:15px; font-weight:700; fill:#111; }
+      .ts { font-family:"Courier New", monospace; font-size:9px; fill:#111; }
+    </style>
+  </defs>
+  <rect x="4" y="4" width="1199" height="795" class="l"/>
+  <rect x="4" y="4" width="248" height="795" class="l"/>
+  <rect x="252" y="4" width="951" height="44" class="l"/>
+  <text x="440" y="32" class="th">Exit Permit Form</text>
+  <rect x="938" y="12" width="120" height="28" rx="4" class="l"/>
+  <circle cx="954" cy="26" r="7" class="l"/>
+  <text x="966" y="30" class="ts">Sisca Dewiyani</text>
+
+  <rect x="252" y="48" width="951" height="751" class="l"/>
+  <rect x="252" y="48" width="774" height="719" rx="8" class="l"/>
+
+  <rect x="264" y="54" width="742" height="34" rx="4" class="l"/>
+  <rect x="264" y="96" width="742" height="60" rx="4" class="l"/>
+  <rect x="264" y="164" width="742" height="58" rx="4" class="l"/>
+  <text x="274" y="184" class="th">Preview Hasil Matching</text>
+  <text x="274" y="202" class="ts">Sumber file, total requestor, matched count, attendance rows.</text>
+
+  <rect x="274" y="230" width="722" height="56" class="l"/>
+  <line x1="274" y1="246" x2="996" y2="246" class="l"/>
+  <line x1="304" y1="230" x2="304" y2="286" class="l"/>
+  <line x1="390" y1="230" x2="390" y2="286" class="l"/>
+  <line x1="478" y1="230" x2="478" y2="286" class="l"/>
+  <line x1="614" y1="230" x2="614" y2="286" class="l"/>
+  <line x1="716" y1="230" x2="716" y2="286" class="l"/>
+  <line x1="796" y1="230" x2="796" y2="286" class="l"/>
+  <line x1="860" y1="230" x2="860" y2="286" class="l"/>
+
+  <text x="280" y="242" class="ts">NO</text>
+  <text x="314" y="242" class="ts">NAME</text>
+  <text x="398" y="242" class="ts">EMPLOYEE ID</text>
+  <text x="486" y="242" class="ts">DEPARTMENT</text>
+  <text x="622" y="242" class="ts">MATCH</text>
+  <text x="724" y="242" class="ts">MATCH BY</text>
+  <text x="804" y="242" class="ts">REASON</text>
+  <text x="868" y="242" class="ts">LUNCH BOX</text>
+
+  <rect x="264" y="300" width="742" height="24" rx="4" class="l"/>
+  <text x="274" y="316" class="ts">Please fill in properly, this document is attachment reimbursement.</text>
+
+  <rect x="252" y="332" width="774" height="16" class="l"/>
+  <text x="260" y="343" class="ts">2 SPECIAL FULFILL BY SECURITY</text>
+  <rect x="268" y="362" width="364" height="50" rx="4" class="l"/>
+  <rect x="642" y="362" width="364" height="50" rx="4" class="l"/>
+
+  <rect x="820" y="736" width="56" height="24" rx="4" class="l"/>
+  <text x="834" y="752" class="t">Kembali</text>
+  <rect x="882" y="736" width="136" height="24" rx="4" class="l"/>
+  <text x="892" y="752" class="t">Simpan Verifikasi Absensi</text>
+
+  <text x="10" y="797" class="ts">Wireframe exit permit verification (matching preview state) - low fidelity black/white sketch</text>
+</svg>

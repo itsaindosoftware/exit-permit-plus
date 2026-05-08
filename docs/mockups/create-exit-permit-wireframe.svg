@@ -1,0 +1,142 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="820" viewBox="0 0 1440 820" fill="none">
+  <defs>
+    <style>
+      .l { stroke:#111; stroke-width:2; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+      .t { font-family:"Courier New", monospace; font-size:12px; fill:#111; }
+      .th { font-family:"Courier New", monospace; font-size:18px; font-weight:700; fill:#111; }
+      .ts { font-family:"Courier New", monospace; font-size:10px; fill:#111; }
+    </style>
+  </defs>
+
+  <rect x="8" y="8" width="1424" height="804" class="l"/>
+
+  <!-- Sidebar -->
+  <rect x="8" y="8" width="128" height="804" class="l"/>
+  <text x="18" y="30" class="ts">INTERNAL SYSTEM</text>
+  <text x="18" y="50" class="th">Exit Permit+</text>
+  <text x="18" y="65" class="ts">Operational Management Portal</text>
+  <line x1="16" y1="72" x2="124" y2="72" class="l"/>
+  <text x="18" y="102" class="t">Dashboard</text>
+  <text x="18" y="124" class="t">Exit Permit</text>
+  <text x="18" y="146" class="t">Reimbursement</text>
+  <text x="18" y="168" class="t">Profile</text>
+
+  <rect x="16" y="196" width="104" height="54" rx="6" class="l"/>
+  <circle cx="30" cy="210" r="7" class="l"/>
+  <text x="42" y="210" class="ts">Indri</text>
+  <text x="42" y="224" class="ts">indri@example.com</text>
+  <rect x="20" y="230" width="24" height="12" rx="3" class="l"/>
+  <text x="23" y="239" class="ts">USER</text>
+
+  <!-- Topbar -->
+  <rect x="136" y="8" width="1296" height="32" class="l"/>
+  <text x="560" y="29" class="th">Exit Permit Form</text>
+  <rect x="1008" y="14" width="56" height="20" rx="3" class="l"/>
+  <circle cx="1021" cy="24" r="5" class="l"/>
+  <text x="1031" y="28" class="ts">Indri</text>
+
+  <!-- Main area -->
+  <rect x="136" y="40" width="1296" height="772" class="l"/>
+
+  <!-- Intro card -->
+  <rect x="520" y="56" width="544" height="68" rx="8" class="l"/>
+  <text x="530" y="72" class="ts">PT INDONESIA THAI SUMMIT AUTO</text>
+  <text x="530" y="87" class="ts">Struktur form ini mengikuti dokumen Exit Permit manual.</text>
+  <rect x="530" y="95" width="290" height="16" rx="8" class="l"/>
+  <text x="537" y="106" class="ts">APPROVAL FLOW: USER | MANAGER | MD | HR</text>
+
+  <!-- Form shell -->
+  <rect x="520" y="136" width="544" height="610" rx="8" class="l"/>
+  <rect x="520" y="136" width="544" height="42" class="l"/>
+  <text x="744" y="150" class="ts">OFFICIAL DOCUMENT</text>
+  <text x="705" y="166" class="th">EXIT PERMIT FORM</text>
+
+  <!-- Section 1 heading -->
+  <rect x="520" y="178" width="544" height="16" class="l"/>
+  <rect x="520" y="178" width="18" height="16" class="l"/>
+  <text x="526" y="189" class="ts">1</text>
+  <text x="548" y="189" class="ts">FOR REQUESTOR</text>
+
+  <!-- Requestor table -->
+  <rect x="532" y="202" width="520" height="40" class="l"/>
+  <line x1="532" y1="218" x2="1052" y2="218" class="l"/>
+  <line x1="560" y1="202" x2="560" y2="242" class="l"/>
+  <line x1="652" y1="202" x2="652" y2="242" class="l"/>
+  <line x1="748" y1="202" x2="748" y2="242" class="l"/>
+  <line x1="840" y1="202" x2="840" y2="242" class="l"/>
+  <line x1="936" y1="202" x2="936" y2="242" class="l"/>
+  <line x1="1012" y1="202" x2="1012" y2="242" class="l"/>
+  <text x="536" y="214" class="ts">NO</text>
+  <text x="570" y="214" class="ts">NAME</text>
+  <text x="662" y="214" class="ts">EMPLOYEE ID</text>
+  <text x="758" y="214" class="ts">POSITION</text>
+  <text x="850" y="214" class="ts">DEPARTMENT</text>
+  <text x="940" y="214" class="ts">LUNCH (Y/N)</text>
+  <text x="1018" y="214" class="ts">AKSI</text>
+
+  <rect x="532" y="248" width="520" height="22" rx="4" class="l"/>
+  <text x="538" y="262" class="ts">Tambahkan atau kurangi baris sesuai jumlah data requestor.</text>
+  <rect x="996" y="252" width="52" height="14" rx="3" class="l"/>
+  <text x="999" y="262" class="ts">+Tambah</text>
+
+  <!-- Date + type -->
+  <rect x="532" y="278" width="520" height="48" rx="4" class="l"/>
+  <line x1="772" y1="278" x2="772" y2="326" class="l"/>
+  <text x="538" y="292" class="ts">1.2 Request permit date</text>
+  <rect x="538" y="300" width="228" height="18" rx="3" class="l"/>
+  <text x="778" y="292" class="ts">Tipe Exit Permit</text>
+  <rect x="778" y="300" width="132" height="18" rx="3" class="l"/>
+  <rect x="914" y="300" width="132" height="18" rx="3" class="l"/>
+
+  <!-- Destination -->
+  <text x="532" y="344" class="ts">Destination</text>
+  <rect x="532" y="350" width="520" height="18" rx="3" class="l"/>
+
+  <!-- Time + checkbox -->
+  <text x="532" y="386" class="ts">Exit from factory on time</text>
+  <text x="688" y="386" class="ts">Plan back time</text>
+  <rect x="532" y="392" width="150" height="18" rx="3" class="l"/>
+  <rect x="688" y="392" width="180" height="18" rx="3" class="l"/>
+  <rect x="874" y="392" width="178" height="32" rx="4" class="l"/>
+  <rect x="882" y="400" width="8" height="8" rx="2" class="l"/>
+  <text x="896" y="407" class="ts">Comeback to factory today</text>
+
+  <!-- Order car -->
+  <text x="532" y="444" class="ts">1.3 Order Car</text>
+  <rect x="538" y="450" width="24" height="14" rx="3" class="l"/>
+  <text x="546" y="460" class="ts">Yes</text>
+  <rect x="568" y="450" width="24" height="14" rx="3" class="l"/>
+  <text x="576" y="460" class="ts">No</text>
+
+  <!-- Reason -->
+  <text x="532" y="486" class="ts">1.4 Detail the reasons</text>
+  <rect x="532" y="492" width="520" height="44" rx="3" class="l"/>
+
+  <!-- Attachment -->
+  <text x="532" y="552" class="ts">Attachment Foto (Opsional, Max 2MB)</text>
+  <rect x="532" y="558" width="520" height="18" rx="3" class="l"/>
+
+  <!-- Warning -->
+  <rect x="532" y="594" width="520" height="22" rx="4" class="l"/>
+  <text x="538" y="608" class="ts">Please fill in properly, this document is attachment reimbursement.</text>
+
+  <!-- Section 2 -->
+  <rect x="520" y="624" width="544" height="16" class="l"/>
+  <rect x="520" y="624" width="18" height="16" class="l"/>
+  <text x="526" y="635" class="ts">2</text>
+  <text x="548" y="635" class="ts">SPECIAL FULFILL BY SECURITY</text>
+
+  <rect x="532" y="650" width="256" height="40" rx="4" class="l"/>
+  <rect x="796" y="650" width="256" height="40" rx="4" class="l"/>
+  <text x="538" y="666" class="ts">2.1 Exit from factory time</text>
+  <text x="802" y="666" class="ts">2.2 Comeback to factory time</text>
+
+  <!-- Footer actions -->
+  <rect x="520" y="712" width="544" height="34" class="l"/>
+  <rect x="944" y="722" width="28" height="14" rx="3" class="l"/>
+  <text x="950" y="732" class="ts">Batal</text>
+  <rect x="980" y="720" width="72" height="18" rx="4" class="l"/>
+  <text x="986" y="732" class="ts">Simpan Exit Permit</text>
+
+  <text x="18" y="804" class="ts">Wireframe create exit permit - low fidelity black/white sketch</text>
+</svg>

@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1365" height="770" viewBox="0 0 1365 770" fill="none">
+  <defs>
+    <style>
+      .l { stroke:#111; stroke-width:2; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+      .t { font-family:"Courier New", monospace; font-size:12px; fill:#111; }
+      .th { font-family:"Courier New", monospace; font-size:22px; font-weight:700; fill:#111; }
+      .ts { font-family:"Courier New", monospace; font-size:10px; fill:#111; }
+    </style>
+  </defs>
+
+  <rect x="4" y="4" width="1357" height="762" class="l"/>
+
+  <!-- Sidebar -->
+  <rect x="4" y="4" width="130" height="762" class="l"/>
+  <text x="18" y="84" class="t">Dashboard</text>
+  <text x="18" y="104" class="t">List Exit Permit</text>
+  <rect x="12" y="118" width="110" height="18" rx="4" class="l"/>
+  <text x="20" y="131" class="t">Schedule Car</text>
+  <text x="18" y="150" class="t">Exit Permit</text>
+  <text x="18" y="172" class="t">Reimbursement</text>
+  <text x="18" y="194" class="t">Profile</text>
+
+  <rect x="14" y="252" width="108" height="54" rx="6" class="l"/>
+  <circle cx="28" cy="270" r="7" class="l"/>
+  <text x="40" y="270" class="ts">Ratna</text>
+  <text x="40" y="284" class="ts">ratna@example.com</text>
+  <rect x="18" y="288" width="26" height="12" rx="3" class="l"/>
+  <text x="23" y="297" class="ts">HR</text>
+
+  <!-- Topbar -->
+  <rect x="134" y="4" width="1227" height="38" class="l"/>
+  <text x="470" y="28" class="th">Schedule Car</text>
+  <rect x="936" y="12" width="80" height="22" rx="4" class="l"/>
+  <circle cx="950" cy="23" r="7" class="l"/>
+  <text x="964" y="27" class="ts">Ratna</text>
+
+  <!-- Main -->
+  <rect x="134" y="42" width="1227" height="724" class="l"/>
+
+  <!-- pending arrange panel -->
+  <rect x="502" y="72" width="534" height="66" rx="6" class="l"/>
+  <rect x="936" y="78" width="92" height="16" rx="4" class="l"/>
+  <text x="944" y="90" class="ts">Create Arrange</text>
+  <rect x="516" y="104" width="508" height="24" rx="4" class="l"/>
+  <text x="520" y="120" class="ts">#12 | 2026-05-08 | 15:48-21:48 | Ke Cikarang</text>
+
+  <!-- Filter bar -->
+  <rect x="502" y="150" width="534" height="48" rx="6" class="l"/>
+  <text x="516" y="168" class="ts">MODE</text>
+  <rect x="516" y="174" width="34" height="16" rx="3" class="l"/>
+  <text x="522" y="186" class="ts">Harian</text>
+  <rect x="554" y="174" width="42" height="16" rx="3" class="l"/>
+  <text x="560" y="186" class="ts">Mingguan</text>
+  <rect x="600" y="174" width="36" height="16" rx="3" class="l"/>
+  <text x="606" y="186" class="ts">Bulanan</text>
+  <text x="640" y="186" class="ts">TANGGAL FOKUS</text>
+  <rect x="700" y="174" width="70" height="16" rx="3" class="l"/>
+  <text x="706" y="186" class="ts">08/05/2026</text>
+  <text x="774" y="186" class="ts">FILTER TANGGAL</text>
+  <rect x="832" y="174" width="72" height="16" rx="3" class="l"/>
+  <text x="838" y="186" class="ts">dd/mm/yyyy</text>
+  <text x="908" y="186" class="ts">FILTER HARI</text>
+  <rect x="954" y="174" width="46" height="16" rx="3" class="l"/>
+  <text x="960" y="186" class="ts">Semua</text>
+
+  <!-- Grid -->
+  <rect x="502" y="212" width="534" height="516" rx="6" class="l"/>
+  <line x1="522" y1="212" x2="522" y2="728" class="l"/>
+  <line x1="560" y1="212" x2="560" y2="728" class="l"/>
+  <line x1="638" y1="212" x2="638" y2="728" class="l"/>
+  <line x1="716" y1="212" x2="716" y2="728" class="l"/>
+  <line x1="794" y1="212" x2="794" y2="728" class="l"/>
+  <line x1="872" y1="212" x2="872" y2="728" class="l"/>
+  <line x1="950" y1="212" x2="950" y2="728" class="l"/>
+
+  <line x1="502" y1="242" x2="1036" y2="242" class="l"/>
+  <line x1="502" y1="268" x2="1036" y2="268" class="l"/>
+  <line x1="502" y1="294" x2="1036" y2="294" class="l"/>
+  <line x1="502" y1="320" x2="1036" y2="320" class="l"/>
+  <line x1="502" y1="346" x2="1036" y2="346" class="l"/>
+  <line x1="502" y1="372" x2="1036" y2="372" class="l"/>
+  <line x1="502" y1="398" x2="1036" y2="398" class="l"/>
+  <line x1="502" y1="424" x2="1036" y2="424" class="l"/>
+  <line x1="502" y1="450" x2="1036" y2="450" class="l"/>
+  <line x1="502" y1="476" x2="1036" y2="476" class="l"/>
+  <line x1="502" y1="502" x2="1036" y2="502" class="l"/>
+  <line x1="502" y1="528" x2="1036" y2="528" class="l"/>
+  <line x1="502" y1="554" x2="1036" y2="554" class="l"/>
+  <line x1="502" y1="580" x2="1036" y2="580" class="l"/>
+  <line x1="502" y1="606" x2="1036" y2="606" class="l"/>
+  <line x1="502" y1="632" x2="1036" y2="632" class="l"/>
+  <line x1="502" y1="658" x2="1036" y2="658" class="l"/>
+  <line x1="502" y1="684" x2="1036" y2="684" class="l"/>
+
+  <text x="508" y="230" class="ts">JAM</text>
+  <text x="566" y="230" class="ts">SEN</text>
+  <text x="644" y="230" class="ts">SEL</text>
+  <text x="722" y="230" class="ts">RAB</text>
+  <text x="800" y="230" class="ts">KAM</text>
+  <text x="878" y="230" class="ts">JUM</text>
+  <text x="956" y="230" class="ts">SAB</text>
+
+  <!-- Schedule blocks -->
+  <rect x="796" y="546" width="76" height="130" rx="4" class="l"/>
+  <text x="802" y="560" class="ts">12:48-15:53</text>
+  <text x="802" y="574" class="ts">Ke ITPS KIM</text>
+
+  <rect x="876" y="484" width="78" height="170" rx="4" class="l"/>
+  <text x="882" y="498" class="ts">08:18-14:14</text>
+  <text x="882" y="512" class="ts">Ke Vendor</text>
+
+  <rect x="876" y="652" width="78" height="76" rx="4" class="l"/>
+  <text x="882" y="666" class="ts">15:48-21:48</text>
+  <text x="882" y="680" class="ts">Ke Cikarang</text>
+
+  <text x="14" y="760" class="ts">Wireframe schedule car - low fidelity black/white sketch</text>
+</svg>

@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="820" viewBox="0 0 1440 820" fill="none">
+  <defs>
+    <style>
+      .l { stroke:#111; stroke-width:2; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+      .t { font-family:"Courier New", monospace; font-size:14px; fill:#111; }
+      .th { font-family:"Courier New", monospace; font-size:22px; font-weight:700; fill:#111; }
+      .ts { font-family:"Courier New", monospace; font-size:12px; fill:#111; }
+    </style>
+  </defs>
+
+  <rect x="12" y="12" width="1416" height="796" class="l"/>
+
+  <!-- Card container -->
+  <rect x="295" y="235" width="880" height="390" rx="18" class="l"/>
+  <line x1="650" y1="235" x2="650" y2="625" class="l"/>
+
+  <!-- Left panel -->
+  <text x="320" y="275" class="ts">CORPORATE PORTAL</text>
+  <text x="320" y="315" class="th">ITSA Hub</text>
+  <line x1="320" y1="330" x2="430" y2="330" class="l"/>
+
+  <text x="320" y="360" class="t">Platform internal perusahaan untuk</text>
+  <text x="320" y="382" class="t">pengajuan izin, order meal, approval.</text>
+
+  <rect x="320" y="410" width="300" height="36" rx="10" class="l"/>
+  <text x="336" y="433" class="t">Approval Manager, MD, HR</text>
+
+  <rect x="320" y="455" width="300" height="52" rx="10" class="l"/>
+  <text x="336" y="477" class="t">Monitoring realtime reimbursement</text>
+  <text x="336" y="496" class="t">dan lunch pack</text>
+
+  <circle cx="600" cy="595" r="95" class="l"/>
+  <circle cx="355" cy="250" r="72" class="l"/>
+
+  <!-- Right panel -->
+  <text x="680" y="282" class="ts">SECURE ACCESS</text>
+  <text x="680" y="314" class="th">Welcome Back</text>
+  <text x="680" y="340" class="t">Masuk menggunakan akun perusahaan</text>
+
+  <text x="680" y="386" class="t">Email</text>
+  <rect x="680" y="395" width="460" height="40" rx="8" class="l"/>
+  <text x="694" y="420" class="t">000.00.00</text>
+
+  <text x="680" y="468" class="t">Password</text>
+  <rect x="680" y="477" width="460" height="40" rx="8" class="l"/>
+  <text x="694" y="502" class="t">..........</text>
+
+  <rect x="680" y="536" width="13" height="13" rx="2" class="l"/>
+  <text x="700" y="548" class="ts">Remember me</text>
+  <text x="1023" y="548" class="ts">Forgot your password?</text>
+
+  <rect x="680" y="563" width="460" height="36" rx="10" class="l"/>
+  <text x="890" y="586" class="t">LOG IN</text>
+
+  <!-- sketch accents -->
+  <line x1="296" y1="235" x2="1174" y2="235" class="l"/>
+  <line x1="296" y1="625" x2="1174" y2="625" class="l"/>
+  <text x="24" y="798" class="ts">Wireframe login - low fidelity black/white sketch</text>
+</svg>

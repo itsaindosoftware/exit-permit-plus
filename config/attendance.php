@@ -10,6 +10,10 @@ return [
     // Connection/table used for requestor autocomplete in Exit Permit form.
     'requestor_source_connection' => env('ATTENDANCE_REQUESTOR_SOURCE_CONNECTION', env('DB_CONNECTION', 'mysql')),
     'requestor_source_table' => env('ATTENDANCE_REQUESTOR_SOURCE_TABLE', 'absensi_karyawan'),
+    'requestor_source_tables' => array_values(array_filter(array_map(
+        fn(string $table) => trim($table),
+        explode(',', (string) env('ATTENDANCE_REQUESTOR_SOURCE_TABLES', 'karyawan,employees,absensi_karyawan')),
+    ))),
 
     // Only these departments are included in company attendance matching.
     // Can be overridden from .env with comma-separated values.

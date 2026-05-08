@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800" fill="none">
+  <defs>
+    <style>
+      .l { stroke:#111; stroke-width:2; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+      .t { font-family:"Courier New", monospace; font-size:11px; fill:#111; }
+      .th { font-family:"Courier New", monospace; font-size:16px; font-weight:700; fill:#111; }
+      .ts { font-family:"Courier New", monospace; font-size:9px; fill:#111; }
+    </style>
+  </defs>
+
+  <rect x="4" y="4" width="1272" height="792" class="l"/>
+  <rect x="4" y="4" width="340" height="792" class="l"/>
+  <rect x="344" y="4" width="932" height="36" class="l"/>
+  <text x="384" y="28" class="th">Exit Permit Form</text>
+  <rect x="950" y="10" width="120" height="24" rx="4" class="l"/>
+  <circle cx="966" cy="22" r="7" class="l"/>
+  <text x="978" y="25" class="ts">Sisca Dewiyani</text>
+
+  <rect x="344" y="40" width="932" height="756" class="l"/>
+  <rect x="352" y="40" width="586" height="724" rx="8" class="l"/>
+  <rect x="352" y="40" width="586" height="16" class="l"/>
+  <text x="360" y="51" class="ts">1 FOR REQUESTOR</text>
+
+  <rect x="364" y="60" width="562" height="56" class="l"/>
+  <line x1="364" y1="76" x2="926" y2="76" class="l"/>
+  <line x1="390" y1="60" x2="390" y2="116" class="l"/>
+  <line x1="500" y1="60" x2="500" y2="116" class="l"/>
+  <line x1="602" y1="60" x2="602" y2="116" class="l"/>
+  <line x1="704" y1="60" x2="704" y2="116" class="l"/>
+  <line x1="806" y1="60" x2="806" y2="116" class="l"/>
+
+  <rect x="364" y="126" width="562" height="20" rx="3" class="l"/>
+  <rect x="816" y="130" width="44" height="12" rx="3" class="l"/>
+  <rect x="866" y="130" width="58" height="12" rx="3" class="l"/>
+
+  <rect x="364" y="156" width="562" height="24" rx="4" class="l"/>
+  <rect x="364" y="190" width="562" height="18" rx="3" class="l"/>
+  <rect x="364" y="218" width="176" height="22" rx="3" class="l"/>
+  <rect x="548" y="218" width="190" height="22" rx="3" class="l"/>
+  <rect x="744" y="218" width="182" height="32" rx="4" class="l"/>
+
+  <rect x="364" y="260" width="562" height="30" rx="4" class="l"/>
+  <rect x="364" y="300" width="562" height="60" rx="4" class="l"/>
+
+  <text x="364" y="382" class="t">Attachment Foto (Opsional, Max 2MB)</text>
+  <rect x="364" y="388" width="562" height="24" rx="3" class="l"/>
+
+  <text x="364" y="438" class="t">Upload Attendance (CSV/XLSX)</text>
+  <rect x="364" y="444" width="562" height="28" rx="4" class="l"/>
+  <text x="364" y="494" class="ts">Untuk tipe company, Sisca upload file attendance dari folder sharing.</text>
+  <rect x="364" y="504" width="146" height="24" rx="4" class="l"/>
+  <text x="374" y="520" class="ts">Preview Matching Attendance</text>
+
+  <rect x="364" y="538" width="562" height="28" rx="4" class="l"/>
+  <text x="374" y="556" class="ts">Please fill in properly, this document is attachment reimbursement.</text>
+
+  <rect x="352" y="572" width="586" height="16" class="l"/>
+  <text x="360" y="583" class="ts">2 SPECIAL FULFILL BY SECURITY</text>
+  <rect x="364" y="602" width="266" height="48" rx="4" class="l"/>
+  <rect x="642" y="602" width="284" height="48" rx="4" class="l"/>
+
+  <rect x="820" y="736" width="56" height="24" rx="4" class="l"/>
+  <text x="834" y="752" class="t">Kembali</text>
+  <rect x="882" y="736" width="140" height="24" rx="4" class="l"/>
+  <text x="892" y="752" class="t">Simpan Verifikasi Absensi</text>
+
+  <text x="10" y="792" class="ts">Wireframe exit permit verification (upload state) - low fidelity black/white sketch</text>
+</svg>

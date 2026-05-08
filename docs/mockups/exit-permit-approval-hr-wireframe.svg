@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1365" height="780" viewBox="0 0 1365 780" fill="none">
+  <defs>
+    <style>
+      .l { stroke:#111; stroke-width:2; fill:none; stroke-linejoin:round; stroke-linecap:round; }
+      .t { font-family:"Courier New", monospace; font-size:12px; fill:#111; }
+      .th { font-family:"Courier New", monospace; font-size:22px; font-weight:700; fill:#111; }
+      .ts { font-family:"Courier New", monospace; font-size:10px; fill:#111; }
+    </style>
+  </defs>
+  <rect x="4" y="4" width="1357" height="772" class="l"/>
+  <rect x="4" y="4" width="196" height="772" class="l"/>
+  <text x="16" y="140" class="t">Dashboard</text>
+  <text x="16" y="172" class="t">List Exit Permit</text>
+  <text x="16" y="204" class="t">Exit Permit</text>
+  <rect x="8" y="226" width="184" height="26" rx="6" class="l"/>
+  <text x="18" y="244" class="t">Exit Permit Approval</text>
+  <text x="16" y="272" class="t">Order Meal Umum</text>
+  <text x="16" y="304" class="t">Reimbursement</text>
+  <text x="16" y="336" class="t">Profile</text>
+  <rect x="10" y="380" width="168" height="82" rx="8" class="l"/>
+  <circle cx="24" cy="406" r="9" class="l"/>
+  <text x="40" y="404" class="t">Sisca Dewiyani</text>
+  <text x="40" y="420" class="ts">sisca.dewiyani@example.com</text>
+
+  <rect x="200" y="4" width="1161" height="46" class="l"/>
+  <text x="366" y="34" class="th">Exit Permit Approval</text>
+  <rect x="1106" y="10" width="132" height="34" rx="6" class="l"/>
+  <circle cx="1128" cy="27" r="10" class="l"/>
+  <text x="1146" y="31" class="t">Sisca Dewiyani</text>
+
+  <rect x="200" y="50" width="1161" height="726" class="l"/>
+
+  <rect x="364" y="76" width="876" height="94" rx="12" class="l"/>
+  <text x="382" y="102" class="ts">APPROVAL WORKFLOW</text>
+  <text x="382" y="128" class="th" style="font-size:40px;">EXIT PERMIT APPROVAL MONITORING</text>
+  <text x="382" y="148" class="t">Menu khusus approver untuk proses review, approval, dan verifikasi absensi.</text>
+
+  <rect x="364" y="188" width="284" height="72" rx="10" class="l"/>
+  <rect x="660" y="188" width="284" height="72" rx="10" class="l"/>
+  <rect x="956" y="188" width="284" height="72" rx="10" class="l"/>
+  <text x="378" y="212" class="t">TOTAL DATA</text>
+  <text x="378" y="240" class="th" style="font-size:40px;">10</text>
+  <text x="674" y="212" class="t">APPROVED</text>
+  <text x="674" y="240" class="th" style="font-size:40px;">10</text>
+  <text x="970" y="212" class="t">ELIGIBLE MEAL</text>
+  <text x="970" y="240" class="th" style="font-size:40px;">1</text>
+
+  <rect x="364" y="276" width="876" height="488" rx="10" class="l"/>
+  <line x1="364" y1="308" x2="1240" y2="308" class="l"/>
+  <line x1="438" y1="276" x2="438" y2="764" class="l"/>
+  <line x1="512" y1="276" x2="512" y2="764" class="l"/>
+  <line x1="598" y1="276" x2="598" y2="764" class="l"/>
+  <line x1="688" y1="276" x2="688" y2="764" class="l"/>
+  <line x1="754" y1="276" x2="754" y2="764" class="l"/>
+  <line x1="912" y1="276" x2="912" y2="764" class="l"/>
+  <line x1="1156" y1="276" x2="1156" y2="764" class="l"/>
+
+  <text x="372" y="298" class="ts">KARYAWAN</text>
+  <text x="446" y="298" class="ts">TANGGAL</text>
+  <text x="520" y="298" class="ts">JENIS</text>
+  <text x="610" y="298" class="ts">TUJUAN</text>
+  <text x="700" y="298" class="ts">MEAL</text>
+  <text x="764" y="298" class="ts">STATUS</text>
+  <text x="922" y="298" class="ts">TAHAP APPROVAL</text>
+  <text x="1164" y="298" class="ts">AKSI</text>
+
+  <line x1="364" y1="386" x2="1240" y2="386" class="l"/>
+  <line x1="364" y1="464" x2="1240" y2="464" class="l"/>
+  <line x1="364" y1="542" x2="1240" y2="542" class="l"/>
+  <line x1="364" y1="620" x2="1240" y2="620" class="l"/>
+  <line x1="364" y1="698" x2="1240" y2="698" class="l"/>
+
+  <text x="374" y="348" class="t">Indri</text>
+  <text x="446" y="348" class="t">2026-05-08</text>
+  <text x="520" y="348" class="t">Perjalanan Dinas</text>
+  <text x="610" y="348" class="t">Ke Cikarang</text>
+  <rect x="700" y="336" width="50" height="20" rx="10" class="l"/>
+  <text x="710" y="350" class="ts">Eligible</text>
+  <rect x="764" y="336" width="60" height="20" rx="10" class="l"/>
+  <text x="774" y="350" class="ts">APPROVED</text>
+  <text x="922" y="350" class="ts">Approved by HR Manager | Menunggu verifikasi absensi Sisca</text>
+  <rect x="1158" y="332" width="72" height="28" rx="4" class="l"/>
+  <text x="1166" y="350" class="ts">Verifikasi Absensi</text>
+
+  <text x="12" y="772" class="ts">Wireframe exit permit approval (HR) - low fidelity black/white sketch</text>
+</svg>

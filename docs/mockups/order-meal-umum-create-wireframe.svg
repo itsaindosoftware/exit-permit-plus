@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1365" height="770" viewBox="0 0 1365 770" fill="none">
+  <defs>
+    <style>
+      .l { stroke:#111; stroke-width:2; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+      .t { font-family:"Courier New", monospace; font-size:12px; fill:#111; }
+      .th { font-family:"Courier New", monospace; font-size:18px; font-weight:700; fill:#111; }
+      .ts { font-family:"Courier New", monospace; font-size:10px; fill:#111; }
+    </style>
+  </defs>
+
+  <rect x="4" y="4" width="1357" height="762" class="l"/>
+  <rect x="4" y="4" width="178" height="762" class="l"/>
+  <text x="16" y="114" class="t">Dashboard</text>
+  <text x="16" y="144" class="t">List Exit Permit</text>
+  <text x="16" y="174" class="t">Exit Permit</text>
+  <text x="16" y="204" class="t">Exit Permit Approval</text>
+  <text x="16" y="234" class="t">Order Meal Umum</text>
+  <text x="16" y="264" class="t">Reimbursement</text>
+  <text x="16" y="294" class="t">Profile</text>
+  <rect x="16" y="330" width="150" height="70" rx="8" class="l"/>
+  <text x="26" y="350" class="t">Sisca Dewiyani</text>
+
+  <rect x="182" y="4" width="1179" height="46" class="l"/>
+  <text x="404" y="34" class="th">Tambah Order Meal Umum</text>
+  <rect x="1048" y="10" width="120" height="34" rx="6" class="l"/>
+  <circle cx="1068" cy="27" r="10" class="l"/>
+  <text x="1084" y="31" class="t">Sisca Dewiyani</text>
+
+  <rect x="182" y="50" width="1179" height="716" class="l"/>
+  <rect x="406" y="62" width="764" height="52" rx="8" class="l"/>
+  <text x="420" y="82" class="ts">CANTEEN REQUEST</text>
+  <text x="420" y="98" class="t">Order meal umum untuk kebutuhan harian karyawan dan additional visitor.</text>
+
+  <rect x="406" y="132" width="764" height="636" rx="10" class="l"/>
+
+  <rect x="422" y="148" width="732" height="58" rx="8" class="l"/>
+  <line x1="662" y1="148" x2="662" y2="206" class="l"/>
+  <line x1="902" y1="148" x2="902" y2="206" class="l"/>
+  <text x="434" y="166" class="ts">MEAL TYPE</text>
+  <rect x="434" y="172" width="38" height="18" rx="9" class="l"/>
+  <text x="444" y="184" class="ts">Lunch</text>
+  <text x="674" y="166" class="ts">DEFAULT CAPACITY</text>
+  <text x="674" y="192" class="th" style="font-size:40px;">120</text>
+  <text x="914" y="166" class="ts">TEMPLATE EXCEL</text>
+  <rect x="914" y="172" width="92" height="18" rx="9" class="l"/>
+  <text x="924" y="184" class="ts">ITSA Catering Cost</text>
+
+  <rect x="422" y="220" width="732" height="56" rx="8" class="l"/>
+  <line x1="662" y1="220" x2="662" y2="276" class="l"/>
+  <line x1="902" y1="220" x2="902" y2="276" class="l"/>
+  <text x="434" y="238" class="t">Schedule</text>
+  <rect x="434" y="246" width="228" height="22" rx="4" class="l"/>
+  <text x="674" y="238" class="t">Jumlah Jadwal</text>
+  <rect x="674" y="246" width="228" height="22" rx="4" class="l"/>
+  <text x="914" y="238" class="t">INFO</text>
+  <text x="914" y="254" class="ts">Buat 1 order meal pada tanggal terpilih.</text>
+
+  <text x="422" y="302" class="t">Tanggal Makan</text>
+  <text x="790" y="302" class="t">Menu Makan Siang</text>
+  <rect x="422" y="310" width="360" height="22" rx="4" class="l"/>
+  <rect x="790" y="310" width="364" height="22" rx="4" class="l"/>
+
+  <rect x="422" y="346" width="732" height="182" rx="8" class="l"/>
+  <text x="434" y="364" class="th">Calculation for Catering Cost</text>
+  <text x="434" y="390" class="t">Day Shift</text><rect x="434" y="398" width="170" height="24" rx="4" class="l"/>
+  <text x="614" y="390" class="t">Overtime Day</text><rect x="614" y="398" width="170" height="24" rx="4" class="l"/>
+  <text x="794" y="390" class="t">Night Shift</text><rect x="794" y="398" width="170" height="24" rx="4" class="l"/>
+  <text x="974" y="390" class="t">Overtime Night</text><rect x="974" y="398" width="170" height="24" rx="4" class="l"/>
+
+  <text x="434" y="442" class="t">Total</text><rect x="434" y="450" width="170" height="24" rx="4" class="l"/>
+  <text x="614" y="442" class="t">Amount / Porsi</text><rect x="614" y="450" width="170" height="24" rx="4" class="l"/>
+  <text x="794" y="442" class="t">Local Tax</text><rect x="794" y="450" width="170" height="24" rx="4" class="l"/>
+  <text x="974" y="442" class="t">Service Tax</text><rect x="974" y="450" width="170" height="24" rx="4" class="l"/>
+
+  <rect x="434" y="484" width="710" height="34" rx="6" class="l"/>
+  <text x="446" y="506" class="t">Subtotal | Local Tax | Service Tax | Grand Total</text>
+
+  <text x="422" y="552" class="t">Paket Dasar Karyawan</text>
+  <text x="670" y="552" class="t">Realisasi Makan</text>
+  <rect x="422" y="560" width="238" height="24" rx="4" class="l"/>
+  <rect x="670" y="560" width="238" height="24" rx="4" class="l"/>
+  <text x="422" y="596" class="ts">Otomatis hasil penjumlahan 4 kolom shift.</text>
+
+  <rect x="422" y="608" width="732" height="28" rx="6" class="l"/>
+  <text x="434" y="626" class="t">Total paket disediakan = day + overtime day + night + overtime night.</text>
+
+  <text x="422" y="658" class="t">Catatan</text>
+  <rect x="422" y="666" width="732" height="48" rx="4" class="l"/>
+
+  <rect x="1054" y="736" width="50" height="24" rx="4" class="l"/>
+  <text x="1068" y="752" class="t">Simpan</text>
+  <rect x="1112" y="736" width="42" height="24" rx="4" class="l"/>
+  <text x="1124" y="752" class="t">Batal</text>
+
+  <text x="10" y="760" class="ts">Wireframe order meal umum create - low fidelity black/white sketch</text>
+</svg>

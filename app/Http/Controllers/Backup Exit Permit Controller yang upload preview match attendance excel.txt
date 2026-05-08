@@ -178,8 +178,8 @@ class ExitPermitController extends Controller
 
         $nameColumn = $findColumn(['name', 'nama', 'employee_name', 'full_name']);
         $employeeIdColumn = $findColumn(['employee_id', 'id_employee', 'nik', 'pin', 'emp_id']);
-        $positionColumn = $findColumn(['position', 'posisi', 'jabatan', 'job_title']);
-        $departmentColumn = $findColumn(['department', 'departemen', 'dept', 'department_name', 'bagian']);
+        $positionColumn = $findColumn(['position', 'jabatan', 'job_title']);
+        $departmentColumn = $findColumn(['department', 'dept', 'department_name', 'bagian']);
 
         if (!$nameColumn && !$employeeIdColumn) {
             return response()->json(['items' => []]);
