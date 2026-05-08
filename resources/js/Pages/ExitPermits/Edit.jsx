@@ -109,6 +109,7 @@ export default function Edit({
     const vehiclePlateLocked = !(canUpdateRequest || canArrangeCar);
     const isCompanyExitType = data.exit_type === 'business_trip';
     const isRecapViewer = ['hr', 'admin'].includes(viewerRole);
+    const backRouteName = (canSubmitApproval || canVerifyAttendance) ? 'exit-permit-approvals.index' : 'exit-permits.index';
     const selectedCar = carOptions.find((car) => car.id === data.car_id);
     const selectedDriver = driverOptions.find((driver) => driver.id === data.driver_id);
     const getAttendanceMatchReason = (item) => {
@@ -664,7 +665,7 @@ export default function Edit({
 
                     <div className="flex flex-col-reverse gap-3 border-t border-slate-200 bg-slate-50 px-4 py-4 sm:flex-row sm:justify-end md:px-6">
                         <Link
-                            href={route('exit-permits.index')}
+                            href={route(backRouteName)}
                             className="rounded-md border border-slate-300 px-4 py-2 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
                         >
                             Kembali

@@ -44,11 +44,32 @@ class ExitPermitController extends Controller
     public function index(): Response
     {
         $user = request()->user();
+        $query = ExitPermit::query()
+            ->with(['user:id,name', 'hrApprover:id,name'])
+            ->where('user_id', $user?->id)
+            ->latest();
+
+        return Inertia::render('ExitPermits/Index', [
+            'canCreate' => (bool) $user,
+            'viewerRole' => $user?->role?->code,
+            'pageMode' => 'personal',
+            'exitPermits' => $query
+                ->paginate(10)
+                ->through(fn(ExitPermit $exitPermit) => $this->transformExitPermitListItem($exitPermit, $user)),
+        ]);
+    }
+
+    public function approvalIndex(): Response
+    {
+        $user = request()->user();
+
+        if (!$this->canAccessApprovalMenu($user)) {
+            abort(403);
+        }
+
         $query = ExitPermit::query()->with(['user:id,name', 'hrApprover:id,name'])->latest();
 
-        if (!$this->canViewAllData($user)) {
-            $query->where('user_id', $user->id);
-        } elseif ($user?->role?->code === 'manager') {
+        if ($user?->role?->code === 'manager') {
             $query->whereNull('manager_approved_at')->where('status', 'pending');
         } elseif ($user?->role?->code === 'md') {
             $query->whereNotNull('manager_approved_at')
@@ -62,36 +83,42 @@ class ExitPermitController extends Controller
         }
 
         return Inertia::render('ExitPermits/Index', [
-            'canCreate' => (bool) $user,
+            'canCreate' => false,
             'viewerRole' => $user?->role?->code,
+            'pageMode' => 'approval',
             'exitPermits' => $query
                 ->paginate(10)
-                ->through(fn(ExitPermit $exitPermit) => [
-                    'id' => $exitPermit->id,
-                    'employee_name' => $exitPermit->user?->name,
-                    'permit_date' => $this->toDateOnly($exitPermit->permit_date),
-                    'start_time' => $this->toHourMinute($exitPermit->start_time),
-                    'end_time' => $this->toHourMinute($exitPermit->end_time),
-                    'destination' => $exitPermit->destination,
-                    'exit_type' => $exitPermit->exit_type,
-                    'vehicle_plate' => $exitPermit->vehicle_plate,
-                    'driver_name' => $exitPermit->driver_name,
-                    'returned_to_office' => $exitPermit->returned_to_office,
-                    'eligible_for_meal' => $exitPermit->eligible_for_meal,
-                    'reimbursement_amount' => $exitPermit->reimbursement_amount,
-                    'reason' => $exitPermit->reason,
-                    'status' => $exitPermit->status,
-                    'status_label' => $this->statusLabel($exitPermit),
-                    'is_attendance_checked' => (bool) $exitPermit->attendance_checked_at,
-                    'post_md_path' => $exitPermit->post_md_path,
-                    'approval_stage' => $this->approvalStageLabel($exitPermit),
-                    'can_update_request' => $this->canOwnerUpdate($exitPermit, $user),
-                    'can_delete' => $this->canOwnerDelete($exitPermit, $user),
-                    'can_submit_approval' => $this->canSubmitApproval($exitPermit, $user),
-                    'can_arrange_car' => $this->canArrangeCar($exitPermit, $user),
-                    'can_verify_attendance' => $this->canVerifyAttendance($exitPermit, $user),
-                ]),
+                ->through(fn(ExitPermit $exitPermit) => $this->transformExitPermitListItem($exitPermit, $user)),
         ]);
+    }
+
+    private function transformExitPermitListItem(ExitPermit $exitPermit, $user): array
+    {
+        return [
+            'id' => $exitPermit->id,
+            'employee_name' => $exitPermit->user?->name,
+            'permit_date' => $this->toDateOnly($exitPermit->permit_date),
+            'start_time' => $this->toHourMinute($exitPermit->start_time),
+            'end_time' => $this->toHourMinute($exitPermit->end_time),
+            'destination' => $exitPermit->destination,
+            'exit_type' => $exitPermit->exit_type,
+            'vehicle_plate' => $exitPermit->vehicle_plate,
+            'driver_name' => $exitPermit->driver_name,
+            'returned_to_office' => $exitPermit->returned_to_office,
+            'eligible_for_meal' => $exitPermit->eligible_for_meal,
+            'reimbursement_amount' => $exitPermit->reimbursement_amount,
+            'reason' => $exitPermit->reason,
+            'status' => $exitPermit->status,
+            'status_label' => $this->statusLabel($exitPermit),
+            'is_attendance_checked' => (bool) $exitPermit->attendance_checked_at,
+            'post_md_path' => $exitPermit->post_md_path,
+            'approval_stage' => $this->approvalStageLabel($exitPermit),
+            'can_update_request' => $this->canOwnerUpdate($exitPermit, $user),
+            'can_delete' => $this->canOwnerDelete($exitPermit, $user),
+            'can_submit_approval' => $this->canSubmitApproval($exitPermit, $user),
+            'can_arrange_car' => $this->canArrangeCar($exitPermit, $user),
+            'can_verify_attendance' => $this->canVerifyAttendance($exitPermit, $user),
+        ];
     }
 
     public function create(): Response
@@ -309,6 +336,7 @@ class ExitPermitController extends Controller
         $isOwner = $exitPermit->user_id === $user?->id;
         $canApprove = $this->canApprove($user);
         $canArrangeCar = $this->canArrangeCar($exitPermit, $user);
+        $canVerifyAttendance = $this->canVerifyAttendance($exitPermit, $user);
         $attachmentPhoto = $request->file('attachment_photo');
         $validated = [];
 
@@ -435,7 +463,7 @@ class ExitPermitController extends Controller
             }
         }
 
-        if (!$isOwner && !$canApprove && !$canArrangeCar && $this->canVerifyAttendance($exitPermit, $user)) {
+        if (!$isOwner && !$canApprove && !$canArrangeCar && $canVerifyAttendance) {
             $attendanceData = $this->validateAttendanceVerificationData($request, $exitPermit);
 
             if ($exitPermit->exit_type === ExitPermit::EXIT_TYPE_BUSINESS_TRIP) {
@@ -493,7 +521,7 @@ class ExitPermitController extends Controller
             $exitPermit->driver_name = (string) ($selectedDriver?->name ?? '');
         }
 
-        if (!$isOwner && !$canApprove && !$canArrangeCar && !$this->canVerifyAttendance($exitPermit, $user)) {
+        if (!$isOwner && !$canApprove && !$canArrangeCar && !$canVerifyAttendance) {
             throw ValidationException::withMessages([
                 'status' => 'Anda tidak memiliki akses untuk mengubah data ini.',
             ]);
@@ -501,11 +529,15 @@ class ExitPermitController extends Controller
 
         $exitPermit->save();
 
-        if ($this->canVerifyAttendance($exitPermit, $user)) {
+        if ($canVerifyAttendance) {
             $this->exitPermitLunchConversionService->applyIfEligible($exitPermit->fresh(['requestors', 'user']));
         }
 
-        return redirect()->route('exit-permits.index')->with('success', 'Data exit permit berhasil diperbarui.');
+        $redirectRoute = (!$isOwner && ($canApprove || $canVerifyAttendance))
+            ? 'exit-permit-approvals.index'
+            : 'exit-permits.index';
+
+        return redirect()->route($redirectRoute)->with('success', 'Data exit permit berhasil diperbarui.');
     }
 
     public function destroy(ExitPermit $exitPermit): RedirectResponse
@@ -550,6 +582,16 @@ class ExitPermitController extends Controller
     private function canViewAllData($user): bool
     {
         return in_array($user?->role?->code, ['manager', 'md', 'hr_manager', 'hr', 'admin'], true);
+    }
+
+    private function canAccessApprovalMenu($user): bool
+    {
+        if (in_array($user?->role?->code, ['manager', 'md', 'hr_manager'], true)) {
+            return true;
+        }
+
+        return $user?->role?->code === 'hr'
+            && strtolower((string) $user?->email) === self::ATTENDANCE_VERIFIER_EMAIL;
     }
 
     private function canOwnerUpdate(ExitPermit $exitPermit, $user): bool
@@ -606,7 +648,15 @@ class ExitPermitController extends Controller
             }
 
             if ($exitPermit->post_md_path === ExitPermit::POST_MD_PATH_REIMBURSEMENT) {
+                if ($exitPermit->attendance_checked_at && !$exitPermit->has_valid_checkin) {
+                    return 'Approved by HR Manager | Matching Attendance Tidak Match | Jalur Reimbursement';
+                }
+
                 return 'Approved by HR Manager | Jalur Reimbursement';
+            }
+
+            if ($exitPermit->attendance_checked_at && !$exitPermit->has_valid_checkin) {
+                return 'Approved by HR Manager | Matching Attendance Tidak Match';
             }
 
             return 'Approved by HR Manager | Sepengetahuan HR Manager (' . $approverName . ')';
@@ -643,6 +693,15 @@ class ExitPermitController extends Controller
             && (bool) $exitPermit->hr_verified_at
         ) {
             return 'Diketahui Sisca (HRD)';
+        }
+
+        if (
+            $exitPermit->status === 'approved'
+            && $exitPermit->exit_type === ExitPermit::EXIT_TYPE_BUSINESS_TRIP
+            && (bool) $exitPermit->attendance_checked_at
+            && !(bool) $exitPermit->has_valid_checkin
+        ) {
+            return 'Matching Attendance Tidak Match';
         }
 
         if (

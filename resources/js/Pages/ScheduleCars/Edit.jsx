@@ -3,13 +3,41 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 
 export default function Edit({ scheduleItem, carOptions = [], driverOptions = [], history = [] }) {
+    const sanitizeTemplateValue = (value) => {
+        if (!value || value === '-') {
+            return '';
+        }
+
+        return String(value).trim();
+    };
+
+    const normalizeTemplate = (template = null) => ({
+        tanggal_dinas_luar: sanitizeTemplateValue(template?.tanggal_dinas_luar),
+        estimasi_jam: sanitizeTemplateValue(template?.estimasi_jam),
+        nama_pt_tujuan: sanitizeTemplateValue(template?.nama_pt_tujuan),
+        lokasi_pt_tujuan: sanitizeTemplateValue(template?.lokasi_pt_tujuan),
+        user_yang_pergi: sanitizeTemplateValue(template?.user_yang_pergi),
+        budget_dept_cost_center: sanitizeTemplateValue(template?.budget_dept_cost_center),
+        alasan_pergi: sanitizeTemplateValue(template?.alasan_pergi),
+        detail_barang_delivery: sanitizeTemplateValue(template?.detail_barang_delivery),
+        permintaan_kurangi_catering: sanitizeTemplateValue(template?.permintaan_kurangi_catering),
+    });
+
     const selectedCar = carOptions.find((car) => car.police_no === scheduleItem.vehicle_plate);
     const selectedDriver = driverOptions.find((driver) => driver.name === scheduleItem.driver_name);
 
     const { data, setData, put, processing, errors } = useForm({
         car_id: selectedCar?.id ?? '',
         driver_id: selectedDriver?.id ?? '',
+        arrange_template: normalizeTemplate(scheduleItem.template),
     });
+
+    const updateArrangeTemplate = (field, value) => {
+        setData('arrange_template', {
+            ...data.arrange_template,
+            [field]: value,
+        });
+    };
 
     const submit = (e) => {
         e.preventDefault();
@@ -28,6 +56,123 @@ export default function Edit({ scheduleItem, carOptions = [], driverOptions = []
                 </div>
 
                 <form onSubmit={submit} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+                    <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-4">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-cyan-700">Format Arrange Car (Ratna)</p>
+                        <p className="mt-1 text-xs text-cyan-700">Data ini bisa diedit manual oleh Ratna jika terdapat kekeliruan.</p>
+
+                        <div className="mt-3 grid gap-4 md:grid-cols-2">
+                            <div>
+                                <label htmlFor="arrange_tanggal_dinas_luar" className="text-sm font-semibold text-slate-800">Tanggal Dinas Luar</label>
+                                <input
+                                    id="arrange_tanggal_dinas_luar"
+                                    type="text"
+                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                                    value={data.arrange_template.tanggal_dinas_luar}
+                                    onChange={(e) => updateArrangeTemplate('tanggal_dinas_luar', e.target.value)}
+                                />
+                                <InputError message={errors['arrange_template.tanggal_dinas_luar']} className="mt-1" />
+                            </div>
+
+                            <div>
+                                <label htmlFor="arrange_estimasi_jam" className="text-sm font-semibold text-slate-800">Estimasi Jam berangkat &amp; Pulang</label>
+                                <input
+                                    id="arrange_estimasi_jam"
+                                    type="text"
+                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                                    value={data.arrange_template.estimasi_jam}
+                                    onChange={(e) => updateArrangeTemplate('estimasi_jam', e.target.value)}
+                                />
+                                <InputError message={errors['arrange_template.estimasi_jam']} className="mt-1" />
+                            </div>
+
+                            <div>
+                                <label htmlFor="arrange_nama_pt_tujuan" className="text-sm font-semibold text-slate-800">Nama PT Tujuan</label>
+                                <input
+                                    id="arrange_nama_pt_tujuan"
+                                    type="text"
+                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                                    value={data.arrange_template.nama_pt_tujuan}
+                                    onChange={(e) => updateArrangeTemplate('nama_pt_tujuan', e.target.value)}
+                                />
+                                <InputError message={errors['arrange_template.nama_pt_tujuan']} className="mt-1" />
+                            </div>
+
+                            <div>
+                                <label htmlFor="arrange_lokasi_pt_tujuan" className="text-sm font-semibold text-slate-800">Lokasi PT Tujuan</label>
+                                <input
+                                    id="arrange_lokasi_pt_tujuan"
+                                    type="text"
+                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                                    value={data.arrange_template.lokasi_pt_tujuan}
+                                    onChange={(e) => updateArrangeTemplate('lokasi_pt_tujuan', e.target.value)}
+                                />
+                                <InputError message={errors['arrange_template.lokasi_pt_tujuan']} className="mt-1" />
+                            </div>
+                        </div>
+
+                        <div className="mt-4 space-y-4">
+                            <div>
+                                <label htmlFor="arrange_user_yang_pergi" className="text-sm font-semibold text-slate-800">User yang pergi</label>
+                                <input
+                                    id="arrange_user_yang_pergi"
+                                    type="text"
+                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                                    value={data.arrange_template.user_yang_pergi}
+                                    onChange={(e) => updateArrangeTemplate('user_yang_pergi', e.target.value)}
+                                />
+                                <InputError message={errors['arrange_template.user_yang_pergi']} className="mt-1" />
+                            </div>
+
+                            <div>
+                                <label htmlFor="arrange_budget_dept_cost_center" className="text-sm font-semibold text-slate-800">Budget Dept &amp; Cost Center</label>
+                                <input
+                                    id="arrange_budget_dept_cost_center"
+                                    type="text"
+                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                                    value={data.arrange_template.budget_dept_cost_center}
+                                    onChange={(e) => updateArrangeTemplate('budget_dept_cost_center', e.target.value)}
+                                />
+                                <InputError message={errors['arrange_template.budget_dept_cost_center']} className="mt-1" />
+                            </div>
+
+                            <div>
+                                <label htmlFor="arrange_alasan_pergi" className="text-sm font-semibold text-slate-800">Alasan Pergi (Meeting / Delivery) dengan detail reason</label>
+                                <textarea
+                                    id="arrange_alasan_pergi"
+                                    rows="3"
+                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                                    value={data.arrange_template.alasan_pergi}
+                                    onChange={(e) => updateArrangeTemplate('alasan_pergi', e.target.value)}
+                                />
+                                <InputError message={errors['arrange_template.alasan_pergi']} className="mt-1" />
+                            </div>
+
+                            <div>
+                                <label htmlFor="arrange_detail_barang_delivery" className="text-sm font-semibold text-slate-800">Detail Barang Yang Dibawa jika Delivery (Part / Tooling)</label>
+                                <textarea
+                                    id="arrange_detail_barang_delivery"
+                                    rows="3"
+                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                                    value={data.arrange_template.detail_barang_delivery}
+                                    onChange={(e) => updateArrangeTemplate('detail_barang_delivery', e.target.value)}
+                                />
+                                <InputError message={errors['arrange_template.detail_barang_delivery']} className="mt-1" />
+                            </div>
+
+                            <div>
+                                <label htmlFor="arrange_permintaan_kurangi_catering" className="text-sm font-semibold text-slate-800">Permintaan untuk kurangin order catering</label>
+                                <textarea
+                                    id="arrange_permintaan_kurangi_catering"
+                                    rows="3"
+                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                                    value={data.arrange_template.permintaan_kurangi_catering}
+                                    onChange={(e) => updateArrangeTemplate('permintaan_kurangi_catering', e.target.value)}
+                                />
+                                <InputError message={errors['arrange_template.permintaan_kurangi_catering']} className="mt-1" />
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="grid gap-4 md:grid-cols-2">
                         <div>
                             <label htmlFor="car_id" className="text-sm font-semibold text-slate-800">No Police Car</label>

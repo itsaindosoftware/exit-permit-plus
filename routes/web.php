@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ExitPermitListController;
 use App\Http\Controllers\ExitPermitController;
 use App\Http\Controllers\OrderMealController;
 use App\Http\Controllers\ProfileController;
@@ -20,6 +21,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', DashboardController::class)->middleware(['auth'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+    Route::get('exit-permit-list', ExitPermitListController::class)->name('exit-permit-list.index');
+    Route::get('exit-permit-approvals', [ExitPermitController::class, 'approvalIndex'])->name('exit-permit-approvals.index');
     Route::get('schedule-cars', [ScheduleCarController::class, 'index'])->name('schedule-cars.index');
     Route::get('schedule-cars/create', [ScheduleCarController::class, 'create'])->name('schedule-cars.create');
     Route::post('schedule-cars', [ScheduleCarController::class, 'store'])->name('schedule-cars.store');

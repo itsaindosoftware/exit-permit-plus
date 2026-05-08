@@ -1,10 +1,10 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
 
 const currencyFormatter = new Intl.NumberFormat('id-ID');
 
-export default function Dashboard({ stats, mealTrend, canViewMealAnalytics = false }) {
+export default function Dashboard({ stats, mealTrend, canViewMealAnalytics = false, canAccessExitPermitApproval = false }) {
     const [hoveredBar, setHoveredBar] = useState(null);
     const chartWidth = 760;
     const chartHeight = 260;
@@ -27,12 +27,27 @@ export default function Dashboard({ stats, mealTrend, canViewMealAnalytics = fal
             <Head title="Dashboard" />
 
             <div className="grid gap-6 xl:grid-cols-4">
-                <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+                <Link
+                    href={route('exit-permits.index')}
+                    className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md hover:ring-cyan-300"
+                >
                     <p className="text-sm font-medium text-slate-500">Total Exit Permit</p>
                     <p className="mt-3 text-4xl font-bold text-slate-900">
                         {stats.exitPermitCount}
                     </p>
-                </div>
+                </Link>
+
+                {canAccessExitPermitApproval && (
+                    <Link
+                        href={route('exit-permit-approvals.index')}
+                        className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md hover:ring-cyan-300"
+                    >
+                        <p className="text-sm font-medium text-slate-500">Exit Permit Approval</p>
+                        <p className="mt-3 text-4xl font-bold text-slate-900">
+                            {stats.exitPermitApprovalCount}
+                        </p>
+                    </Link>
+                )}
 
                 {canViewMealAnalytics && (
                     <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
@@ -43,12 +58,15 @@ export default function Dashboard({ stats, mealTrend, canViewMealAnalytics = fal
                     </div>
                 )}
 
-                <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+                <Link
+                    href={route('reimbursements.index')}
+                    className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md hover:ring-cyan-300"
+                >
                     <p className="text-sm font-medium text-slate-500">Total Reimbursement Approved</p>
                     <p className="mt-3 text-4xl font-bold text-slate-900">
                         Rp {currencyFormatter.format(stats.reimbursementTotal)}
                     </p>
-                </div>
+                </Link>
 
                 {canViewMealAnalytics && (
                     <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">

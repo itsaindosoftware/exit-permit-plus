@@ -351,7 +351,11 @@ class OrderMealController extends Controller
             'updateRouteName' => $this->routeName($scope, 'update'),
             'orderMeal' => [
                 'id' => $orderMeal->id,
-                'meal_date' => $orderMeal->meal_date ? (string) $orderMeal->meal_date : null,
+                'meal_date' => $orderMeal->meal_date
+                    ? (method_exists($orderMeal->meal_date, 'toDateString')
+                        ? $orderMeal->meal_date->toDateString()
+                        : substr((string) $orderMeal->meal_date, 0, 10))
+                    : null,
                 'meal_type' => $orderMeal->meal_type,
                 'menu_name' => $orderMeal->menu_name,
                 'quantity' => max(1, (int) $orderMeal->quantity - (int) $orderMeal->visitor_count),

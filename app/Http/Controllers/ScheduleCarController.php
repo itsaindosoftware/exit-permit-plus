@@ -16,6 +16,18 @@ class ScheduleCarController extends Controller
 {
     private const RATNA_EMAIL = 'ratna@example.com';
 
+    private const ARRANGE_TEMPLATE_FIELDS = [
+        'tanggal_dinas_luar',
+        'estimasi_jam',
+        'nama_pt_tujuan',
+        'lokasi_pt_tujuan',
+        'user_yang_pergi',
+        'budget_dept_cost_center',
+        'alasan_pergi',
+        'detail_barang_delivery',
+        'permintaan_kurangi_catering',
+    ];
+
     public function index(Request $request): Response
     {
         $this->authorizeRatnaOnly();
@@ -150,6 +162,7 @@ class ScheduleCarController extends Controller
             'car_id' => ['required', 'integer', 'exists:cars,id'],
             'driver_id' => ['required', 'integer', 'exists:drivers,id'],
         ]);
+        $templateOverride = $this->validatedArrangeTemplate($request);
 
         $exitPermit = ExitPermit::query()->findOrFail((int) $validated['exit_permit_id']);
         $this->ensureCanArrange($exitPermit);
@@ -159,6 +172,7 @@ class ScheduleCarController extends Controller
 
         $exitPermit->vehicle_plate = strtoupper((string) $car->police_no);
         $exitPermit->driver_name = (string) $driver->name;
+        $exitPermit->arrange_template_override = $templateOverride;
         $exitPermit->save();
 
         $this->logArrangement($exitPermit, $car, $driver, 'create');
@@ -170,6 +184,10 @@ class ScheduleCarController extends Controller
     {
         $this->authorizeRatnaOnly();
         $this->ensureCanArrange($exitPermit);
+        $exitPermit->loadMissing([
+            'user:id,name',
+            'requestors:id,exit_permit_id,name,department,reimburs_lunch_box',
+        ]);
 
         $history = $exitPermit->scheduleCarArrangementLogs()
             ->with('arranger:id,name')
@@ -194,6 +212,7 @@ class ScheduleCarController extends Controller
                 'destination' => $exitPermit->destination,
                 'vehicle_plate' => $exitPermit->vehicle_plate,
                 'driver_name' => $exitPermit->driver_name,
+                'template' => $this->buildArrangeTemplate($exitPermit),
             ],
             'carOptions' => $this->carOptions(),
             'driverOptions' => $this->driverOptions(),
@@ -210,12 +229,14 @@ class ScheduleCarController extends Controller
             'car_id' => ['required', 'integer', 'exists:cars,id'],
             'driver_id' => ['required', 'integer', 'exists:drivers,id'],
         ]);
+        $templateOverride = $this->validatedArrangeTemplate($request);
 
         $car = Car::query()->findOrFail((int) $validated['car_id']);
         $driver = Driver::query()->findOrFail((int) $validated['driver_id']);
 
         $exitPermit->vehicle_plate = strtoupper((string) $car->police_no);
         $exitPermit->driver_name = (string) $driver->name;
+        $exitPermit->arrange_template_override = $templateOverride;
         $exitPermit->save();
 
         $this->logArrangement($exitPermit, $car, $driver, 'update');
@@ -249,19 +270,6 @@ class ScheduleCarController extends Controller
                 'notes',
             ])
             ->map(function (ExitPermit $permit) {
-                $requestorNames = $permit->requestors
-                    ->pluck('name')
-                    ->filter()
-                    ->values();
-
-                $departmentLabels = $permit->requestors
-                    ->pluck('department')
-                    ->filter()
-                    ->map(fn(string $department) => trim($department))
-                    ->filter()
-                    ->unique()
-                    ->values();
-
                 return [
                     'id' => $permit->id,
                     'label' => sprintf(
@@ -272,29 +280,88 @@ class ScheduleCarController extends Controller
                         $this->toHourMinute($permit->end_time) ?? '-',
                         $permit->destination,
                     ),
-                    'template' => [
-                        'tanggal_dinas_luar' => $this->toDateOnly($permit->permit_date) ?? '-',
-                        'estimasi_jam' => sprintf(
-                            '%s - %s',
-                            $this->toHourMinuteDot($permit->start_time),
-                            $this->toHourMinuteDot($permit->end_time),
-                        ),
-                        'nama_pt_tujuan' => $permit->destination ?: '-',
-                        'lokasi_pt_tujuan' => $permit->destination ?: '-',
-                        'user_yang_pergi' => $requestorNames->isNotEmpty()
-                            ? $requestorNames->join(', ')
-                            : ($permit->user?->name ?: '-'),
-                        'budget_dept_cost_center' => $departmentLabels->isNotEmpty()
-                            ? $departmentLabels->map(fn(string $department) => sprintf('%s (Cost Center: -)', $department))->join('; ')
-                            : '-',
-                        'alasan_pergi' => $permit->reason ?: '-',
-                        'detail_barang_delivery' => $permit->notes ?: '-',
-                        'permintaan_kurangi_catering' => $this->cateringReductionSummary($permit),
-                    ],
+                    'template' => $this->buildArrangeTemplate($permit),
                 ];
             })
             ->values()
             ->all();
+    }
+
+    private function buildArrangeTemplate(ExitPermit $permit): array
+    {
+        $requestorNames = $permit->requestors
+            ->pluck('name')
+            ->filter()
+            ->values();
+
+        $departmentLabels = $permit->requestors
+            ->pluck('department')
+            ->filter()
+            ->map(fn(string $department) => trim($department))
+            ->filter()
+            ->unique()
+            ->values();
+
+        $autoTemplate = [
+            'tanggal_dinas_luar' => $this->toDateOnly($permit->permit_date) ?? '-',
+            'estimasi_jam' => sprintf(
+                '%s - %s',
+                $this->toHourMinuteDot($permit->start_time),
+                $this->toHourMinuteDot($permit->end_time),
+            ),
+            'nama_pt_tujuan' => $permit->destination ?: '-',
+            'lokasi_pt_tujuan' => $permit->destination ?: '-',
+            'user_yang_pergi' => $requestorNames->isNotEmpty()
+                ? $requestorNames->join(', ')
+                : ($permit->user?->name ?: '-'),
+            'budget_dept_cost_center' => $departmentLabels->isNotEmpty()
+                ? $departmentLabels->map(fn(string $department) => sprintf('%s (Cost Center: -)', $department))->join('; ')
+                : '-',
+            'alasan_pergi' => $permit->reason ?: '-',
+            'detail_barang_delivery' => $permit->notes ?: '-',
+            'permintaan_kurangi_catering' => $this->cateringReductionSummary($permit),
+        ];
+
+        $override = $this->normalizedArrangeTemplateOverride($permit->arrange_template_override);
+
+        foreach (self::ARRANGE_TEMPLATE_FIELDS as $field) {
+            if (filled($override[$field] ?? null)) {
+                $autoTemplate[$field] = $override[$field];
+            }
+        }
+
+        return $autoTemplate;
+    }
+
+    private function validatedArrangeTemplate(Request $request): array
+    {
+        $validated = $request->validate([
+            'arrange_template.tanggal_dinas_luar' => ['nullable', 'string', 'max:120'],
+            'arrange_template.estimasi_jam' => ['nullable', 'string', 'max:120'],
+            'arrange_template.nama_pt_tujuan' => ['nullable', 'string', 'max:255'],
+            'arrange_template.lokasi_pt_tujuan' => ['nullable', 'string', 'max:255'],
+            'arrange_template.user_yang_pergi' => ['nullable', 'string', 'max:1000'],
+            'arrange_template.budget_dept_cost_center' => ['nullable', 'string', 'max:1000'],
+            'arrange_template.alasan_pergi' => ['nullable', 'string', 'max:2000'],
+            'arrange_template.detail_barang_delivery' => ['nullable', 'string', 'max:2000'],
+            'arrange_template.permintaan_kurangi_catering' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        return $this->normalizedArrangeTemplateOverride($validated['arrange_template'] ?? []);
+    }
+
+    private function normalizedArrangeTemplateOverride(mixed $value): array
+    {
+        $source = is_array($value) ? $value : [];
+        $normalized = [];
+
+        foreach (self::ARRANGE_TEMPLATE_FIELDS as $field) {
+            $normalized[$field] = isset($source[$field])
+                ? trim((string) $source[$field])
+                : '';
+        }
+
+        return $normalized;
     }
 
     private function toHourMinuteDot(?string $time): string

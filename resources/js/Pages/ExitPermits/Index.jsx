@@ -6,7 +6,8 @@ const exitTypeLabel = {
     sick: 'Sakit',
 };
 
-export default function Index({ exitPermits, canCreate }) {
+export default function Index({ exitPermits, canCreate, pageMode = 'personal' }) {
+    const isApprovalMode = pageMode === 'approval';
     const totalItems = exitPermits?.total ?? exitPermits?.data?.length ?? 0;
     const approvedItems = exitPermits?.data?.filter((item) => item.status === 'approved').length ?? 0;
     const eligibleItems = exitPermits?.data?.filter((item) => item.eligible_for_meal).length ?? 0;
@@ -21,20 +22,26 @@ export default function Index({ exitPermits, canCreate }) {
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-bold leading-tight text-slate-800">
-                    Exit Permit
+                    {isApprovalMode ? 'Exit Permit Approval' : 'Exit Permit'}
                 </h2>
             }
         >
-            <Head title="Exit Permit" />
+            <Head title={isApprovalMode ? 'Exit Permit Approval' : 'Exit Permit'} />
 
             <div className="space-y-6">
                 <div className="rounded-2xl border border-cyan-200 bg-gradient-to-r from-cyan-50 via-slate-50 to-white p-6 shadow-sm">
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">Operational Request</p>
-                            <h3 className="mt-2 text-2xl font-black uppercase tracking-wide text-slate-900">Exit Permit Monitoring</h3>
+                            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">
+                                {isApprovalMode ? 'Approval Workflow' : 'Personal Request'}
+                            </p>
+                            <h3 className="mt-2 text-2xl font-black uppercase tracking-wide text-slate-900">
+                                {isApprovalMode ? 'Exit Permit Approval Monitoring' : 'Exit Permit Pengajuan Pribadi'}
+                            </h3>
                             <p className="mt-2 text-sm text-slate-600">
-                                Monitor seluruh pengajuan keluar area pabrik untuk kebutuhan operasional, reimbursement, dan approval.
+                                {isApprovalMode
+                                    ? 'Menu khusus approver untuk proses review, approval, dan verifikasi absensi pengajuan Exit Permit.'
+                                    : 'Menu khusus user untuk membuat dan memantau pengajuan Exit Permit pribadi.'}
                             </p>
                         </div>
                         {canCreate && (

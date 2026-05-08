@@ -1,3 +1,64 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+	body {
+		@apply bg-slate-100 text-slate-900 transition-colors duration-200;
+	}
+
+	.dark {
+		color-scheme: dark;
+	}
+
+	.dark body {
+		@apply bg-slate-950 text-slate-100;
+	}
+
+	/* Keep default text readable in dark mode without forcing semantic status colors. */
+	.dark [class*='text-gray-'],
+	.dark [class*='text-slate-'],
+	.dark [class*='text-zinc-'],
+	.dark [class*='text-neutral-'] {
+		color: rgb(226 232 240) !important;
+	}
+
+	/* Convert common light surfaces into dark surfaces. */
+	.dark [class*='bg-white'] {
+		background-color: rgb(15 23 42) !important;
+	}
+
+	.dark [class*='bg-gray-50'],
+	.dark [class*='bg-slate-50'],
+	.dark [class*='bg-gray-100'],
+	.dark [class*='bg-slate-100'] {
+		background-color: rgb(30 41 59) !important;
+	}
+
+	/* Normalize border visibility in dark mode. */
+	.dark [class*='border-gray-'],
+	.dark [class*='border-slate-'],
+	.dark [class*='border-zinc-'],
+	.dark [class*='border-neutral-'] {
+		border-color: rgb(51 65 85) !important;
+	}
+
+	/* Improve form controls readability globally. */
+	.dark input,
+	.dark textarea,
+	.dark select {
+		background-color: rgb(30 41 59);
+		color: rgb(226 232 240);
+		border-color: rgb(71 85 105);
+	}
+
+	.dark input::placeholder,
+	.dark textarea::placeholder {
+		color: rgb(148 163 184);
+	}
+
+	/* Tables and chart wrappers often need explicit contrast in dark mode. */
+	.dark table {
+		color: rgb(226 232 240);
+	}
+}

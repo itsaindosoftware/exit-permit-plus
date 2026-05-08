@@ -39,6 +39,7 @@ class ExitPermit extends Model
         'order_car',
         'vehicle_plate',
         'driver_name',
+        'arrange_template_override',
         'returned_to_office',
         'eligible_for_meal',
         'reimbursement_amount',
@@ -64,6 +65,7 @@ class ExitPermit extends Model
         return [
             'permit_date' => 'date',
             'order_car' => 'boolean',
+            'arrange_template_override' => 'array',
             'returned_to_office' => 'boolean',
             'eligible_for_meal' => 'boolean',
             'manager_approved_at' => 'datetime',
