@@ -6,6 +6,12 @@ import { useEffect } from 'react';
 const inputClass =
     'mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-cyan-600 focus:ring-2 focus:ring-cyan-200';
 
+const currencyFormatter = new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    maximumFractionDigits: 0,
+});
+
 export default function Create({ mode, storeRouteName, indexRouteName, eligibleExitPermits = [], eligibilityWarning = null }) {
     const isExitPermitMode = mode === 'exit_permit';
     const firstPermitId = eligibleExitPermits?.[0]?.id ?? '';
@@ -19,6 +25,13 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
         quantity: isExitPermitMode ? firstPermitRequestorCount : 120,
         actual_quantity: 0,
         visitor_count: 0,
+        day_shift_qty: 0,
+        overtime_day_shift_qty: 0,
+        night_shift_qty: 0,
+        overtime_night_shift_qty: 0,
+        meal_unit_price: 12000,
+        local_tax_rate: 10,
+        service_tax_rate: 2,
         schedule_type: 'single',
         repeat_count: 1,
         notes: '',
@@ -28,11 +41,44 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
         ? eligibleExitPermits.find((permit) => String(permit.id) === String(data.exit_permit_id))
         : null;
     const selectedRequestorCount = Math.max(0, Number(selectedPermit?.requestors?.length ?? 0));
+    const shiftTotal =
+        Number(data.day_shift_qty || 0)
+        + Number(data.overtime_day_shift_qty || 0)
+        + Number(data.night_shift_qty || 0)
+        + Number(data.overtime_night_shift_qty || 0);
     const displayedBaseQuantity = isExitPermitMode ? selectedRequestorCount : Number(data.quantity || 0);
     const totalProvided = displayedBaseQuantity + Number(data.visitor_count || 0);
+    const subtotalAmount = isExitPermitMode
+        ? 0
+        : shiftTotal * Number(data.meal_unit_price || 0);
+    const localTaxAmount = isExitPermitMode
+        ? 0
+        : Math.round(subtotalAmount * (Number(data.local_tax_rate || 0) / 100));
+    const serviceTaxAmount = isExitPermitMode
+        ? 0
+        : Math.round(subtotalAmount * (Number(data.service_tax_rate || 0) / 100));
+    const grandTotalAmount = isExitPermitMode
+        ? 0
+        : subtotalAmount + localTaxAmount - serviceTaxAmount;
 
     useEffect(() => {
         if (!isExitPermitMode) {
+            const nextTotal = Math.max(0, shiftTotal);
+
+            if (Number(data.quantity || 0) !== nextTotal) {
+                setData('quantity', nextTotal);
+            }
+
+            const nextActualQuantity = Math.min(Number(data.actual_quantity || 0), nextTotal);
+
+            if (Number(data.actual_quantity || 0) !== nextActualQuantity) {
+                setData('actual_quantity', nextActualQuantity);
+            }
+
+            if (Number(data.visitor_count || 0) !== 0) {
+                setData('visitor_count', 0);
+            }
+
             return;
         }
 
@@ -50,6 +96,7 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
     }, [
         isExitPermitMode,
         selectedRequestorCount,
+        shiftTotal,
         data.quantity,
         data.visitor_count,
         data.actual_quantity,
@@ -107,8 +154,8 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
                         </div>
                         {!isExitPermitMode && (
                             <div>
-                                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Status</p>
-                                <p className="mt-2 inline-flex rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-700">Pending Approval</p>
+                                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Template Excel</p>
+                                <p className="mt-2 inline-flex rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-700">ITSA Catering Cost</p>
                             </div>
                         )}
                     </div>
@@ -202,6 +249,118 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
                         </div>
                     </div>
 
+                    {!isExitPermitMode && (
+                        <div className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                            <p className="text-sm font-semibold text-slate-900">Calculation for Catering Cost (Format Excel)</p>
+
+                            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                                <div>
+                                    <label htmlFor="day_shift_qty" className="text-sm font-semibold text-slate-800">Day Shift (12.00 - 13.00)</label>
+                                    <input
+                                        id="day_shift_qty"
+                                        type="number"
+                                        min="0"
+                                        value={data.day_shift_qty}
+                                        className={inputClass}
+                                        onChange={(e) => setData('day_shift_qty', Number(e.target.value))}
+                                    />
+                                    <InputError message={errors.day_shift_qty} className="mt-2" />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="overtime_day_shift_qty" className="text-sm font-semibold text-slate-800">Overtime Day Shift (18.15 - 18.35)</label>
+                                    <input
+                                        id="overtime_day_shift_qty"
+                                        type="number"
+                                        min="0"
+                                        value={data.overtime_day_shift_qty}
+                                        className={inputClass}
+                                        onChange={(e) => setData('overtime_day_shift_qty', Number(e.target.value))}
+                                    />
+                                    <InputError message={errors.overtime_day_shift_qty} className="mt-2" />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="night_shift_qty" className="text-sm font-semibold text-slate-800">Night Shift (00.00 - 01.11)</label>
+                                    <input
+                                        id="night_shift_qty"
+                                        type="number"
+                                        min="0"
+                                        value={data.night_shift_qty}
+                                        className={inputClass}
+                                        onChange={(e) => setData('night_shift_qty', Number(e.target.value))}
+                                    />
+                                    <InputError message={errors.night_shift_qty} className="mt-2" />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="overtime_night_shift_qty" className="text-sm font-semibold text-slate-800">Overtime Night Shift (06.15 - 06.35)</label>
+                                    <input
+                                        id="overtime_night_shift_qty"
+                                        type="number"
+                                        min="0"
+                                        value={data.overtime_night_shift_qty}
+                                        className={inputClass}
+                                        onChange={(e) => setData('overtime_night_shift_qty', Number(e.target.value))}
+                                    />
+                                    <InputError message={errors.overtime_night_shift_qty} className="mt-2" />
+                                </div>
+                            </div>
+
+                            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                                <div>
+                                    <label htmlFor="quantity" className="text-sm font-semibold text-slate-800">Total</label>
+                                    <input id="quantity" type="number" value={shiftTotal} className={inputClass} readOnly />
+                                </div>
+                                <div>
+                                    <label htmlFor="meal_unit_price" className="text-sm font-semibold text-slate-800">Amount / Porsi</label>
+                                    <input
+                                        id="meal_unit_price"
+                                        type="number"
+                                        min="1"
+                                        value={data.meal_unit_price}
+                                        className={inputClass}
+                                        onChange={(e) => setData('meal_unit_price', Number(e.target.value))}
+                                    />
+                                    <InputError message={errors.meal_unit_price} className="mt-2" />
+                                </div>
+                                <div>
+                                    <label htmlFor="local_tax_rate" className="text-sm font-semibold text-slate-800">Local Tax (%)</label>
+                                    <input
+                                        id="local_tax_rate"
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value={data.local_tax_rate}
+                                        className={inputClass}
+                                        onChange={(e) => setData('local_tax_rate', Number(e.target.value))}
+                                    />
+                                    <InputError message={errors.local_tax_rate} className="mt-2" />
+                                </div>
+                                <div>
+                                    <label htmlFor="service_tax_rate" className="text-sm font-semibold text-slate-800">Service Tax (%)</label>
+                                    <input
+                                        id="service_tax_rate"
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value={data.service_tax_rate}
+                                        className={inputClass}
+                                        onChange={(e) => setData('service_tax_rate', Number(e.target.value))}
+                                    />
+                                    <InputError message={errors.service_tax_rate} className="mt-2" />
+                                </div>
+                            </div>
+
+                            <div className="grid gap-3 rounded-lg border border-cyan-200 bg-cyan-50 p-4 text-sm text-cyan-900 md:grid-cols-2 xl:grid-cols-4">
+                                <p><span className="font-semibold">Subtotal:</span> {currencyFormatter.format(subtotalAmount)}</p>
+                                <p><span className="font-semibold">Local Tax:</span> {currencyFormatter.format(localTaxAmount)}</p>
+                                <p><span className="font-semibold">Service Tax:</span> {currencyFormatter.format(serviceTaxAmount)}</p>
+                                <p><span className="font-semibold">Grand Total:</span> {currencyFormatter.format(grandTotalAmount)}</p>
+                            </div>
+                        </div>
+                    )}
+
                     {isExitPermitMode && selectedPermit && (
                         <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
                             <p className="text-sm font-semibold text-slate-900">Detail Exit Permit Terpilih</p>
@@ -243,29 +402,32 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
                             <input
                                 id="quantity"
                                 type="number"
-                                min="1"
+                                min="0"
                                 value={displayedBaseQuantity}
                                 className={inputClass}
-                                disabled={isExitPermitMode}
+                                disabled
                                 onChange={(e) => setData('quantity', Number(e.target.value))}
                             />
                             {isExitPermitMode && (
                                 <p className="mt-1 text-xs text-slate-500">Otomatis mengikuti jumlah karyawan di Detail Exit Permit Terpilih.</p>
                             )}
+                            {!isExitPermitMode && <p className="mt-1 text-xs text-slate-500">Otomatis hasil penjumlahan 4 kolom shift.</p>}
                             <InputError message={errors.quantity} className="mt-2" />
                         </div>
-                        <div>
-                            <label htmlFor="visitor_count" className="text-sm font-semibold text-slate-800">Additional Visitor</label>
-                            <input
-                                id="visitor_count"
-                                type="number"
-                                min="0"
-                                value={data.visitor_count}
-                                className={inputClass}
-                                onChange={(e) => setData('visitor_count', Number(e.target.value))}
-                            />
-                            <InputError message={errors.visitor_count} className="mt-2" />
-                        </div>
+                        {isExitPermitMode && (
+                            <div>
+                                <label htmlFor="visitor_count" className="text-sm font-semibold text-slate-800">Additional Visitor</label>
+                                <input
+                                    id="visitor_count"
+                                    type="number"
+                                    min="0"
+                                    value={data.visitor_count}
+                                    className={inputClass}
+                                    onChange={(e) => setData('visitor_count', Number(e.target.value))}
+                                />
+                                <InputError message={errors.visitor_count} className="mt-2" />
+                            </div>
+                        )}
                         <div>
                             <label htmlFor="actual_quantity" className="text-sm font-semibold text-slate-800">Realisasi Makan</label>
                             <input
@@ -281,7 +443,9 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
                     </div>
 
                     <div className="rounded-lg border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-cyan-900">
-                        Total paket disediakan = <span className="font-semibold">{totalProvided}</span> (paket dasar + visitor).
+                        {isExitPermitMode
+                            ? <>Total paket disediakan = <span className="font-semibold">{totalProvided}</span> (paket dasar + visitor).</>
+                            : <>Total paket disediakan = <span className="font-semibold">{shiftTotal}</span> (day shift + overtime day + night shift + overtime night).</>}
                     </div>
 
                     <div>

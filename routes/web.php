@@ -23,6 +23,8 @@ Route::get('/', DashboardController::class)->middleware(['auth'])->name('dashboa
 Route::middleware('auth')->group(function () {
     Route::get('exit-permit-list', ExitPermitListController::class)->name('exit-permit-list.index');
     Route::get('exit-permit-approvals', [ExitPermitController::class, 'approvalIndex'])->name('exit-permit-approvals.index');
+    Route::get('exit-permits/requestor-options', [ExitPermitController::class, 'requestorLookup'])
+        ->name('exit-permits.requestor-options');
     Route::get('schedule-cars', [ScheduleCarController::class, 'index'])->name('schedule-cars.index');
     Route::get('schedule-cars/create', [ScheduleCarController::class, 'create'])->name('schedule-cars.create');
     Route::post('schedule-cars', [ScheduleCarController::class, 'store'])->name('schedule-cars.store');

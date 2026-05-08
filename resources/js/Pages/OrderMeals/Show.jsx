@@ -1,6 +1,12 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 
+const currencyFormatter = new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    maximumFractionDigits: 0,
+});
+
 function translateConversionNotes(text) {
     if (!text) {
         return text;
@@ -40,9 +46,20 @@ export default function Show({ mode, orderMeal, exitPermit, indexRouteName, edit
                         <p><span className="font-semibold">Menu:</span> {orderMeal.menu_name || '-'}</p>
                         <p><span className="font-semibold">Schedule:</span> {orderMeal.schedule_type || '-'}</p>
                         <p><span className="font-semibold">Status:</span> {orderMeal.status || '-'}</p>
+                        {!isExitPermitMode && <p><span className="font-semibold">Day Shift:</span> {orderMeal.day_shift_qty ?? 0}</p>}
+                        {!isExitPermitMode && <p><span className="font-semibold">Overtime Day Shift:</span> {orderMeal.overtime_day_shift_qty ?? 0}</p>}
+                        {!isExitPermitMode && <p><span className="font-semibold">Night Shift:</span> {orderMeal.night_shift_qty ?? 0}</p>}
+                        {!isExitPermitMode && <p><span className="font-semibold">Overtime Night Shift:</span> {orderMeal.overtime_night_shift_qty ?? 0}</p>}
                         <p><span className="font-semibold">Paket Disediakan:</span> {orderMeal.quantity ?? 0}</p>
                         <p><span className="font-semibold">Realisasi:</span> {orderMeal.actual_quantity ?? 0}</p>
                         <p><span className="font-semibold">Sisa:</span> {orderMeal.remaining_quantity ?? 0}</p>
+                        {!isExitPermitMode && <p><span className="font-semibold">Amount / Porsi:</span> {currencyFormatter.format(orderMeal.meal_unit_price ?? 0)}</p>}
+                        {!isExitPermitMode && <p><span className="font-semibold">Local Tax:</span> {(orderMeal.local_tax_rate ?? 0)}%</p>}
+                        {!isExitPermitMode && <p><span className="font-semibold">Service Tax:</span> {(orderMeal.service_tax_rate ?? 0)}%</p>}
+                        {!isExitPermitMode && <p><span className="font-semibold">Subtotal:</span> {currencyFormatter.format(orderMeal.subtotal_amount ?? 0)}</p>}
+                        {!isExitPermitMode && <p><span className="font-semibold">Nominal Local Tax:</span> {currencyFormatter.format(orderMeal.local_tax_amount ?? 0)}</p>}
+                        {!isExitPermitMode && <p><span className="font-semibold">Nominal Service Tax:</span> {currencyFormatter.format(orderMeal.service_tax_amount ?? 0)}</p>}
+                        {!isExitPermitMode && <p><span className="font-semibold">Grand Total:</span> {currencyFormatter.format(orderMeal.total_amount ?? 0)}</p>}
                     </div>
 
                     {readableNotes && (

@@ -155,10 +155,21 @@ class OrderMealController extends Controller
                     'meal_date' => $orderMeal->meal_date ? (string) $orderMeal->meal_date : null,
                     'meal_type' => $orderMeal->meal_type,
                     'menu_name' => $orderMeal->menu_name,
+                    'day_shift_qty' => (int) $orderMeal->day_shift_qty,
+                    'overtime_day_shift_qty' => (int) $orderMeal->overtime_day_shift_qty,
+                    'night_shift_qty' => (int) $orderMeal->night_shift_qty,
+                    'overtime_night_shift_qty' => (int) $orderMeal->overtime_night_shift_qty,
                     'quantity' => $orderMeal->quantity,
                     'actual_quantity' => $orderMeal->actual_quantity,
                     'visitor_count' => $orderMeal->visitor_count,
                     'schedule_type' => $orderMeal->schedule_type,
+                    'meal_unit_price' => (int) $orderMeal->meal_unit_price,
+                    'local_tax_rate' => (float) $orderMeal->local_tax_rate,
+                    'service_tax_rate' => (float) $orderMeal->service_tax_rate,
+                    'subtotal_amount' => (int) $orderMeal->subtotal_amount,
+                    'local_tax_amount' => (int) $orderMeal->local_tax_amount,
+                    'service_tax_amount' => (int) $orderMeal->service_tax_amount,
+                    'total_amount' => (int) $orderMeal->total_amount,
                     'remaining_quantity' => $orderMeal->remaining_quantity,
                     'status' => $orderMeal->status,
                 ]),
@@ -228,11 +239,22 @@ class OrderMealController extends Controller
                 'meal_date' => $orderMeal->meal_date ? (string) $orderMeal->meal_date : null,
                 'meal_type' => $orderMeal->meal_type,
                 'menu_name' => $orderMeal->menu_name,
+                'day_shift_qty' => (int) $orderMeal->day_shift_qty,
+                'overtime_day_shift_qty' => (int) $orderMeal->overtime_day_shift_qty,
+                'night_shift_qty' => (int) $orderMeal->night_shift_qty,
+                'overtime_night_shift_qty' => (int) $orderMeal->overtime_night_shift_qty,
                 'quantity' => $orderMeal->quantity,
                 'actual_quantity' => $orderMeal->actual_quantity,
                 'visitor_count' => $orderMeal->visitor_count,
                 'remaining_quantity' => $orderMeal->remaining_quantity,
                 'schedule_type' => $orderMeal->schedule_type,
+                'meal_unit_price' => (int) $orderMeal->meal_unit_price,
+                'local_tax_rate' => (float) $orderMeal->local_tax_rate,
+                'service_tax_rate' => (float) $orderMeal->service_tax_rate,
+                'subtotal_amount' => (int) $orderMeal->subtotal_amount,
+                'local_tax_amount' => (int) $orderMeal->local_tax_amount,
+                'service_tax_amount' => (int) $orderMeal->service_tax_amount,
+                'total_amount' => (int) $orderMeal->total_amount,
                 'notes' => $orderMeal->notes,
                 'status' => $orderMeal->status,
             ],
@@ -280,12 +302,50 @@ class OrderMealController extends Controller
         }
 
         $baseQuantity = (int) $validated['quantity'];
+        $generalShiftData = [
+            'day_shift_qty' => 0,
+            'overtime_day_shift_qty' => 0,
+            'night_shift_qty' => 0,
+            'overtime_night_shift_qty' => 0,
+        ];
+        $generalCostData = [
+            'meal_unit_price' => 12000,
+            'local_tax_rate' => 10,
+            'service_tax_rate' => 2,
+            'subtotal_amount' => 0,
+            'local_tax_amount' => 0,
+            'service_tax_amount' => 0,
+            'total_amount' => 0,
+        ];
+
+        if ($scope === OrderMeal::SCOPE_GENERAL) {
+            $generalShiftData = [
+                'day_shift_qty' => (int) ($validated['day_shift_qty'] ?? 0),
+                'overtime_day_shift_qty' => (int) ($validated['overtime_day_shift_qty'] ?? 0),
+                'night_shift_qty' => (int) ($validated['night_shift_qty'] ?? 0),
+                'overtime_night_shift_qty' => (int) ($validated['overtime_night_shift_qty'] ?? 0),
+            ];
+
+            $baseQuantity = $generalShiftData['day_shift_qty']
+                + $generalShiftData['overtime_day_shift_qty']
+                + $generalShiftData['night_shift_qty']
+                + $generalShiftData['overtime_night_shift_qty'];
+
+            $generalCostData = $this->calculateGeneralMealCost(
+                $baseQuantity,
+                (int) ($validated['meal_unit_price'] ?? 12000),
+                (float) ($validated['local_tax_rate'] ?? 10),
+                (float) ($validated['service_tax_rate'] ?? 2),
+            );
+        }
 
         if ($scope === OrderMeal::SCOPE_EXIT_PERMIT && $matchedRequestorCount !== null) {
             $baseQuantity = max(1, (int) $matchedRequestorCount);
         }
 
-        $visitorCount = (int) $validated['visitor_count'];
+        $visitorCount = $scope === OrderMeal::SCOPE_GENERAL
+            ? 0
+            : (int) $validated['visitor_count'];
         $totalQuantity = $baseQuantity + $visitorCount;
         $actualQuantity = $repeatCount > 1 ? 0 : (int) $validated['actual_quantity'];
 
@@ -317,6 +377,8 @@ class OrderMealController extends Controller
                 'actual_quantity' => $actualQuantity,
                 'visitor_count' => $visitorCount,
                 'schedule_type' => $scheduleType,
+                ...$generalShiftData,
+                ...$generalCostData,
                 'notes' => $validated['notes'] ?? null,
                 'status' => 'pending',
             ]);
@@ -358,10 +420,21 @@ class OrderMealController extends Controller
                     : null,
                 'meal_type' => $orderMeal->meal_type,
                 'menu_name' => $orderMeal->menu_name,
-                'quantity' => max(1, (int) $orderMeal->quantity - (int) $orderMeal->visitor_count),
+                'day_shift_qty' => (int) $orderMeal->day_shift_qty,
+                'overtime_day_shift_qty' => (int) $orderMeal->overtime_day_shift_qty,
+                'night_shift_qty' => (int) $orderMeal->night_shift_qty,
+                'overtime_night_shift_qty' => (int) $orderMeal->overtime_night_shift_qty,
+                'quantity' => max(0, (int) $orderMeal->quantity - (int) $orderMeal->visitor_count),
                 'actual_quantity' => $orderMeal->actual_quantity,
                 'visitor_count' => $orderMeal->visitor_count,
                 'schedule_type' => $orderMeal->schedule_type,
+                'meal_unit_price' => (int) $orderMeal->meal_unit_price,
+                'local_tax_rate' => (float) $orderMeal->local_tax_rate,
+                'service_tax_rate' => (float) $orderMeal->service_tax_rate,
+                'subtotal_amount' => (int) $orderMeal->subtotal_amount,
+                'local_tax_amount' => (int) $orderMeal->local_tax_amount,
+                'service_tax_amount' => (int) $orderMeal->service_tax_amount,
+                'total_amount' => (int) $orderMeal->total_amount,
                 'remaining_quantity' => $orderMeal->remaining_quantity,
                 'notes' => $orderMeal->notes,
                 'status' => $orderMeal->status,
@@ -379,9 +452,49 @@ class OrderMealController extends Controller
         $this->authorizeUser($orderMeal);
 
         $canApprove = $this->canApprove($request->user());
-        $validated = $this->validatedData($request, $canApprove, false);
+        $validated = $this->validatedData($request, $canApprove, false, $scope);
         $baseQuantity = (int) $validated['quantity'];
-        $visitorCount = (int) $validated['visitor_count'];
+        $visitorCount = $scope === OrderMeal::SCOPE_GENERAL
+            ? 0
+            : (int) $validated['visitor_count'];
+
+        $generalShiftData = [
+            'day_shift_qty' => (int) $orderMeal->day_shift_qty,
+            'overtime_day_shift_qty' => (int) $orderMeal->overtime_day_shift_qty,
+            'night_shift_qty' => (int) $orderMeal->night_shift_qty,
+            'overtime_night_shift_qty' => (int) $orderMeal->overtime_night_shift_qty,
+        ];
+        $generalCostData = [
+            'meal_unit_price' => (int) $orderMeal->meal_unit_price,
+            'local_tax_rate' => (float) $orderMeal->local_tax_rate,
+            'service_tax_rate' => (float) $orderMeal->service_tax_rate,
+            'subtotal_amount' => (int) $orderMeal->subtotal_amount,
+            'local_tax_amount' => (int) $orderMeal->local_tax_amount,
+            'service_tax_amount' => (int) $orderMeal->service_tax_amount,
+            'total_amount' => (int) $orderMeal->total_amount,
+        ];
+
+        if ($scope === OrderMeal::SCOPE_GENERAL) {
+            $generalShiftData = [
+                'day_shift_qty' => (int) ($validated['day_shift_qty'] ?? 0),
+                'overtime_day_shift_qty' => (int) ($validated['overtime_day_shift_qty'] ?? 0),
+                'night_shift_qty' => (int) ($validated['night_shift_qty'] ?? 0),
+                'overtime_night_shift_qty' => (int) ($validated['overtime_night_shift_qty'] ?? 0),
+            ];
+
+            $baseQuantity = $generalShiftData['day_shift_qty']
+                + $generalShiftData['overtime_day_shift_qty']
+                + $generalShiftData['night_shift_qty']
+                + $generalShiftData['overtime_night_shift_qty'];
+
+            $generalCostData = $this->calculateGeneralMealCost(
+                $baseQuantity,
+                (int) ($validated['meal_unit_price'] ?? 12000),
+                (float) ($validated['local_tax_rate'] ?? 10),
+                (float) ($validated['service_tax_rate'] ?? 2),
+            );
+        }
+
         $totalQuantity = $baseQuantity + $visitorCount;
 
         if ((int) $validated['actual_quantity'] > $totalQuantity) {
@@ -397,7 +510,10 @@ class OrderMealController extends Controller
         $orderMeal->fill([
             ...$validated,
             'quantity' => $totalQuantity,
+            'visitor_count' => $visitorCount,
             'meal_type' => 'lunch',
+            ...$generalShiftData,
+            ...$generalCostData,
         ]);
 
         if ($canApprove && array_key_exists('status', $validated)) {
@@ -446,9 +562,16 @@ class OrderMealController extends Controller
             ],
             'meal_date' => ['required', 'date'],
             'menu_name' => ['required', 'string', 'max:255'],
-            'quantity' => ['required', 'integer', 'min:1'],
+            'quantity' => ['required', 'integer', 'min:0'],
             'actual_quantity' => ['required', 'integer', 'min:0'],
             'visitor_count' => ['required', 'integer', 'min:0'],
+            'day_shift_qty' => [Rule::requiredIf(fn() => $scope === OrderMeal::SCOPE_GENERAL), 'nullable', 'integer', 'min:0'],
+            'overtime_day_shift_qty' => [Rule::requiredIf(fn() => $scope === OrderMeal::SCOPE_GENERAL), 'nullable', 'integer', 'min:0'],
+            'night_shift_qty' => [Rule::requiredIf(fn() => $scope === OrderMeal::SCOPE_GENERAL), 'nullable', 'integer', 'min:0'],
+            'overtime_night_shift_qty' => [Rule::requiredIf(fn() => $scope === OrderMeal::SCOPE_GENERAL), 'nullable', 'integer', 'min:0'],
+            'meal_unit_price' => [Rule::requiredIf(fn() => $scope === OrderMeal::SCOPE_GENERAL), 'nullable', 'integer', 'min:1'],
+            'local_tax_rate' => [Rule::requiredIf(fn() => $scope === OrderMeal::SCOPE_GENERAL), 'nullable', 'numeric', 'min:0'],
+            'service_tax_rate' => [Rule::requiredIf(fn() => $scope === OrderMeal::SCOPE_GENERAL), 'nullable', 'numeric', 'min:0'],
             'schedule_type' => $isStore
                 ? ['required', Rule::in(['single', 'daily', 'weekly'])]
                 : ['nullable', Rule::in(['single', 'daily', 'weekly'])],
@@ -475,7 +598,50 @@ class OrderMealController extends Controller
             unset($validated['exit_permit_id']);
         }
 
+        if ($scope === OrderMeal::SCOPE_GENERAL) {
+            $validated['quantity'] = max(
+                0,
+                (int) ($validated['day_shift_qty'] ?? 0)
+                + (int) ($validated['overtime_day_shift_qty'] ?? 0)
+                + (int) ($validated['night_shift_qty'] ?? 0)
+                + (int) ($validated['overtime_night_shift_qty'] ?? 0)
+            );
+            $validated['visitor_count'] = 0;
+        }
+
+        if ($scope !== OrderMeal::SCOPE_GENERAL) {
+            unset(
+                $validated['day_shift_qty'],
+                $validated['overtime_day_shift_qty'],
+                $validated['night_shift_qty'],
+                $validated['overtime_night_shift_qty'],
+                $validated['meal_unit_price'],
+                $validated['local_tax_rate'],
+                $validated['service_tax_rate'],
+            );
+        }
+
         return $validated;
+    }
+
+    private function calculateGeneralMealCost(int $totalQuantity, int $unitPrice, float $localTaxRate, float $serviceTaxRate): array
+    {
+        $subtotalAmount = max(0, $totalQuantity) * max(1, $unitPrice);
+        $localTaxAmount = (int) round($subtotalAmount * (max(0, $localTaxRate) / 100), 0);
+        $serviceTaxAmount = (int) round($subtotalAmount * (max(0, $serviceTaxRate) / 100), 0);
+
+        // Keep parity with spreadsheet formula: Total = Amount + Local Tax - Service Tax.
+        $totalAmount = max(0, $subtotalAmount + $localTaxAmount - $serviceTaxAmount);
+
+        return [
+            'meal_unit_price' => max(1, $unitPrice),
+            'local_tax_rate' => max(0, $localTaxRate),
+            'service_tax_rate' => max(0, $serviceTaxRate),
+            'subtotal_amount' => $subtotalAmount,
+            'local_tax_amount' => $localTaxAmount,
+            'service_tax_amount' => $serviceTaxAmount,
+            'total_amount' => $totalAmount,
+        ];
     }
 
     private function resolveVerifiedExitPermitForMeal($user, int $exitPermitId, string $mealDate): ExitPermit

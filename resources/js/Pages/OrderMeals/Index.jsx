@@ -1,6 +1,12 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 
+const currencyFormatter = new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    maximumFractionDigits: 0,
+});
+
 function NotEatenChart({ title, points }) {
     const maxValue = Math.max(1, ...(points ?? []).map((item) => item.remaining ?? 0));
 
@@ -132,11 +138,23 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Karyawan</th>
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Tanggal</th>
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Menu</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Schedule</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Visitor</th>
+                                    {isExitPermitMode ? (
+                                        <>
+                                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Schedule</th>
+                                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Visitor</th>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Day Shift</th>
+                                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">OT Day</th>
+                                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Night Shift</th>
+                                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">OT Night</th>
+                                        </>
+                                    )}
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Disediakan</th>
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Realisasi</th>
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Sisa</th>
+                                    {!isExitPermitMode && <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Amount</th>}
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Aksi</th>
                                 </tr>
                             </thead>
@@ -146,11 +164,25 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                         <td className="px-4 py-3 font-semibold text-slate-800">{item.employee_name}</td>
                                         <td className="px-4 py-3 text-slate-700">{item.meal_date}</td>
                                         <td className="px-4 py-3 text-slate-700">{item.menu_name}</td>
-                                        <td className="px-4 py-3 text-slate-700">{item.schedule_type ?? 'single'}</td>
-                                        <td className="px-4 py-3 text-slate-700">{item.visitor_count ?? 0}</td>
+                                        {isExitPermitMode ? (
+                                            <>
+                                                <td className="px-4 py-3 text-slate-700">{item.schedule_type ?? 'single'}</td>
+                                                <td className="px-4 py-3 text-slate-700">{item.visitor_count ?? 0}</td>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <td className="px-4 py-3 text-slate-700">{item.day_shift_qty ?? 0}</td>
+                                                <td className="px-4 py-3 text-slate-700">{item.overtime_day_shift_qty ?? 0}</td>
+                                                <td className="px-4 py-3 text-slate-700">{item.night_shift_qty ?? 0}</td>
+                                                <td className="px-4 py-3 text-slate-700">{item.overtime_night_shift_qty ?? 0}</td>
+                                            </>
+                                        )}
                                         <td className="px-4 py-3 text-slate-700">{item.quantity}</td>
                                         <td className="px-4 py-3 text-slate-700">{item.actual_quantity}</td>
                                         <td className="px-4 py-3 font-semibold text-emerald-600">{item.remaining_quantity}</td>
+                                        {!isExitPermitMode && (
+                                            <td className="px-4 py-3 text-slate-700">{currencyFormatter.format(item.total_amount ?? 0)}</td>
+                                        )}
                                         <td className="px-4 py-3">
                                             <div className="flex gap-2">
                                                 <Link

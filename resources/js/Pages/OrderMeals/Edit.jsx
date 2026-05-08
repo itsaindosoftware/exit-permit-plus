@@ -1,6 +1,7 @@
 import InputError from '@/Components/InputError';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { useEffect } from 'react';
 
 function translateConversionNotes(text) {
     if (!text) {
@@ -21,6 +22,12 @@ function translateConversionNotes(text) {
 const inputClass =
     'mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-cyan-600 focus:ring-2 focus:ring-cyan-200';
 
+const currencyFormatter = new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    maximumFractionDigits: 0,
+});
+
 export default function Edit({ orderMeal, canApprove, mode, indexRouteName, updateRouteName }) {
     const isExitPermitMode = mode === 'exit_permit';
     const readableNotes = translateConversionNotes(orderMeal.notes ?? '');
@@ -31,11 +38,55 @@ export default function Edit({ orderMeal, canApprove, mode, indexRouteName, upda
         quantity: orderMeal.quantity ?? 1,
         actual_quantity: orderMeal.actual_quantity ?? 0,
         visitor_count: orderMeal.visitor_count ?? 0,
+        day_shift_qty: orderMeal.day_shift_qty ?? 0,
+        overtime_day_shift_qty: orderMeal.overtime_day_shift_qty ?? 0,
+        night_shift_qty: orderMeal.night_shift_qty ?? 0,
+        overtime_night_shift_qty: orderMeal.overtime_night_shift_qty ?? 0,
+        meal_unit_price: orderMeal.meal_unit_price ?? 12000,
+        local_tax_rate: orderMeal.local_tax_rate ?? 10,
+        service_tax_rate: orderMeal.service_tax_rate ?? 2,
         notes: readableNotes,
         status: orderMeal.status ?? 'pending',
     });
 
-    const totalProvided = Number(data.quantity || 0) + Number(data.visitor_count || 0);
+    const shiftTotal =
+        Number(data.day_shift_qty || 0)
+        + Number(data.overtime_day_shift_qty || 0)
+        + Number(data.night_shift_qty || 0)
+        + Number(data.overtime_night_shift_qty || 0);
+    const baseProvided = isExitPermitMode ? Number(data.quantity || 0) : shiftTotal;
+    const totalProvided = baseProvided + Number(isExitPermitMode ? (data.visitor_count || 0) : 0);
+    const subtotalAmount = isExitPermitMode
+        ? 0
+        : totalProvided * Number(data.meal_unit_price || 0);
+    const localTaxAmount = isExitPermitMode
+        ? 0
+        : Math.round(subtotalAmount * (Number(data.local_tax_rate || 0) / 100));
+    const serviceTaxAmount = isExitPermitMode
+        ? 0
+        : Math.round(subtotalAmount * (Number(data.service_tax_rate || 0) / 100));
+    const grandTotalAmount = isExitPermitMode
+        ? 0
+        : subtotalAmount + localTaxAmount - serviceTaxAmount;
+
+    useEffect(() => {
+        if (isExitPermitMode) {
+            return;
+        }
+
+        if (Number(data.quantity || 0) !== shiftTotal) {
+            setData('quantity', shiftTotal);
+        }
+
+        if (Number(data.visitor_count || 0) !== 0) {
+            setData('visitor_count', 0);
+        }
+
+        const clampedActual = Math.min(Number(data.actual_quantity || 0), shiftTotal);
+        if (Number(data.actual_quantity || 0) !== clampedActual) {
+            setData('actual_quantity', clampedActual);
+        }
+    }, [isExitPermitMode, shiftTotal, data.quantity, data.visitor_count, data.actual_quantity, setData]);
 
     const submit = (e) => {
         e.preventDefault();
@@ -76,11 +127,123 @@ export default function Edit({ orderMeal, canApprove, mode, indexRouteName, upda
                             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Sisa Paket</p>
                             <p className="mt-2 text-3xl font-black text-emerald-700">{Math.max(0, totalProvided - Number(data.actual_quantity || 0))}</p>
                         </div>
-                        <div>
+                        {/* <div>
                             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Status</p>
                             <p className="mt-2 inline-flex rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold uppercase text-amber-700">{data.status}</p>
-                        </div>
+                        </div> */}
                     </div>
+
+                    {!isExitPermitMode && (
+                        <div className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                            <p className="text-sm font-semibold text-slate-900">Calculation for Catering Cost (Format Excel)</p>
+
+                            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                                <div>
+                                    <label htmlFor="day_shift_qty" className="text-sm font-semibold text-slate-800">Day Shift (12.00 - 13.00)</label>
+                                    <input
+                                        id="day_shift_qty"
+                                        type="number"
+                                        min="0"
+                                        value={data.day_shift_qty}
+                                        className={inputClass}
+                                        onChange={(e) => setData('day_shift_qty', Number(e.target.value))}
+                                    />
+                                    <InputError message={errors.day_shift_qty} className="mt-2" />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="overtime_day_shift_qty" className="text-sm font-semibold text-slate-800">Overtime Day Shift (18.15 - 18.35)</label>
+                                    <input
+                                        id="overtime_day_shift_qty"
+                                        type="number"
+                                        min="0"
+                                        value={data.overtime_day_shift_qty}
+                                        className={inputClass}
+                                        onChange={(e) => setData('overtime_day_shift_qty', Number(e.target.value))}
+                                    />
+                                    <InputError message={errors.overtime_day_shift_qty} className="mt-2" />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="night_shift_qty" className="text-sm font-semibold text-slate-800">Night Shift (00.00 - 01.11)</label>
+                                    <input
+                                        id="night_shift_qty"
+                                        type="number"
+                                        min="0"
+                                        value={data.night_shift_qty}
+                                        className={inputClass}
+                                        onChange={(e) => setData('night_shift_qty', Number(e.target.value))}
+                                    />
+                                    <InputError message={errors.night_shift_qty} className="mt-2" />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="overtime_night_shift_qty" className="text-sm font-semibold text-slate-800">Overtime Night Shift (06.15 - 06.35)</label>
+                                    <input
+                                        id="overtime_night_shift_qty"
+                                        type="number"
+                                        min="0"
+                                        value={data.overtime_night_shift_qty}
+                                        className={inputClass}
+                                        onChange={(e) => setData('overtime_night_shift_qty', Number(e.target.value))}
+                                    />
+                                    <InputError message={errors.overtime_night_shift_qty} className="mt-2" />
+                                </div>
+                            </div>
+
+                            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                                <div>
+                                    <label htmlFor="quantity" className="text-sm font-semibold text-slate-800">Total</label>
+                                    <input id="quantity" type="number" value={shiftTotal} className={inputClass} readOnly />
+                                </div>
+                                <div>
+                                    <label htmlFor="meal_unit_price" className="text-sm font-semibold text-slate-800">Amount / Porsi</label>
+                                    <input
+                                        id="meal_unit_price"
+                                        type="number"
+                                        min="1"
+                                        value={data.meal_unit_price}
+                                        className={inputClass}
+                                        onChange={(e) => setData('meal_unit_price', Number(e.target.value))}
+                                    />
+                                    <InputError message={errors.meal_unit_price} className="mt-2" />
+                                </div>
+                                <div>
+                                    <label htmlFor="local_tax_rate" className="text-sm font-semibold text-slate-800">Local Tax (%)</label>
+                                    <input
+                                        id="local_tax_rate"
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value={data.local_tax_rate}
+                                        className={inputClass}
+                                        onChange={(e) => setData('local_tax_rate', Number(e.target.value))}
+                                    />
+                                    <InputError message={errors.local_tax_rate} className="mt-2" />
+                                </div>
+                                <div>
+                                    <label htmlFor="service_tax_rate" className="text-sm font-semibold text-slate-800">Service Tax (%)</label>
+                                    <input
+                                        id="service_tax_rate"
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value={data.service_tax_rate}
+                                        className={inputClass}
+                                        onChange={(e) => setData('service_tax_rate', Number(e.target.value))}
+                                    />
+                                    <InputError message={errors.service_tax_rate} className="mt-2" />
+                                </div>
+                            </div>
+
+                            <div className="grid gap-3 rounded-lg border border-cyan-200 bg-cyan-50 p-4 text-sm text-cyan-900 md:grid-cols-2 xl:grid-cols-4">
+                                <p><span className="font-semibold">Subtotal:</span> {currencyFormatter.format(subtotalAmount)}</p>
+                                <p><span className="font-semibold">Local Tax:</span> {currencyFormatter.format(localTaxAmount)}</p>
+                                <p><span className="font-semibold">Service Tax:</span> {currencyFormatter.format(serviceTaxAmount)}</p>
+                                <p><span className="font-semibold">Grand Total:</span> {currencyFormatter.format(grandTotalAmount)}</p>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="grid gap-4 md:grid-cols-2">
                         <div>
@@ -113,25 +276,28 @@ export default function Edit({ orderMeal, canApprove, mode, indexRouteName, upda
                             <input
                                 id="quantity"
                                 type="number"
-                                min="1"
+                                min="0"
                                 value={data.quantity}
                                 className={inputClass}
+                                readOnly={!isExitPermitMode}
                                 onChange={(e) => setData('quantity', Number(e.target.value))}
                             />
                             <InputError message={errors.quantity} className="mt-2" />
                         </div>
-                        <div>
-                            <label htmlFor="visitor_count" className="text-sm font-semibold text-slate-800">Additional Visitor</label>
-                            <input
-                                id="visitor_count"
-                                type="number"
-                                min="0"
-                                value={data.visitor_count}
-                                className={inputClass}
-                                onChange={(e) => setData('visitor_count', Number(e.target.value))}
-                            />
-                            <InputError message={errors.visitor_count} className="mt-2" />
-                        </div>
+                        {isExitPermitMode && (
+                            <div>
+                                <label htmlFor="visitor_count" className="text-sm font-semibold text-slate-800">Additional Visitor</label>
+                                <input
+                                    id="visitor_count"
+                                    type="number"
+                                    min="0"
+                                    value={data.visitor_count}
+                                    className={inputClass}
+                                    onChange={(e) => setData('visitor_count', Number(e.target.value))}
+                                />
+                                <InputError message={errors.visitor_count} className="mt-2" />
+                            </div>
+                        )}
                         <div>
                             <label htmlFor="actual_quantity" className="text-sm font-semibold text-slate-800">Realisasi Makan</label>
                             <input
@@ -147,7 +313,9 @@ export default function Edit({ orderMeal, canApprove, mode, indexRouteName, upda
                     </div>
 
                     <div className="rounded-lg border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-cyan-900">
-                        Total paket disediakan = <span className="font-semibold">{totalProvided}</span> (paket dasar + visitor).
+                        {isExitPermitMode
+                            ? <>Total paket disediakan = <span className="font-semibold">{totalProvided}</span> (paket dasar + visitor).</>
+                            : <>Total paket disediakan = <span className="font-semibold">{shiftTotal}</span> (day shift + overtime day + night shift + overtime night).</>}
                     </div>
 
                     <div>

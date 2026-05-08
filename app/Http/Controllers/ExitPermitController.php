@@ -10,10 +10,13 @@ use App\Models\User;
 use App\Notifications\ArrangeCarDriverRequested;
 use App\Services\AttendanceMatchingService;
 use App\Services\ExitPermitLunchConversionService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
@@ -127,7 +130,81 @@ class ExitPermitController extends Controller
             'exitTypes' => ExitPermit::EXIT_TYPES,
             'carOptions' => $this->carOptions(),
             'driverOptions' => $this->driverOptions(),
+            'requestorLookupRouteName' => 'exit-permits.requestor-options',
         ]);
+    }
+
+    public function requestorLookup(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+            'limit' => ['nullable', 'integer', 'min:1', 'max:50'],
+        ]);
+
+        $queryText = trim((string) ($validated['q'] ?? ''));
+        $limit = (int) ($validated['limit'] ?? 20);
+        $connectionName = (string) config('attendance.requestor_source_connection', config('database.default'));
+        $sourceTable = (string) config('attendance.requestor_source_table', 'absensi_karyawan');
+
+        if (!Schema::connection($connectionName)->hasTable($sourceTable)) {
+            return response()->json(['items' => []]);
+        }
+
+        $columns = collect(Schema::connection($connectionName)->getColumnListing($sourceTable))
+            ->map(fn($column) => strtolower((string) $column))
+            ->values();
+
+        $findColumn = function (array $candidates) use ($columns): ?string {
+            foreach ($candidates as $candidate) {
+                if ($columns->contains(strtolower($candidate))) {
+                    return (string) $columns->first(fn($column) => strtolower((string) $column) === strtolower($candidate));
+                }
+            }
+
+            return null;
+        };
+
+        $nameColumn = $findColumn(['name', 'nama', 'employee_name', 'full_name']);
+        $employeeIdColumn = $findColumn(['employee_id', 'id_employee', 'nik', 'pin', 'emp_id']);
+        $positionColumn = $findColumn(['position', 'jabatan', 'job_title']);
+        $departmentColumn = $findColumn(['department', 'dept', 'department_name', 'bagian']);
+
+        if (!$nameColumn && !$employeeIdColumn) {
+            return response()->json(['items' => []]);
+        }
+
+        $query = DB::connection($connectionName)->table($sourceTable);
+
+        if ($queryText !== '') {
+            $query->where(function ($builder) use ($queryText, $nameColumn, $employeeIdColumn, $positionColumn, $departmentColumn) {
+                foreach (array_filter([$nameColumn, $employeeIdColumn, $positionColumn, $departmentColumn]) as $column) {
+                    $builder->orWhere($column, 'like', '%' . $queryText . '%');
+                }
+            });
+        }
+
+        $selects = [];
+        $selects[] = $nameColumn ? ($nameColumn . ' as name') : DB::raw('NULL as name');
+        $selects[] = $employeeIdColumn ? ($employeeIdColumn . ' as employee_id') : DB::raw('NULL as employee_id');
+        $selects[] = $positionColumn ? ($positionColumn . ' as position') : DB::raw('NULL as position');
+        $selects[] = $departmentColumn ? ($departmentColumn . ' as department') : DB::raw('NULL as department');
+
+        $items = $query
+            ->select($selects)
+            ->limit($limit)
+            ->get()
+            ->map(fn($row) => [
+                'name' => trim((string) ($row->name ?? '')),
+                'employee_id' => trim((string) ($row->employee_id ?? '')),
+                'position' => trim((string) ($row->position ?? '')),
+                'department' => trim((string) ($row->department ?? '')),
+            ])
+            ->filter(fn(array $row) => $row['name'] !== '' || $row['employee_id'] !== '')
+            ->unique(fn(array $row) => strtolower($row['employee_id'] . '|' . $row['name']))
+            ->values()
+            ->all();
+
+        return response()->json(['items' => $items]);
     }
 
     public function show(ExitPermit $exitPermit): Response
@@ -293,6 +370,7 @@ class ExitPermitController extends Controller
             'exitTypes' => ExitPermit::EXIT_TYPES,
             'carOptions' => $this->carOptions(),
             'driverOptions' => $this->driverOptions(),
+            'requestorLookupRouteName' => 'exit-permits.requestor-options',
             'attendancePreview' => $request->session()->get($this->attendancePreviewSessionKey($exitPermit->id)),
         ]);
     }
