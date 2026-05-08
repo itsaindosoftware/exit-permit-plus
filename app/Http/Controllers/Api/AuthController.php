@@ -14,6 +14,7 @@ class AuthController extends Controller
         $validated = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
+            'device_id' => ['required', 'string', 'max:191'],
             'device_name' => ['nullable', 'string', 'max:100'],
         ]);
 
@@ -27,6 +28,23 @@ class AuthController extends Controller
                 'message' => 'Email atau password tidak valid.',
             ], 422);
         }
+
+        $deviceId = trim($validated['device_id']);
+        $deviceHash = hash('sha256', $deviceId);
+
+        if (!$user->login_device_hash) {
+            $user->login_device_hash = $deviceHash;
+            $user->save();
+        }
+
+        if (!hash_equals((string) $user->login_device_hash, $deviceHash)) {
+            return response()->json([
+                'message' => 'Akun ini hanya bisa login dari perangkat yang terdaftar.',
+            ], 403);
+        }
+
+        // Keep one active token per account so relogin from the same device rotates token cleanly.
+        $user->tokens()->delete();
 
         $token = $user->createToken($validated['device_name'] ?? 'mobile-app')->plainTextToken;
 
