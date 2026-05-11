@@ -13,6 +13,7 @@ export default function AuthenticatedLayout({ header, children }) {
     const isHr = user?.role?.code === 'hr';
     const isExitPermitApprovalUser = ['manager', 'md', 'hr_manager'].includes(user?.role?.code)
         || (isHr && isSisca);
+    const isReimbursementApprovalUser = ['manager', 'md', 'hr', 'accounting', 'admin'].includes(user?.role?.code);
 
     const menuItems = [
         { label: 'Dashboard', routeName: 'dashboard' },
@@ -22,6 +23,7 @@ export default function AuthenticatedLayout({ header, children }) {
         ...(isExitPermitApprovalUser ? [{ label: 'Exit Permit Approval', routeName: 'exit-permit-approvals.index' }] : []),
         ...(isSisca ? [{ label: 'Order Meal Umum', routeName: 'order-meals.index' }] : []),
         { label: 'Reimbursement', routeName: 'reimbursements.index' },
+        ...(isReimbursementApprovalUser ? [{ label: 'Reimbursement Approval', routeName: 'reimbursement-approvals.index' }] : []),
         { label: 'Profile', routeName: 'profile.edit' },
     ];
 

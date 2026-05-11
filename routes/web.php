@@ -38,6 +38,8 @@ Route::middleware('auth')->group(function () {
         ->name('reimbursements.attachment');
     Route::get('reimbursement-documents/{document}/attachment', [ReimbursementController::class, 'documentAttachment'])
         ->name('reimbursement-documents.attachment');
+    Route::get('reimbursement-approvals', [ReimbursementController::class, 'approvalIndex'])
+        ->name('reimbursement-approvals.index');
     Route::resource('exit-permits', ExitPermitController::class);
     Route::resource('order-meals', OrderMealController::class)->except([]);
     Route::get('exit-permit-meals', [OrderMealController::class, 'indexExitPermit'])->name('exit-permit-meals.index');

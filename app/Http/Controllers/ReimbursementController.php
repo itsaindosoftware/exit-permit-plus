@@ -68,37 +68,39 @@ class ReimbursementController extends Controller
             ->with(['user:id,name', 'exitPermit:id,permit_date,destination'])
             ->latest();
 
-        if (!$this->canViewAllData($user)) {
-            $query->where('user_id', $user->id);
-        }
+        $query->where('user_id', $user?->id);
 
         return Inertia::render('Reimbursements/Index', [
             'viewerRole' => $user?->role?->code,
+            'pageMode' => 'personal',
             'canCreate' => $isUserRole && count($eligibleExitPermits) > 0,
             'eligibleExitPermits' => $eligibleExitPermits,
             'reimbursements' => $query
                 ->paginate(10)
-                ->through(fn(Reimbursement $reimbursement) => [
-                    'id' => $reimbursement->id,
-                    'employee_name' => $reimbursement->user?->name,
-                    'exit_permit_id' => $reimbursement->exit_permit_id,
-                    'exit_permit_label' => $this->exitPermitLabel($reimbursement->exitPermit),
-                    'request_date' => $this->normalizeDateForInput($reimbursement->request_date),
-                    'paid_to' => $reimbursement->paid_to,
-                    'amount' => $reimbursement->amount,
-                    'amount_order_meal' => (int) ($reimbursement->amount_order_meal ?? 0),
-                    'amount_fuel' => (int) ($reimbursement->amount_fuel ?? 0),
-                    'amount_toll' => (int) ($reimbursement->amount_toll ?? 0),
-                    'amount_in_words' => $reimbursement->amount_in_words,
-                    'expense_type' => $reimbursement->expense_type,
-                    'purpose' => $reimbursement->purpose,
-                    'ref_document' => $reimbursement->ref_document,
-                    'description' => $reimbursement->description,
-                    'status' => $reimbursement->status,
-                    'approval_stage' => $this->approvalStageLabel($reimbursement),
-                    'can_update_request' => $this->canOwnerUpdate($reimbursement, $user),
-                    'can_take_action' => $this->canTakeApprovalAction($reimbursement, $user),
-                ]),
+                ->through(fn(Reimbursement $reimbursement) => $this->transformReimbursementListItem($reimbursement, $user)),
+        ]);
+    }
+
+    public function approvalIndex(): Response
+    {
+        $user = request()->user();
+
+        if (!$this->canAccessApprovalMenu($user)) {
+            abort(403);
+        }
+
+        $query = Reimbursement::query()
+            ->with(['user:id,name', 'exitPermit:id,permit_date,destination'])
+            ->latest();
+
+        return Inertia::render('Reimbursements/Index', [
+            'viewerRole' => $user?->role?->code,
+            'pageMode' => 'approval',
+            'canCreate' => false,
+            'eligibleExitPermits' => [],
+            'reimbursements' => $query
+                ->paginate(10)
+                ->through(fn(Reimbursement $reimbursement) => $this->transformReimbursementListItem($reimbursement, $user)),
         ]);
     }
 
@@ -151,13 +153,14 @@ class ReimbursementController extends Controller
         $exitPermit = ExitPermit::query()->findOrFail($validated['exit_permit_id']);
         $this->ensureEligibleForReimbursementPath($exitPermit, $user->id);
 
-        $alreadyExists = Reimbursement::query()
+        $alreadyFinished = Reimbursement::query()
             ->where('exit_permit_id', $exitPermit->id)
+            ->where('status', Reimbursement::STATUS_FINISHED)
             ->exists();
 
-        if ($alreadyExists) {
+        if ($alreadyFinished) {
             throw ValidationException::withMessages([
-                'exit_permit_id' => 'Form reimbursement untuk Exit Permit ini sudah pernah diajukan.',
+                'exit_permit_id' => 'Reimbursement untuk Exit Permit ini sudah berstatus Sudah Dibayarkan oleh Accounting.',
             ]);
         }
 
@@ -232,6 +235,9 @@ class ReimbursementController extends Controller
                     ->values()
                     ->all(),
             ],
+            'backRouteName' => ($this->canTakeApprovalAction($reimbursement, $user) && !$this->canOwnerUpdate($reimbursement, $user))
+                ? 'reimbursement-approvals.index'
+                : 'reimbursements.index',
             'canUpdateRequest' => $this->canOwnerUpdate($reimbursement, $user),
             'canApproveManager' => $this->canApproveManager($reimbursement, $user),
             'canApproveMd' => $this->canApproveMd($reimbursement, $user),
@@ -302,7 +308,7 @@ class ReimbursementController extends Controller
                 : Reimbursement::STATUS_REJECTED;
             $reimbursement->save();
 
-            return redirect()->route('reimbursements.index')->with('success', 'Approval manager berhasil diproses.');
+            return redirect()->route('reimbursement-approvals.index')->with('success', 'Approval manager berhasil diproses.');
         }
 
         if ($this->canApproveMd($reimbursement, $user)) {
@@ -314,7 +320,7 @@ class ReimbursementController extends Controller
                 : Reimbursement::STATUS_REJECTED;
             $reimbursement->save();
 
-            return redirect()->route('reimbursements.index')->with('success', 'Approval MD berhasil diproses.');
+            return redirect()->route('reimbursement-approvals.index')->with('success', 'Approval MD berhasil diproses.');
         }
 
         if ($this->canSubmitRatna($reimbursement, $user)) {
@@ -324,7 +330,7 @@ class ReimbursementController extends Controller
             $reimbursement->status = $status;
             $reimbursement->save();
 
-            return redirect()->route('reimbursements.index')->with('success', 'Reimbursement berhasil disubmit ke accounting.');
+            return redirect()->route('reimbursement-approvals.index')->with('success', 'Reimbursement berhasil disubmit ke accounting.');
         }
 
         if ($this->canFinishAccounting($reimbursement, $user)) {
@@ -334,7 +340,7 @@ class ReimbursementController extends Controller
             $reimbursement->status = $status;
             $reimbursement->save();
 
-            return redirect()->route('reimbursements.index')->with('success', 'Reimbursement telah diselesaikan oleh accounting.');
+            return redirect()->route('reimbursement-approvals.index')->with('success', 'Reimbursement telah diselesaikan oleh accounting.');
         }
 
         throw ValidationException::withMessages([
@@ -349,7 +355,9 @@ class ReimbursementController extends Controller
             ->where('status', 'approved')
             ->whereNotNull('md_approved_at')
             ->whereNotNull('attendance_checked_at')
-            ->whereDoesntHave('reimbursements')
+            ->whereDoesntHave('reimbursements', function ($query) {
+                $query->where('status', Reimbursement::STATUS_FINISHED);
+            })
             ->latest('permit_date')
             ->with(['user:id,name', 'requestors:id,exit_permit_id,name,row_number,reimburs_lunch_box'])
             ->get(['id', 'user_id', 'permit_date', 'destination', 'reimbursement_amount'])
@@ -459,6 +467,36 @@ class ReimbursementController extends Controller
     private function canViewAllData($user): bool
     {
         return in_array($user?->role?->code, ['manager', 'md', 'hr', 'accounting', 'admin'], true);
+    }
+
+    private function canAccessApprovalMenu($user): bool
+    {
+        return $this->canViewAllData($user);
+    }
+
+    private function transformReimbursementListItem(Reimbursement $reimbursement, $user): array
+    {
+        return [
+            'id' => $reimbursement->id,
+            'employee_name' => $reimbursement->user?->name,
+            'exit_permit_id' => $reimbursement->exit_permit_id,
+            'exit_permit_label' => $this->exitPermitLabel($reimbursement->exitPermit),
+            'request_date' => $this->normalizeDateForInput($reimbursement->request_date),
+            'paid_to' => $reimbursement->paid_to,
+            'amount' => $reimbursement->amount,
+            'amount_order_meal' => (int) ($reimbursement->amount_order_meal ?? 0),
+            'amount_fuel' => (int) ($reimbursement->amount_fuel ?? 0),
+            'amount_toll' => (int) ($reimbursement->amount_toll ?? 0),
+            'amount_in_words' => $reimbursement->amount_in_words,
+            'expense_type' => $reimbursement->expense_type,
+            'purpose' => $reimbursement->purpose,
+            'ref_document' => $reimbursement->ref_document,
+            'description' => $reimbursement->description,
+            'status' => $reimbursement->status,
+            'approval_stage' => $this->approvalStageLabel($reimbursement),
+            'can_update_request' => $this->canOwnerUpdate($reimbursement, $user),
+            'can_take_action' => $this->canTakeApprovalAction($reimbursement, $user),
+        ];
     }
 
     private function canOwnerUpdate(Reimbursement $reimbursement, $user): bool

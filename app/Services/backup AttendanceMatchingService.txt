@@ -35,18 +35,12 @@ class AttendanceMatchingService
             ];
         }
 
-        $networkPath = trim((string) config('attendance.source_network_path', ''));
-
-        if ($networkPath !== '') {
-            return $this->loadRowsFromNetworkDirectory($networkPath);
-        }
-
         $disk = (string) config('attendance.source_disk', 'local');
         $path = trim((string) config('attendance.source_path', ''), '/');
 
         if ($path === '') {
             throw ValidationException::withMessages([
-                'attendance_file' => 'File attendance wajib diupload atau set ATTENDANCE_SOURCE_NETWORK_PATH/ATTENDANCE_SOURCE_PATH terlebih dahulu.',
+                'attendance_file' => 'File attendance wajib diupload atau set ATTENDANCE_SOURCE_PATH terlebih dahulu.',
             ]);
         }
 
@@ -85,87 +79,6 @@ class AttendanceMatchingService
                 'rows' => $rows,
                 'source' => [
                     'disk' => $disk,
-                    'path' => $latestFile,
-                    'file_name' => basename($latestFile),
-                    'loaded_at' => now()->toDateTimeString(),
-                ],
-            ];
-        } finally {
-            @unlink($tempPath);
-        }
-    }
-
-    /**
-     * @return array{rows: Collection<int, array<string, mixed>>, source: array<string, mixed>}
-     */
-    private function loadRowsFromNetworkDirectory(string $directory): array
-    {
-        if (!is_dir($directory)) {
-            throw ValidationException::withMessages([
-                'attendance_file' => 'Folder attendance network tidak dapat diakses. Gunakan UNC path (contoh: \\\\192.168.1.5\\HRGA\\Daily Attendance) atau pastikan mapped drive tersedia untuk proses web server.',
-            ]);
-        }
-
-        $allowedExtensions = ['csv', 'txt', 'xlsx'];
-        $latestFile = null;
-        $latestMtime = null;
-
-        try {
-            $iterator = new \FilesystemIterator($directory, \FilesystemIterator::SKIP_DOTS);
-
-            foreach ($iterator as $fileInfo) {
-                if (!$fileInfo->isFile()) {
-                    continue;
-                }
-
-                $extension = strtolower((string) $fileInfo->getExtension());
-                if (!in_array($extension, $allowedExtensions, true)) {
-                    continue;
-                }
-
-                $mtime = $fileInfo->getMTime();
-
-                if ($latestMtime === null || $mtime > $latestMtime) {
-                    $latestMtime = $mtime;
-                    $latestFile = $fileInfo->getPathname();
-                }
-            }
-        } catch (\Throwable $exception) {
-            throw ValidationException::withMessages([
-                'attendance_file' => 'Gagal membaca folder attendance network. Periksa hak akses folder sharing.',
-            ]);
-        }
-
-        if (!$latestFile) {
-            throw ValidationException::withMessages([
-                'attendance_file' => 'Tidak ada file attendance (csv/xlsx) di folder network sharing.',
-            ]);
-        }
-
-        $tempPath = tempnam(sys_get_temp_dir(), 'attendance_');
-
-        if ($tempPath === false) {
-            throw ValidationException::withMessages([
-                'attendance_file' => 'Gagal menyiapkan file sementara attendance.',
-            ]);
-        }
-
-        if (@copy($latestFile, $tempPath) === false) {
-            @unlink($tempPath);
-
-            throw ValidationException::withMessages([
-                'attendance_file' => 'Gagal menyalin file attendance dari folder network sharing.',
-            ]);
-        }
-
-        try {
-            $extension = strtolower((string) pathinfo($latestFile, PATHINFO_EXTENSION));
-            $rows = $this->parseAttendanceFile($tempPath, $extension);
-
-            return [
-                'rows' => $rows,
-                'source' => [
-                    'disk' => 'network',
                     'path' => $latestFile,
                     'file_name' => basename($latestFile),
                     'loaded_at' => now()->toDateTimeString(),

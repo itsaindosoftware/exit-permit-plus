@@ -12,30 +12,36 @@ const statusClass = {
     rejected: 'bg-rose-100 text-rose-700',
 };
 
-export default function Index({ reimbursements, canCreate, eligibleExitPermits, viewerRole }) {
+export default function Index({ reimbursements, canCreate, eligibleExitPermits, viewerRole, pageMode = 'personal' }) {
     const totalItems = reimbursements?.total ?? reimbursements?.data?.length ?? 0;
+    const isApprovalMode = pageMode === 'approval';
 
     return (
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-bold leading-tight text-slate-800">
-                    Reimbursement
+                    {isApprovalMode ? 'Reimbursement Approval' : 'Reimbursement'}
                 </h2>
             }
         >
-            <Head title="Reimbursement" />
+            <Head title={isApprovalMode ? 'Reimbursement Approval' : 'Reimbursement'} />
 
             <div className="space-y-6">
                 <div className="rounded-2xl border border-cyan-200 bg-gradient-to-r from-cyan-50 via-white to-slate-50 p-6 shadow-sm">
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <div>
                             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">Claim Flow</p>
-                            <h3 className="mt-2 text-2xl font-black uppercase tracking-wide text-slate-900">Reimbursement Monitoring</h3>
+                            <h3 className="mt-2 text-2xl font-black uppercase tracking-wide text-slate-900">
+                                {isApprovalMode ? 'Reimbursement Approval Monitoring' : 'Reimbursement Pribadi'}
+                            </h3>
+                            {/* Proses approval dipantau melalui menu Reimbursement Approval. */}
                             <p className="mt-2 text-sm text-slate-600">
-                                Alur persetujuan reimbursement: User, Manager, MD, Ratna (submit accounting), lalu finish oleh Accounting.
+                                {isApprovalMode
+                                    ? 'Alur persetujuan reimbursement: User, Manager, MD, Ratna (submit accounting), lalu finish oleh Accounting.'
+                                    : 'Kelola data reimbursement milik Anda sendiri.'}
                             </p>
                         </div>
-                        {canCreate && (
+                        {!isApprovalMode && canCreate && (
                             <Link
                                 href={route('reimbursements.create')}
                                 className="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
@@ -46,7 +52,7 @@ export default function Index({ reimbursements, canCreate, eligibleExitPermits, 
                     </div>
                 </div>
 
-                {viewerRole === 'user' && (eligibleExitPermits?.length ?? 0) === 0 && (
+                {!isApprovalMode && viewerRole === 'user' && (eligibleExitPermits?.length ?? 0) === 0 && (
                     <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
                         Belum ada Exit Permit yang lolos jalur reimbursement (approved MD + verifikasi Sisca).
                     </div>

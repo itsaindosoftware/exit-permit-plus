@@ -5,6 +5,62 @@ import { useEffect } from 'react';
 
 const currencyFormatter = new Intl.NumberFormat('id-ID');
 
+const numberToBahasaWords = (value) => {
+    const angka = Math.floor(Math.abs(Number(value) || 0));
+
+    const terbilang = (n) => {
+        const words = ['', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan', 'sepuluh', 'sebelas'];
+
+        if (n < 12) {
+            return words[n];
+        }
+
+        if (n < 20) {
+            return `${terbilang(n - 10)} belas`;
+        }
+
+        if (n < 100) {
+            return `${terbilang(Math.floor(n / 10))} puluh ${terbilang(n % 10)}`.trim();
+        }
+
+        if (n < 200) {
+            return `seratus ${terbilang(n - 100)}`.trim();
+        }
+
+        if (n < 1000) {
+            return `${terbilang(Math.floor(n / 100))} ratus ${terbilang(n % 100)}`.trim();
+        }
+
+        if (n < 2000) {
+            return `seribu ${terbilang(n - 1000)}`.trim();
+        }
+
+        if (n < 1000000) {
+            return `${terbilang(Math.floor(n / 1000))} ribu ${terbilang(n % 1000)}`.trim();
+        }
+
+        if (n < 1000000000) {
+            return `${terbilang(Math.floor(n / 1000000))} juta ${terbilang(n % 1000000)}`.trim();
+        }
+
+        if (n < 1000000000000) {
+            return `${terbilang(Math.floor(n / 1000000000))} miliar ${terbilang(n % 1000000000)}`.trim();
+        }
+
+        if (n < 1000000000000000) {
+            return `${terbilang(Math.floor(n / 1000000000000))} triliun ${terbilang(n % 1000000000000)}`.trim();
+        }
+
+        return 'terlalu besar';
+    };
+
+    if (angka === 0) {
+        return 'nol rupiah';
+    }
+
+    return `${terbilang(angka).replace(/\s+/g, ' ').trim()} rupiah`;
+};
+
 const inputClass =
     'mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-cyan-600 focus:ring-2 focus:ring-cyan-200';
 
@@ -65,6 +121,11 @@ export default function Create({ eligibleExitPermits }) {
 
         if (Number(data.amount || 0) !== totalAmount) {
             setData('amount', totalAmount);
+        }
+
+        const words = numberToBahasaWords(totalAmount);
+        if ((data.amount_in_words ?? '') !== words) {
+            setData('amount_in_words', words);
         }
     }, [data.amount_order_meal, data.amount_fuel, data.amount_toll]);
 
@@ -257,7 +318,8 @@ export default function Create({ eligibleExitPermits }) {
                                 type="text"
                                 className={inputClass}
                                 value={data.amount_in_words}
-                                onChange={(e) => setData('amount_in_words', e.target.value)}
+                                readOnly
+                                disabled
                                 required
                             />
                             <InputError message={errors.amount_in_words} className="mt-2" />
