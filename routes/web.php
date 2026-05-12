@@ -32,10 +32,14 @@ Route::middleware('auth')->group(function () {
     Route::put('schedule-cars/{exitPermit}', [ScheduleCarController::class, 'update'])->name('schedule-cars.update');
     Route::get('exit-permits/{exitPermit}/attachment', [ExitPermitController::class, 'attachment'])
         ->name('exit-permits.attachment');
+    Route::get('exit-permits/{exitPermit}/print', [ExitPermitController::class, 'print'])
+        ->name('exit-permits.print');
     Route::post('exit-permits/{exitPermit}/attendance-preview', [ExitPermitController::class, 'previewAttendance'])
         ->name('exit-permits.attendance-preview');
     Route::get('reimbursements/{reimbursement}/attachment', [ReimbursementController::class, 'attachment'])
         ->name('reimbursements.attachment');
+    Route::get('reimbursements/{reimbursement}/print', [ReimbursementController::class, 'print'])
+        ->name('reimbursements.print');
     Route::get('reimbursement-documents/{document}/attachment', [ReimbursementController::class, 'documentAttachment'])
         ->name('reimbursement-documents.attachment');
     Route::get('reimbursement-approvals', [ReimbursementController::class, 'approvalIndex'])

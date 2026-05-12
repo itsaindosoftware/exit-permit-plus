@@ -49,6 +49,7 @@ export default function Create({
 
     const submit = (e) => {
         e.preventDefault();
+
         post(route('exit-permits.store'), { forceFormData: true });
     };
 

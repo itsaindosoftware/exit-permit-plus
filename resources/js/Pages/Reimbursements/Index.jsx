@@ -101,12 +101,22 @@ export default function Index({ reimbursements, canCreate, eligibleExitPermits, 
                                         </td>
                                         <td className="px-4 py-3 text-xs font-semibold text-cyan-700">{item.approval_stage}</td>
                                         <td className="px-4 py-3">
-                                            <Link
-                                                href={route('reimbursements.edit', item.id)}
-                                                className="rounded bg-cyan-700 px-3 py-1 text-xs font-semibold text-white transition hover:bg-cyan-600"
-                                            >
-                                                {item.can_take_action ? 'Proses' : (item.can_update_request ? 'Edit' : 'Detail')}
-                                            </Link>
+                                            <div className="flex gap-2">
+                                                <Link
+                                                    href={route('reimbursements.edit', item.id)}
+                                                    className="rounded bg-cyan-700 px-3 py-1 text-xs font-semibold text-white transition hover:bg-cyan-600"
+                                                >
+                                                    {item.can_take_action ? 'Proses' : (item.can_update_request ? 'Edit' : 'Detail')}
+                                                </Link>
+                                                {/* <a
+                                                    href={route('reimbursements.print', item.id)}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="rounded bg-slate-700 px-3 py-1 text-xs font-semibold text-white transition hover:bg-slate-600"
+                                                >
+                                                    Print PDF
+                                                </a> */}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

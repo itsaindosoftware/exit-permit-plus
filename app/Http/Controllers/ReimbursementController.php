@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ExitPermit;
 use App\Models\Reimbursement;
 use App\Models\ReimbursementDocument;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -57,6 +58,25 @@ class ReimbursementController extends Controller
                 'Content-Disposition' => 'inline',
             ],
         );
+    }
+
+    public function print(Reimbursement $reimbursement)
+    {
+        $this->authorizeUser($reimbursement);
+
+        $reimbursement->load([
+            'user:id,name',
+            'managerApprover:id,name',
+            'mdApprover:id,name',
+            'ratnaSubmitter:id,name',
+            'accountingProcessor:id,name',
+        ]);
+
+        return Pdf::loadView('pdf.reimbursement-internal-receipt', [
+            'reimbursement' => $reimbursement,
+        ])
+            ->setPaper('a4', 'portrait')
+            ->stream('reimbursement-' . $reimbursement->id . '.pdf');
     }
 
     public function index(): Response

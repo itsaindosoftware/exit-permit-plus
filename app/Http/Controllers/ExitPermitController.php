@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Notifications\ArrangeCarDriverRequested;
 use App\Services\AttendanceMatchingService;
 use App\Services\ExitPermitLunchConversionService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -318,7 +319,8 @@ class ExitPermitController extends Controller
             }
         }
 
-        return redirect()->route('exit-permits.index')->with('success', 'Data exit permit berhasil ditambahkan.');
+        return redirect()->route('exit-permits.index')
+            ->with('success', 'Data exit permit berhasil ditambahkan.');
     }
 
     public function edit(Request $request, ExitPermit $exitPermit): Response
@@ -662,6 +664,22 @@ class ExitPermitController extends Controller
                 'Content-Disposition' => 'inline',
             ],
         );
+    }
+
+    public function print(ExitPermit $exitPermit)
+    {
+        $this->authorizeView($exitPermit);
+
+        $exitPermit->load([
+            'user:id,name',
+            'requestors',
+        ]);
+
+        return Pdf::loadView('pdf.exit-permit', [
+            'exitPermit' => $exitPermit,
+        ])
+            ->setPaper('a4', 'portrait')
+            ->stream('exit-permit-' . $exitPermit->id . '.pdf');
     }
 
     private function canApprove($user): bool
