@@ -108,6 +108,7 @@ export default function Index({ reimbursements, canCreate, eligibleExitPermits, 
                                                 >
                                                     {item.can_take_action ? 'Proses' : (item.can_update_request ? 'Edit' : 'Detail')}
                                                 </Link>
+                                                {/* s */}
                                                 {/* <a
                                                     href={route('reimbursements.print', item.id)}
                                                     target="_blank"
