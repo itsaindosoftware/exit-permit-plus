@@ -1,6 +1,8 @@
 admin@example.com
 password
 
+semua nama user disini passwordnya yaitu password
+
 nanti kedepannya kalau sudah setup .env ke server, masukkan file .env ke list .gitignore
 php artisan key:generate
 

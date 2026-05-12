@@ -255,7 +255,7 @@ class ReimbursementController extends Controller
         $user = $request->user();
         $isOwner = $reimbursement->user_id === $user?->id;
 
-        if ($isOwner && !$this->canTakeApprovalAction($reimbursement, $user)) {
+        if ($isOwner) {
             if (!$this->canOwnerUpdate($reimbursement, $user)) {
                 throw ValidationException::withMessages([
                     'status' => 'Form reimbursement yang sudah diproses tidak dapat diubah oleh pemohon.',
@@ -466,23 +466,12 @@ class ReimbursementController extends Controller
 
     private function canViewAllData($user): bool
     {
-        return in_array($user?->role?->code, ['manager', 'md', 'hr_manager', 'hr', 'accounting', 'admin'], true);
+        return in_array($user?->role?->code, ['manager', 'md', 'hr', 'accounting', 'admin'], true);
     }
 
     private function isRequesterRole($user): bool
     {
-        $roleCode = $user?->role?->code;
-
-        if (!$roleCode) {
-            return true;
-        }
-
-        if (in_array($roleCode, ['user', 'manager', 'md', 'hr_manager'], true)) {
-            return true;
-        }
-
-        return $roleCode === 'hr'
-            && strtolower((string) $user?->email) === self::RATNA_EMAIL;
+        return !$this->canViewAllData($user);
     }
 
     private function canAccessApprovalMenu($user): bool
@@ -523,7 +512,7 @@ class ReimbursementController extends Controller
 
     private function canApproveManager(Reimbursement $reimbursement, $user): bool
     {
-        return in_array($user?->role?->code, ['manager', 'hr_manager'], true)
+        return $user?->role?->code === 'manager'
             && $reimbursement->status === Reimbursement::STATUS_PENDING_MANAGER;
     }
 

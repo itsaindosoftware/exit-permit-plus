@@ -430,7 +430,7 @@ class ExitPermitController extends Controller
         $attachmentPhoto = $request->file('attachment_photo');
         $validated = [];
 
-        if ($isOwner) {
+        if ($isOwner && !$canApprove && !$canArrangeCar && !$canVerifyAttendance) {
             $validated = $this->validatedData($request);
             unset($validated['attachment_photo']);
 
@@ -449,7 +449,7 @@ class ExitPermitController extends Controller
             }
         }
 
-        if (!$isOwner && $canApprove) {
+        if ($canApprove) {
             $approval = $this->validateApprovalData($request);
             $newStatus = $approval['status'];
 
@@ -553,7 +553,7 @@ class ExitPermitController extends Controller
             }
         }
 
-        if (!$isOwner && !$canApprove && !$canArrangeCar && $canVerifyAttendance) {
+        if (!$canApprove && !$canArrangeCar && $canVerifyAttendance) {
             $attendanceData = $this->validateAttendanceVerificationData($request, $exitPermit);
 
             if ($exitPermit->exit_type === ExitPermit::EXIT_TYPE_BUSINESS_TRIP) {
@@ -601,7 +601,7 @@ class ExitPermitController extends Controller
                 : ExitPermit::POST_MD_PATH_REIMBURSEMENT;
         }
 
-        if (!$isOwner && !$canApprove && $canArrangeCar) {
+        if (!$canApprove && $canArrangeCar) {
             $arrangementData = $this->validateVehicleArrangementData($request, $exitPermit);
 
             $selectedCar = Car::query()->find((int) $arrangementData['car_id']);
@@ -623,7 +623,7 @@ class ExitPermitController extends Controller
             $this->exitPermitLunchConversionService->applyIfEligible($exitPermit->fresh(['requestors', 'user']));
         }
 
-        $redirectRoute = (!$isOwner && ($canApprove || $canVerifyAttendance))
+        $redirectRoute = ($canApprove || $canArrangeCar || $canVerifyAttendance)
             ? 'exit-permit-approvals.index'
             : 'exit-permits.index';
 
@@ -681,7 +681,10 @@ class ExitPermitController extends Controller
         }
 
         return $user?->role?->code === 'hr'
-            && strtolower((string) $user?->email) === self::ATTENDANCE_VERIFIER_EMAIL;
+            && in_array(strtolower((string) $user?->email), [
+                self::ATTENDANCE_VERIFIER_EMAIL,
+                self::CAR_DRIVER_COORDINATOR_EMAIL,
+            ], true);
     }
 
     private function canOwnerUpdate(ExitPermit $exitPermit, $user): bool
