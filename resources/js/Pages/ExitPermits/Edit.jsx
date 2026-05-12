@@ -849,14 +849,14 @@ export default function Edit({
                             <div>
                                 {exitPermit.exit_type === 'business_trip' ? (
                                     <>
-                                        <label htmlFor="attendance_file" className="text-sm font-semibold text-slate-800">Upload Attendance (CSV/XLSX)</label>
+                                        {/* <label htmlFor="attendance_file" className="text-sm font-semibold text-slate-800">Upload Attendance (CSV/XLSX)</label>
                                         <input
                                             id="attendance_file"
                                             type="file"
                                             accept=".csv,.txt,.xlsx"
                                             className={inputClass}
                                             onChange={(e) => setData('attendance_file', e.target.files?.[0] ?? null)}
-                                        />
+                                        /> */}
                                         <p className="mt-1 text-xs text-slate-500">
                                             Untuk tipe company (business trip), Sisca upload file attendance dari folder sharing (finger print), lalu sistem akan otomatis cocokkan ke list requestor sesuai scope department konfigurasi (default: BIPO/Internship/Outsource/IT).
                                         </p>

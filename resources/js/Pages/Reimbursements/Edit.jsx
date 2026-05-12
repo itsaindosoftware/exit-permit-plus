@@ -81,7 +81,8 @@ export default function Edit({
                 ? 'finished'
                 : reimbursement.status;
 
-    const { data, setData, put, processing, errors } = useForm({
+    const { data, setData, post, processing, errors, transform } = useForm({
+        _method: 'put',
         request_date: reimbursement.request_date ?? '',
         paid_to: reimbursement.paid_to ?? '',
         amount: reimbursement.amount ?? 0,
@@ -109,11 +110,29 @@ export default function Edit({
     const submit = (e) => {
         e.preventDefault();
 
-        if (!canUpdateRequest && !canApproveManager && !canApproveMd && !canSubmitRatna && !canFinishAccounting) {
+        if (!canUpdateRequest) {
             return;
         }
 
-        put(route('reimbursements.update', reimbursement.id), { forceFormData: true });
+        post(route('reimbursements.update', reimbursement.id), { forceFormData: true });
+    };
+
+    const submitApprovalAction = (status) => {
+        if (!canApproveManager && !canApproveMd && !canSubmitRatna && !canFinishAccounting) {
+            return;
+        }
+
+        transform((payload) => ({
+            ...payload,
+            status,
+        }));
+
+        post(route('reimbursements.update', reimbursement.id), {
+            forceFormData: true,
+            onFinish: () => {
+                transform((payload) => payload);
+            },
+        });
     };
 
     const formLocked = !canUpdateRequest;
@@ -431,35 +450,7 @@ export default function Edit({
                     </div>
 
                     {(canApproveManager || canApproveMd || canSubmitRatna || canFinishAccounting) && (
-                        <div>
-                            <label htmlFor="status" className="text-sm font-semibold text-slate-800">Action</label>
-                            <select
-                                id="status"
-                                className={inputClass}
-                                value={data.status}
-                                onChange={(e) => setData('status', e.target.value)}
-                            >
-                                {canApproveManager && (
-                                    <>
-                                        <option value="approved">Approve (lanjut ke MD)</option>
-                                        <option value="rejected">Reject</option>
-                                    </>
-                                )}
-                                {canApproveMd && (
-                                    <>
-                                        <option value="approved">Approve (lanjut ke Ratna)</option>
-                                        <option value="rejected">Reject</option>
-                                    </>
-                                )}
-                                {canSubmitRatna && (
-                                    <option value="submitted_to_accounting">Check &amp; Submit ke Accounting</option>
-                                )}
-                                {canFinishAccounting && (
-                                    <option value="finished">Tandai Finish</option>
-                                )}
-                            </select>
-                            <InputError message={errors.status} className="mt-2" />
-                        </div>
+                        <InputError message={errors.status} className="mt-2" />
                     )}
 
                     <div className="flex flex-col-reverse gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:justify-end">
@@ -470,19 +461,56 @@ export default function Edit({
                             Kembali
                         </Link>
 
-                        {(canUpdateRequest || canApproveManager || canApproveMd || canSubmitRatna || canFinishAccounting) && (
+                        {canUpdateRequest && (
                             <button
                                 type="submit"
                                 disabled={processing}
                                 className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
                             >
-                                {canUpdateRequest
-                                    ? 'Update Reimbursement'
-                                    : canApproveManager || canApproveMd
-                                        ? 'Submit Approval'
-                                        : canSubmitRatna
-                                            ? 'Submit Accounting'
-                                            : 'Finish Reimbursement'}
+                                Update Reimbursement
+                            </button>
+                        )}
+
+                        {(canApproveManager || canApproveMd) && (
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={() => submitApprovalAction('rejected')}
+                                    disabled={processing}
+                                    className="rounded-md bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                    Reject
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => submitApprovalAction('approved')}
+                                    disabled={processing}
+                                    className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                    Approve
+                                </button>
+                            </>
+                        )}
+
+                        {canSubmitRatna && (
+                            <button
+                                type="button"
+                                onClick={() => submitApprovalAction('submitted_to_accounting')}
+                                disabled={processing}
+                                className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                Submit Accounting
+                            </button>
+                        )}
+
+                        {canFinishAccounting && (
+                            <button
+                                type="button"
+                                onClick={() => submitApprovalAction('finished')}
+                                disabled={processing}
+                                className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                Finish Reimbursement
                             </button>
                         )}
                     </div>
