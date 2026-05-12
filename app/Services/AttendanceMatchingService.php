@@ -196,7 +196,7 @@ class AttendanceMatchingService
             ->values();
 
         if ($attendanceForDate->isEmpty()) {
-            // Fallback to all rows so preview can still match by NIK or Name.
+            // Fallback to all rows so previews can still match by NIK or Name.
             $attendanceForDate = $attendanceRows;
         }
 
