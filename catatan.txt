@@ -20,3 +20,9 @@ task hari ini 05 mei: bikin API login, absen masuk, dan absen pulang untuk untuk
 bikin integrasi api dan ui untuk login, dashboard, absen masuk, absen pulang, dan halaman profile (karyawan).
 
  php artisan db:seed
+
+ format absen yang karyawan, magang, dan outsourcing samain aja kayak yang di excel absen fingerprint kata ibu sisca chat wa "Cm kl mau dibikin samaij aja formatnya"
+
+ Baik ibu sisca Terima kasih infonya
+
+Paling nanti saya dibedain di nik nya saja ibu yang karyawan, magang, dan outsourcing. Soalnya ikutin contoh yang sudah ada di Excel ibu
