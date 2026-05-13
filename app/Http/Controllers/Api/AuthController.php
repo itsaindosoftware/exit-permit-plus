@@ -12,20 +12,27 @@ class AuthController extends Controller
     public function login(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'email' => ['required', 'email'],
+            'nik' => ['required', 'string', 'max:60'],
             'password' => ['required', 'string'],
             'device_id' => ['required', 'string', 'max:191'],
             'device_name' => ['nullable', 'string', 'max:100'],
         ]);
 
+        $rawNik = trim((string) $validated['nik']);
+        $normalizedNik = strtoupper(preg_replace('/[^A-Z0-9]/', '', $rawNik) ?? '');
+
         $user = \App\Models\User::query()
             ->with('role:id,code,name')
-            ->where('email', $validated['email'])
+            ->where('nik', $rawNik)
+            ->orWhereRaw(
+                "REPLACE(REPLACE(REPLACE(UPPER(nik), '.', ''), '-', ''), ' ', '') = ?",
+                [$normalizedNik],
+            )
             ->first();
 
         if (!$user || !Hash::check($validated['password'], $user->password)) {
             return response()->json([
-                'message' => 'Email atau password tidak valid.',
+                'message' => 'NIK atau password tidak valid.',
             ], 422);
         }
 
@@ -55,6 +62,7 @@ class AuthController extends Controller
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
+                'nik' => $user->nik,
                 'email' => $user->email,
                 'role' => $user->role?->code,
                 'role_name' => $user->role?->name,

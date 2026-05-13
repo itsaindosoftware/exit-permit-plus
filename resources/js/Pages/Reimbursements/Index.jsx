@@ -267,14 +267,14 @@ export default function Index({
                                                     {item.can_take_action ? 'Proses' : (item.can_update_request ? 'Edit' : 'Detail')}
                                                 </Link>
                                                 {/* s */}
-                                                {/* <a
+                                                <a
                                                     href={route('reimbursements.print', item.id)}
                                                     target="_blank"
                                                     rel="noreferrer"
                                                     className="rounded bg-slate-700 px-3 py-1 text-xs font-semibold text-white transition hover:bg-slate-600"
                                                 >
                                                     Print PDF
-                                                </a> */}
+                                                </a>
                                             </div>
                                         </td>
                                     </tr>

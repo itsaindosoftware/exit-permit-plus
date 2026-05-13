@@ -141,21 +141,7 @@ export default function Edit({
         const normalize = (text) => (text || '').trim().toLowerCase();
         const exactMatch = options.find((option) => normalize(option[field]) === keyword);
 
-        if (exactMatch) {
-            return exactMatch;
-        }
-
-        const startsWithMatches = options.filter((option) => normalize(option[field]).startsWith(keyword));
-        if (startsWithMatches.length === 1) {
-            return startsWithMatches[0];
-        }
-
-        const includesMatches = options.filter((option) => normalize(option[field]).includes(keyword));
-        if (includesMatches.length === 1) {
-            return includesMatches[0];
-        }
-
-        return null;
+        return exactMatch || null;
     };
 
     const findRequestorOption = (field, value) => findRequestorOptionInList(requestorOptions, field, value);
@@ -461,26 +447,10 @@ export default function Edit({
                                                         updateRequestorRow(index, 'name', value);
 
                                                         if (!formLocked && value.trim().length >= 1) {
-                                                            fetchRequestorOptions(value);
+                                                            void fetchRequestorOptions(value);
                                                         }
 
-                                                        const matched = findRequestorOption('name', value);
-                                                        if (matched) {
-                                                            applyRequestorOption(index, matched);
-                                                        }
-                                                    }}
-                                                    onBlur={async (e) => {
-                                                        if (formLocked) {
-                                                            return;
-                                                        }
-
-                                                        const value = e.target.value;
-                                                        if (!value.trim()) {
-                                                            return;
-                                                        }
-
-                                                        const latestOptions = await fetchRequestorOptions(value);
-                                                        const matched = findRequestorOptionInList(latestOptions, 'name', value);
+                                                        const matched = findRequestorOptionInList(requestorOptions, 'name', value);
                                                         if (matched) {
                                                             applyRequestorOption(index, matched);
                                                         }
@@ -506,26 +476,10 @@ export default function Edit({
                                                         updateRequestorRow(index, 'employee_id', value);
 
                                                         if (!formLocked && value.trim().length >= 1) {
-                                                            fetchRequestorOptions(value);
+                                                            void fetchRequestorOptions(value);
                                                         }
 
-                                                        const matched = findRequestorOption('employee_id', value);
-                                                        if (matched) {
-                                                            applyRequestorOption(index, matched);
-                                                        }
-                                                    }}
-                                                    onBlur={async (e) => {
-                                                        if (formLocked) {
-                                                            return;
-                                                        }
-
-                                                        const value = e.target.value;
-                                                        if (!value.trim()) {
-                                                            return;
-                                                        }
-
-                                                        const latestOptions = await fetchRequestorOptions(value);
-                                                        const matched = findRequestorOptionInList(latestOptions, 'employee_id', value);
+                                                        const matched = findRequestorOptionInList(requestorOptions, 'employee_id', value);
                                                         if (matched) {
                                                             applyRequestorOption(index, matched);
                                                         }
@@ -597,6 +551,7 @@ export default function Edit({
                                 <option
                                     key={`requestor-name-${option.employee_id || option.name || optionIndex}`}
                                     value={option.name || ''}
+                                    label={[option.employee_id, option.position, option.department].filter(Boolean).join(' | ')}
                                 />
                             ))}
                         </datalist>
@@ -858,7 +813,7 @@ export default function Edit({
                                             onChange={(e) => setData('attendance_file', e.target.files?.[0] ?? null)}
                                         /> */}
                                         <p className="mt-1 text-xs text-slate-500">
-                                            Untuk tipe company (business trip), Sisca upload file attendance dari folder sharing (finger print), lalu sistem akan otomatis cocokkan ke list requestor sesuai scope department konfigurasi (default: BIPO/Internship/Outsource/IT).
+                                            Untuk tipe company (business trip), saat klik preview sistem membaca file attendance terbaru dari path network drive yang sudah dikonfigurasi, lalu mencocokkan data absensi hari ini ke list requestor.
                                         </p>
                                         <InputError message={errors.attendance_file} className="mt-2" />
 
@@ -882,6 +837,9 @@ export default function Edit({
                                                 </p>
                                                 <p className="mt-1 text-xs text-cyan-900">
                                                     Attendance rows (by date): {attendancePreview?.summary?.attendance_rows_for_date ?? 0}
+                                                </p>
+                                                <p className="mt-1 text-xs text-cyan-900">
+                                                    Tanggal matching: {attendancePreview?.summary?.match_date ?? attendancePreview?.match_date ?? '-'}
                                                 </p>
 
                                                 <div className="mt-3 overflow-x-auto rounded-md border border-cyan-200 bg-white">

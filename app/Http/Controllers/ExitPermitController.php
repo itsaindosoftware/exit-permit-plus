@@ -253,9 +253,10 @@ class ExitPermitController extends Controller
         $connectionName = (string) config('attendance.requestor_source_connection', config('database.default'));
         $configuredSourceTable = trim((string) config('attendance.requestor_source_table', ''));
         $tableCandidates = collect(array_merge(
+            ['karyawan'],
             $configuredSourceTable !== '' ? [$configuredSourceTable] : [],
             (array) config('attendance.requestor_source_tables', []),
-            ['karyawan', 'employees', 'absensi_karyawan'],
+            ['employees', 'absensi_karyawan'],
         ))
             ->map(fn($table) => trim((string) $table))
             ->filter(fn(string $table) => $table !== '')
@@ -511,7 +512,11 @@ class ExitPermitController extends Controller
             ]);
         }
 
-        $preview = $this->makeAttendancePreview($exitPermit, $request->file('attendance_file'));
+        $preview = $this->makeAttendancePreview(
+            $exitPermit,
+            $request->file('attendance_file'),
+            now()->toDateString(),
+        );
         $request->session()->put($this->attendancePreviewSessionKey($exitPermit->id), $preview);
 
         $this->logAttendanceImport(
@@ -1093,7 +1098,7 @@ class ExitPermitController extends Controller
         return 'attendance_preview_' . $exitPermitId;
     }
 
-    private function makeAttendancePreview(ExitPermit $exitPermit, ?UploadedFile $uploadedFile = null): array
+    private function makeAttendancePreview(ExitPermit $exitPermit, ?UploadedFile $uploadedFile = null, ?string $matchDate = null): array
     {
         $sourcePayload = $this->attendanceMatchingService->loadRowsWithSource($uploadedFile);
 
@@ -1101,6 +1106,7 @@ class ExitPermitController extends Controller
             $exitPermit,
             $sourcePayload['rows'],
             $sourcePayload['source'],
+            $matchDate,
         );
     }
 

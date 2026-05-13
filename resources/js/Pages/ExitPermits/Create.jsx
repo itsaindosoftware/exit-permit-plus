@@ -87,21 +87,7 @@ export default function Create({
         const normalize = (text) => (text || '').trim().toLowerCase();
         const exactMatch = options.find((option) => normalize(option[field]) === keyword);
 
-        if (exactMatch) {
-            return exactMatch;
-        }
-
-        const startsWithMatches = options.filter((option) => normalize(option[field]).startsWith(keyword));
-        if (startsWithMatches.length === 1) {
-            return startsWithMatches[0];
-        }
-
-        const includesMatches = options.filter((option) => normalize(option[field]).includes(keyword));
-        if (includesMatches.length === 1) {
-            return includesMatches[0];
-        }
-
-        return null;
+        return exactMatch || null;
     };
 
     const findRequestorOption = (field, value) => findRequestorOptionInList(requestorOptions, field, value);
@@ -254,22 +240,10 @@ export default function Create({
                                                         updateRequestorRow(index, 'name', value);
 
                                                         if (value.trim().length >= 1) {
-                                                            fetchRequestorOptions(value);
+                                                            void fetchRequestorOptions(value);
                                                         }
 
-                                                        const matched = findRequestorOption('name', value);
-                                                        if (matched) {
-                                                            applyRequestorOption(index, matched);
-                                                        }
-                                                    }}
-                                                    onBlur={async (e) => {
-                                                        const value = e.target.value;
-                                                        if (!value.trim()) {
-                                                            return;
-                                                        }
-
-                                                        const latestOptions = await fetchRequestorOptions(value);
-                                                        const matched = findRequestorOptionInList(latestOptions, 'name', value);
+                                                        const matched = findRequestorOptionInList(requestorOptions, 'name', value);
                                                         if (matched) {
                                                             applyRequestorOption(index, matched);
                                                         }
@@ -290,22 +264,10 @@ export default function Create({
                                                         updateRequestorRow(index, 'employee_id', value);
 
                                                         if (value.trim().length >= 1) {
-                                                            fetchRequestorOptions(value);
+                                                            void fetchRequestorOptions(value);
                                                         }
 
-                                                        const matched = findRequestorOption('employee_id', value);
-                                                        if (matched) {
-                                                            applyRequestorOption(index, matched);
-                                                        }
-                                                    }}
-                                                    onBlur={async (e) => {
-                                                        const value = e.target.value;
-                                                        if (!value.trim()) {
-                                                            return;
-                                                        }
-
-                                                        const latestOptions = await fetchRequestorOptions(value);
-                                                        const matched = findRequestorOptionInList(latestOptions, 'employee_id', value);
+                                                        const matched = findRequestorOptionInList(requestorOptions, 'employee_id', value);
                                                         if (matched) {
                                                             applyRequestorOption(index, matched);
                                                         }
@@ -363,6 +325,7 @@ export default function Create({
                                 <option
                                     key={`requestor-name-${option.employee_id || option.name || optionIndex}`}
                                     value={option.name || ''}
+                                    label={[option.employee_id, option.position, option.department].filter(Boolean).join(' | ')}
                                 />
                             ))}
                         </datalist>

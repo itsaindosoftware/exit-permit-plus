@@ -334,14 +334,14 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
                                                     </button>
                                                 )}
                                                 {/* dicomment dulu */}
-                                                {/* <a
+                                                <a
                                                     href={route('exit-permits.print', item.id)}
                                                     target="_blank"
                                                     rel="noreferrer"
                                                     className="rounded bg-slate-700 px-3 py-1 text-xs font-semibold text-white transition hover:bg-slate-600"
                                                 >
                                                     Print PDF
-                                                </a> */}
+                                                </a>
                                             </div>
                                         </td>
                                     </tr>

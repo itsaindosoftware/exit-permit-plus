@@ -181,9 +181,10 @@ class AttendanceMatchingService
      * @param array<string, mixed> $source
      * @return array<string, mixed>
      */
-    public function buildPreview(ExitPermit $exitPermit, Collection $attendanceRows, array $source): array
+    public function buildPreview(ExitPermit $exitPermit, Collection $attendanceRows, array $source, ?string $matchDate = null): array
     {
         $permitDate = $this->toDateOnly($exitPermit->permit_date);
+        $targetMatchDate = $matchDate ?: $permitDate;
 
         $allowedDepartments = collect(config('attendance.company_departments', ['BIPO', 'INTERNSHIP', 'OUTSOURCE']))
             ->map(fn($department) => strtoupper(trim((string) $department)))
@@ -192,10 +193,10 @@ class AttendanceMatchingService
             ->all();
 
         $attendanceForDate = $attendanceRows
-            ->where('attendance_date', $permitDate)
+            ->where('attendance_date', $targetMatchDate)
             ->values();
 
-        if ($attendanceForDate->isEmpty()) {
+        if ($matchDate === null && $attendanceForDate->isEmpty()) {
             // Fallback to all rows so previews can still match by NIK or Name.
             $attendanceForDate = $attendanceRows;
         }
@@ -258,11 +259,13 @@ class AttendanceMatchingService
         return [
             'exit_permit_id' => $exitPermit->id,
             'permit_date' => $permitDate,
+            'match_date' => $targetMatchDate,
             'source' => $source,
             'summary' => [
                 'total_requestors' => count($items),
                 'matched_count' => $matchedCount,
                 'attendance_rows_for_date' => $attendanceForDate->count(),
+                'match_date' => $targetMatchDate,
                 'has_valid_checkin' => $matchedCount > 0,
             ],
             'items' => $items,

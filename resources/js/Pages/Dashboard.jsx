@@ -3,8 +3,46 @@ import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
 
 const currencyFormatter = new Intl.NumberFormat('id-ID');
+const shortDateFormatter = new Intl.DateTimeFormat('id-ID', {
+    weekday: 'short',
+    day: '2-digit',
+    month: 'short',
+});
 
-export default function Dashboard({ stats, mealTrend, canViewMealAnalytics = false, canAccessExitPermitApproval = false }) {
+const stageCardClass = {
+    manager: 'border-amber-200 bg-amber-50 text-amber-800',
+    md: 'border-sky-200 bg-sky-50 text-sky-800',
+    hr_manager: 'border-violet-200 bg-violet-50 text-violet-800',
+};
+
+const statusPillClass = {
+    approved: 'bg-emerald-100 text-emerald-800',
+    rejected: 'bg-rose-100 text-rose-800',
+    pending: 'bg-amber-100 text-amber-800',
+};
+
+const formatShortDate = (value) => {
+    if (!value) {
+        return '-';
+    }
+
+    const parsed = new Date(`${value}T00:00:00`);
+
+    if (Number.isNaN(parsed.getTime())) {
+        return value;
+    }
+
+    return shortDateFormatter.format(parsed);
+};
+
+export default function Dashboard({
+    stats,
+    mealTrend,
+    approvalStageCounts = { manager: 0, md: 0, hr_manager: 0 },
+    recentExitPermits = [],
+    canViewMealAnalytics = false,
+    canAccessExitPermitApproval = false,
+}) {
     const [hoveredBar, setHoveredBar] = useState(null);
     const chartWidth = 760;
     const chartHeight = 260;
@@ -26,7 +64,26 @@ export default function Dashboard({ stats, mealTrend, canViewMealAnalytics = fal
         >
             <Head title="Dashboard" />
 
-            <div className="grid gap-6 xl:grid-cols-4">
+            <div className="space-y-6">
+                <section className="relative overflow-hidden rounded-2xl border border-cyan-200 bg-gradient-to-r from-cyan-50 via-white to-slate-50 p-6 shadow-sm">
+                    <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-cyan-200/40 blur-2xl" />
+                    <div className="absolute -bottom-16 right-24 h-36 w-36 rounded-full bg-sky-200/40 blur-2xl" />
+                    <div className="relative flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <p className="text-xs font-semibold uppercase tracking-[0.26em] text-cyan-700">Dashboard Personal</p>
+                            <h3 className="mt-2 text-2xl font-black text-slate-900">Ringkasan Aktivitas Anda</h3>
+                            <p className="mt-2 text-sm text-slate-600">
+                                Pantau pengajuan exit permit, progres approval, dan reimbursement dalam satu tampilan.
+                            </p>
+                        </div>
+                        <div className="rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-right shadow-sm">
+                            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Periode</p>
+                            <p className="mt-1 text-sm font-bold text-slate-800">{stats.monthLabel || '-'}</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section className="grid gap-6 xl:grid-cols-4">
                 <Link
                     href={route('exit-permits.index')}
                     className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md hover:ring-cyan-300"
@@ -37,10 +94,50 @@ export default function Dashboard({ stats, mealTrend, canViewMealAnalytics = fal
                     </p>
                 </Link>
 
+                <Link
+                    href={route('exit-permits.index', { month: new Date().getMonth() + 1, year: new Date().getFullYear() })}
+                    className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md hover:ring-cyan-300"
+                >
+                    <p className="text-sm font-medium text-slate-500">Pengajuan Bulan Ini</p>
+                    <p className="mt-3 text-4xl font-bold text-slate-900">
+                        {stats.exitPermitThisMonthCount}
+                    </p>
+                </Link>
+
+                <Link
+                    href={route('exit-permits.index', { status: 'pending' })}
+                    className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md hover:ring-amber-300"
+                >
+                    <p className="text-sm font-medium text-slate-500">Pending Approval Saya</p>
+                    <p className="mt-3 text-4xl font-bold text-amber-600">
+                        {stats.pendingApprovalMyCount}
+                    </p>
+                </Link>
+
+                <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+                    <p className="text-sm font-medium text-slate-500">Reimbursement Pending</p>
+                    <p className="mt-3 text-4xl font-bold text-slate-900">
+                        {stats.reimbursementPendingCount}
+                    </p>
+                </div>
+
+                <Link
+                    href={route('reimbursements.index')}
+                    className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md hover:ring-cyan-300 xl:col-span-2"
+                >
+                    <p className="text-sm font-medium text-slate-500">Total Reimbursement Approved</p>
+                    <p className="mt-3 text-4xl font-bold text-slate-900">
+                        Rp {currencyFormatter.format(stats.reimbursementTotal)}
+                    </p>
+                    <p className="mt-2 text-xs text-slate-500">
+                        Approved bulan ini: Rp {currencyFormatter.format(stats.reimbursementThisMonthApprovedTotal || 0)}
+                    </p>
+                </Link>
+
                 {canAccessExitPermitApproval && (
                     <Link
                         href={route('exit-permit-approvals.index')}
-                        className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md hover:ring-cyan-300"
+                        className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md hover:ring-cyan-300 xl:col-span-2"
                     >
                         <p className="text-sm font-medium text-slate-500">Exit Permit Approval</p>
                         <p className="mt-3 text-4xl font-bold text-slate-900">
@@ -48,6 +145,114 @@ export default function Dashboard({ stats, mealTrend, canViewMealAnalytics = fal
                         </p>
                     </Link>
                 )}
+                </section>
+
+                <section className="grid gap-6 xl:grid-cols-3">
+                    <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 xl:col-span-2">
+                        <div className="flex items-center justify-between gap-3">
+                            <p className="text-sm font-semibold text-slate-700">Progress Approval Saya</p>
+                            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                                Total: {stats.pendingApprovalMyCount}
+                            </span>
+                        </div>
+                        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                            <div className={`rounded-lg border px-4 py-3 ${stageCardClass.manager}`}>
+                                <p className="text-xs font-semibold uppercase tracking-wider">Waiting Manager</p>
+                                <p className="mt-2 text-3xl font-black">{approvalStageCounts.manager || 0}</p>
+                            </div>
+                            <div className={`rounded-lg border px-4 py-3 ${stageCardClass.md}`}>
+                                <p className="text-xs font-semibold uppercase tracking-wider">Waiting MD</p>
+                                <p className="mt-2 text-3xl font-black">{approvalStageCounts.md || 0}</p>
+                            </div>
+                            <div className={`rounded-lg border px-4 py-3 ${stageCardClass.hr_manager}`}>
+                                <p className="text-xs font-semibold uppercase tracking-wider">Waiting HR Manager</p>
+                                <p className="mt-2 text-3xl font-black">{approvalStageCounts.hr_manager || 0}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+                        <p className="text-sm font-semibold text-slate-700">Quick Actions</p>
+                        <div className="mt-4 space-y-2">
+                            <Link
+                                href={route('exit-permits.create')}
+                                className="block rounded-md bg-cyan-700 px-3 py-2 text-sm font-semibold text-white transition hover:bg-cyan-600"
+                            >
+                                + Buat Exit Permit
+                            </Link>
+                            <Link
+                                href={route('reimbursements.create')}
+                                className="block rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                            >
+                                + Buat Reimbursement
+                            </Link>
+                            <Link
+                                href={route('exit-permits.index')}
+                                className="block rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                            >
+                                Lihat Semua Pengajuan
+                            </Link>
+                        </div>
+                    </div>
+                </section>
+
+                <section className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <p className="text-sm font-semibold text-slate-700">Aktivitas Exit Permit Terbaru</p>
+                            <p className="mt-1 text-xs text-slate-500">Menampilkan 6 pengajuan terakhir milik Anda.</p>
+                        </div>
+                        <Link
+                            href={route('exit-permits.index')}
+                            className="text-sm font-semibold text-cyan-700 hover:text-cyan-600"
+                        >
+                            Lihat semua
+                        </Link>
+                    </div>
+
+                    {recentExitPermits.length === 0 ? (
+                        <div className="mt-4 rounded-lg border border-dashed border-slate-300 px-4 py-10 text-center text-sm text-slate-500">
+                            Belum ada aktivitas exit permit.
+                        </div>
+                    ) : (
+                        <div className="mt-4 overflow-x-auto">
+                            <table className="min-w-full text-sm">
+                                <thead className="text-left text-xs uppercase tracking-wide text-slate-500">
+                                    <tr>
+                                        <th className="px-2 py-2">Tanggal</th>
+                                        <th className="px-2 py-2">Requestor</th>
+                                        <th className="px-2 py-2">Tujuan</th>
+                                        <th className="px-2 py-2">Stage</th>
+                                        <th className="px-2 py-2">Status</th>
+                                        <th className="px-2 py-2">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100 text-slate-700">
+                                    {recentExitPermits.map((item) => (
+                                        <tr key={item.id}>
+                                            <td className="px-2 py-3">{formatShortDate(item.permit_date)}</td>
+                                            <td className="px-2 py-3">{item.requestor_name || '-'}</td>
+                                            <td className="px-2 py-3">{item.destination || '-'}</td>
+                                            <td className="px-2 py-3">{item.stage || '-'}</td>
+                                            <td className="px-2 py-3">
+                                                <span className={`rounded-full px-2 py-1 text-xs font-semibold ${statusPillClass[item.status] || 'bg-slate-100 text-slate-700'}`}>
+                                                    {(item.status || 'pending').toUpperCase()}
+                                                </span>
+                                            </td>
+                                            <td className="px-2 py-3">
+                                                <Link href={route('exit-permits.show', item.id)} className="text-cyan-700 hover:text-cyan-600">
+                                                    Detail
+                                                </Link>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </section>
+
+                <section className="grid gap-6 xl:grid-cols-4">
 
                 {canViewMealAnalytics && (
                     <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
@@ -57,16 +262,6 @@ export default function Dashboard({ stats, mealTrend, canViewMealAnalytics = fal
                         </p>
                     </div>
                 )}
-
-                <Link
-                    href={route('reimbursements.index')}
-                    className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md hover:ring-cyan-300"
-                >
-                    <p className="text-sm font-medium text-slate-500">Total Reimbursement Approved</p>
-                    <p className="mt-3 text-4xl font-bold text-slate-900">
-                        Rp {currencyFormatter.format(stats.reimbursementTotal)}
-                    </p>
-                </Link>
 
                 {canViewMealAnalytics && (
                     <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
@@ -112,7 +307,7 @@ export default function Dashboard({ stats, mealTrend, canViewMealAnalytics = fal
                                 <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />Sisa</span>
                             </div>
                         </div>
-                    
+
 
                     {mealTrend.length === 0 ? (
                         <div className="mt-6 rounded-lg border border-dashed border-slate-300 px-4 py-10 text-center text-sm text-slate-500">
@@ -256,6 +451,7 @@ export default function Dashboard({ stats, mealTrend, canViewMealAnalytics = fal
                     )}
                     </div>
                 )}
+                </section>
             </div>
         </AuthenticatedLayout>
     );
