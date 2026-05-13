@@ -82,6 +82,7 @@ class ReimbursementController extends Controller
     public function index(): Response
     {
         $user = request()->user();
+        $filters = $this->listFiltersFromRequest();
         $isRequester = $this->isRequesterRole($user);
         $eligibleExitPermits = $isRequester ? $this->eligibleExitPermitsForUser($user->id) : [];
         $query = Reimbursement::query()
@@ -89,6 +90,7 @@ class ReimbursementController extends Controller
             ->latest();
 
         $query->where('user_id', $user?->id);
+        $this->applyListFilters($query, $filters);
 
         return Inertia::render('Reimbursements/Index', [
             'viewerRole' => $user?->role?->code,
@@ -96,8 +98,19 @@ class ReimbursementController extends Controller
             'isRequester' => $isRequester,
             'canCreate' => $isRequester && count($eligibleExitPermits) > 0,
             'eligibleExitPermits' => $eligibleExitPermits,
+            'filters' => $filters,
+            'statusOptions' => Reimbursement::STATUSES,
+            'stageOptions' => [
+                ['value' => 'manager', 'label' => 'Menunggu Approval Manager'],
+                ['value' => 'md', 'label' => 'Menunggu Approval MD'],
+                ['value' => 'ratna', 'label' => 'Menunggu Ratna Check & Submit Accounting'],
+                ['value' => 'accounting', 'label' => 'Menunggu Proses Accounting'],
+                ['value' => 'finished', 'label' => 'Sudah Dibayarkan oleh Accounting'],
+                ['value' => 'rejected', 'label' => 'Rejected'],
+            ],
             'reimbursements' => $query
                 ->paginate(10)
+                ->withQueryString()
                 ->through(fn(Reimbursement $reimbursement) => $this->transformReimbursementListItem($reimbursement, $user)),
         ]);
     }
@@ -105,6 +118,7 @@ class ReimbursementController extends Controller
     public function approvalIndex(): Response
     {
         $user = request()->user();
+        $filters = $this->listFiltersFromRequest();
 
         if (!$this->canAccessApprovalMenu($user)) {
             abort(403);
@@ -114,16 +128,102 @@ class ReimbursementController extends Controller
             ->with(['user:id,name', 'exitPermit:id,permit_date,destination'])
             ->latest();
 
+        $this->applyListFilters($query, $filters);
+
         return Inertia::render('Reimbursements/Index', [
             'viewerRole' => $user?->role?->code,
             'pageMode' => 'approval',
             'isRequester' => false,
             'canCreate' => false,
             'eligibleExitPermits' => [],
+            'filters' => $filters,
+            'statusOptions' => Reimbursement::STATUSES,
+            'stageOptions' => [
+                ['value' => 'manager', 'label' => 'Menunggu Approval Manager'],
+                ['value' => 'md', 'label' => 'Menunggu Approval MD'],
+                ['value' => 'ratna', 'label' => 'Menunggu Ratna Check & Submit Accounting'],
+                ['value' => 'accounting', 'label' => 'Menunggu Proses Accounting'],
+                ['value' => 'finished', 'label' => 'Sudah Dibayarkan oleh Accounting'],
+                ['value' => 'rejected', 'label' => 'Rejected'],
+            ],
             'reimbursements' => $query
                 ->paginate(10)
+                ->withQueryString()
                 ->through(fn(Reimbursement $reimbursement) => $this->transformReimbursementListItem($reimbursement, $user)),
         ]);
+    }
+
+    private function listFiltersFromRequest(): array
+    {
+        $amountRaw = preg_replace('/[^0-9]/', '', (string) request()->query('amount', ''));
+
+        return [
+            'employee' => trim((string) request()->query('employee', '')),
+            'exit_permit' => trim((string) request()->query('exit_permit', '')),
+            'date' => trim((string) request()->query('date', '')),
+            'amount' => $amountRaw !== '' ? $amountRaw : '',
+            'status' => trim((string) request()->query('status', '')),
+            'stage' => trim((string) request()->query('stage', '')),
+        ];
+    }
+
+    private function applyListFilters($query, array $filters): void
+    {
+        $employee = (string) ($filters['employee'] ?? '');
+        $exitPermit = (string) ($filters['exit_permit'] ?? '');
+        $date = (string) ($filters['date'] ?? '');
+        $amount = (string) ($filters['amount'] ?? '');
+        $status = (string) ($filters['status'] ?? '');
+        $stage = (string) ($filters['stage'] ?? '');
+
+        if ($employee !== '') {
+            $query->whereHas('user', function ($subQuery) use ($employee) {
+                $subQuery->where('name', 'like', '%' . $employee . '%');
+            });
+        }
+
+        if ($exitPermit !== '') {
+            $query->where(function ($subQuery) use ($exitPermit) {
+                $subQuery->where('exit_permit_id', 'like', '%' . $exitPermit . '%')
+                    ->orWhereHas('exitPermit', function ($permitQuery) use ($exitPermit) {
+                        $permitQuery->where('destination', 'like', '%' . $exitPermit . '%')
+                            ->orWhere('permit_date', 'like', '%' . $exitPermit . '%');
+                    });
+            });
+        }
+
+        if ($date !== '') {
+            $query->whereDate('request_date', $date);
+        }
+
+        if ($amount !== '') {
+            $query->where('amount', (int) $amount);
+        }
+
+        if ($status !== '' && in_array($status, Reimbursement::STATUSES, true)) {
+            $query->where('status', $status);
+        }
+
+        if ($stage !== '') {
+            $stageStatuses = $this->stageStatuses($stage);
+
+            if (count($stageStatuses) > 0) {
+                $query->whereIn('status', $stageStatuses);
+            }
+        }
+    }
+
+    private function stageStatuses(string $stage): array
+    {
+        return match ($stage) {
+            'manager' => [Reimbursement::STATUS_PENDING_MANAGER],
+            'md' => [Reimbursement::STATUS_PENDING_MD],
+            'ratna' => [Reimbursement::STATUS_PENDING_RATNA],
+            'accounting' => [Reimbursement::STATUS_SUBMITTED_TO_ACCOUNTING],
+            'finished' => [Reimbursement::STATUS_FINISHED],
+            'rejected' => [Reimbursement::STATUS_REJECTED],
+            default => [],
+        };
     }
 
     public function create(): Response|RedirectResponse

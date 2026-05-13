@@ -5,6 +5,15 @@ import { useEffect } from 'react';
 
 const currencyFormatter = new Intl.NumberFormat('id-ID');
 
+const toTitleCaseWords = (text) => {
+    return String(text)
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+};
+
 const numberToBahasaWords = (value) => {
     const angka = Math.floor(Math.abs(Number(value) || 0));
 
@@ -55,10 +64,10 @@ const numberToBahasaWords = (value) => {
     };
 
     if (angka === 0) {
-        return 'nol rupiah';
+        return toTitleCaseWords('nol rupiah');
     }
 
-    return `${terbilang(angka).replace(/\s+/g, ' ').trim()} rupiah`;
+    return toTitleCaseWords(`${terbilang(angka).replace(/\s+/g, ' ').trim()} rupiah`);
 };
 
 const inputClass =

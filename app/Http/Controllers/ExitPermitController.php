@@ -48,17 +48,68 @@ class ExitPermitController extends Controller
     public function index(): Response
     {
         $user = request()->user();
+        $submitter = trim((string) request()->query('submitter', ''));
+        $requestor = trim((string) request()->query('requestor', ''));
+        $permitDate = trim((string) request()->query('date', ''));
+        $month = (int) request()->query('month', 0);
+        $year = (int) request()->query('year', 0);
+        $exitType = trim((string) request()->query('exit_type', ''));
+        $destination = trim((string) request()->query('destination', ''));
+
         $query = ExitPermit::query()
-            ->with(['user:id,name', 'hrApprover:id,name'])
+            ->with(['user:id,name', 'hrApprover:id,name', 'requestors:id,exit_permit_id,name'])
             ->where('user_id', $user?->id)
             ->latest();
+
+        if ($submitter !== '') {
+            $query->whereHas('user', function ($subQuery) use ($submitter) {
+                $subQuery->where('name', 'like', '%' . $submitter . '%');
+            });
+        }
+
+        if ($requestor !== '') {
+            $query->whereHas('requestors', function ($subQuery) use ($requestor) {
+                $subQuery->where('name', 'like', '%' . $requestor . '%');
+            });
+        }
+
+        if ($permitDate !== '') {
+            $query->whereDate('permit_date', $permitDate);
+        }
+
+        if ($month >= 1 && $month <= 12) {
+            $query->whereMonth('permit_date', $month);
+        }
+
+        if ($year >= 1900 && $year <= 3000) {
+            $query->whereYear('permit_date', $year);
+        }
+
+        if ($exitType !== '' && in_array($exitType, ExitPermit::EXIT_TYPES, true)) {
+            $query->where('exit_type', $exitType);
+        }
+
+        if ($destination !== '') {
+            $query->where('destination', 'like', '%' . $destination . '%');
+        }
 
         return Inertia::render('ExitPermits/Index', [
             'canCreate' => (bool) $user,
             'viewerRole' => $user?->role?->code,
             'pageMode' => 'personal',
+            'filters' => [
+                'submitter' => $submitter,
+                'requestor' => $requestor,
+                'date' => $permitDate,
+                'month' => $month >= 1 && $month <= 12 ? (string) $month : '',
+                'year' => $year >= 1900 && $year <= 3000 ? (string) $year : '',
+                'exit_type' => $exitType,
+                'destination' => $destination,
+            ],
+            'exitTypes' => ExitPermit::EXIT_TYPES,
             'exitPermits' => $query
                 ->paginate(10)
+                ->withQueryString()
                 ->through(fn(ExitPermit $exitPermit) => $this->transformExitPermitListItem($exitPermit, $user)),
         ]);
     }
@@ -66,12 +117,19 @@ class ExitPermitController extends Controller
     public function approvalIndex(): Response
     {
         $user = request()->user();
+        $submitter = trim((string) request()->query('submitter', ''));
+        $requestor = trim((string) request()->query('requestor', ''));
+        $permitDate = trim((string) request()->query('date', ''));
+        $month = (int) request()->query('month', 0);
+        $year = (int) request()->query('year', 0);
+        $exitType = trim((string) request()->query('exit_type', ''));
+        $destination = trim((string) request()->query('destination', ''));
 
         if (!$this->canAccessApprovalMenu($user)) {
             abort(403);
         }
 
-        $query = ExitPermit::query()->with(['user:id,name', 'hrApprover:id,name'])->latest();
+        $query = ExitPermit::query()->with(['user:id,name', 'hrApprover:id,name', 'requestors:id,exit_permit_id,name'])->latest();
 
         if ($user?->role?->code === 'manager') {
             $query->whereNull('manager_approved_at')->where('status', 'pending');
@@ -86,12 +144,55 @@ class ExitPermitController extends Controller
                 ->where('status', 'pending');
         }
 
+        if ($submitter !== '') {
+            $query->whereHas('user', function ($subQuery) use ($submitter) {
+                $subQuery->where('name', 'like', '%' . $submitter . '%');
+            });
+        }
+
+        if ($requestor !== '') {
+            $query->whereHas('requestors', function ($subQuery) use ($requestor) {
+                $subQuery->where('name', 'like', '%' . $requestor . '%');
+            });
+        }
+
+        if ($permitDate !== '') {
+            $query->whereDate('permit_date', $permitDate);
+        }
+
+        if ($month >= 1 && $month <= 12) {
+            $query->whereMonth('permit_date', $month);
+        }
+
+        if ($year >= 1900 && $year <= 3000) {
+            $query->whereYear('permit_date', $year);
+        }
+
+        if ($exitType !== '' && in_array($exitType, ExitPermit::EXIT_TYPES, true)) {
+            $query->where('exit_type', $exitType);
+        }
+
+        if ($destination !== '') {
+            $query->where('destination', 'like', '%' . $destination . '%');
+        }
+
         return Inertia::render('ExitPermits/Index', [
             'canCreate' => false,
             'viewerRole' => $user?->role?->code,
             'pageMode' => 'approval',
+            'filters' => [
+                'submitter' => $submitter,
+                'requestor' => $requestor,
+                'date' => $permitDate,
+                'month' => $month >= 1 && $month <= 12 ? (string) $month : '',
+                'year' => $year >= 1900 && $year <= 3000 ? (string) $year : '',
+                'exit_type' => $exitType,
+                'destination' => $destination,
+            ],
+            'exitTypes' => ExitPermit::EXIT_TYPES,
             'exitPermits' => $query
                 ->paginate(10)
+                ->withQueryString()
                 ->through(fn(ExitPermit $exitPermit) => $this->transformExitPermitListItem($exitPermit, $user)),
         ]);
     }
@@ -101,6 +202,11 @@ class ExitPermitController extends Controller
         return [
             'id' => $exitPermit->id,
             'employee_name' => $exitPermit->user?->name,
+            'requestor_names' => $exitPermit->requestors
+                ->pluck('name')
+                ->filter()
+                ->values()
+                ->all(),
             'permit_date' => $this->toDateOnly($exitPermit->permit_date),
             'start_time' => $this->toHourMinute($exitPermit->start_time),
             'end_time' => $this->toHourMinute($exitPermit->end_time),

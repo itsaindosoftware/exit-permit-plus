@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
+import { useEffect, useRef, useState } from 'react';
 
 const currencyFormatter = new Intl.NumberFormat('id-ID', {
     style: 'currency',
@@ -7,7 +8,128 @@ const currencyFormatter = new Intl.NumberFormat('id-ID', {
     maximumFractionDigits: 0,
 });
 
-function NotEatenChart({ title, points }) {
+const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+const parseDateLabel = (value) => {
+    if (!value) {
+        return null;
+    }
+
+    const text = String(value).trim();
+    const dateMatch = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
+
+    if (dateMatch) {
+        const year = Number(dateMatch[1]);
+        const month = Number(dateMatch[2]) - 1;
+        const day = Number(dateMatch[3]);
+        return new Date(year, month, day);
+    }
+
+    const parsed = new Date(text);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const formatShortIdDate = (value) => {
+    const date = parseDateLabel(value);
+
+    if (!date) {
+        return String(value ?? '-');
+    }
+
+    const dayName = dayNames[date.getDay()] ?? '';
+    const day = String(date.getDate()).padStart(2, '0');
+    const monthName = monthNames[date.getMonth()] ?? '';
+
+    return `${dayName}, ${day} ${monthName}`.trim();
+};
+
+const formatWeeklyLabel = (value) => {
+    const text = String(value ?? '');
+    const match = text.match(/^(\d{4})-W(\d{1,2})$/i);
+
+    if (!match) {
+        return text || '-';
+    }
+
+    return `Minggu ${Number(match[2])}, ${match[1]}`;
+};
+
+const formatMonthlyLabel = (value) => {
+    const text = String(value ?? '');
+    const match = text.match(/^(\d{4})-(\d{2})$/);
+
+    if (!match) {
+        return text || '-';
+    }
+
+    const monthIndex = Number(match[2]) - 1;
+    const monthName = monthNames[monthIndex] ?? match[2];
+
+    return `${monthName} ${match[1]}`;
+};
+
+const formatChartLabel = (group, value) => {
+    if (group === 'weekly') {
+        return formatWeeklyLabel(value);
+    }
+
+    if (group === 'monthly') {
+        return formatMonthlyLabel(value);
+    }
+
+    return formatShortIdDate(value);
+};
+
+const getBarTone = (ratio) => {
+    if (ratio <= 0.33) {
+        return {
+            bar: 'bg-emerald-500',
+            value: 'text-emerald-700',
+            percent: 'text-emerald-600',
+        };
+    }
+
+    if (ratio <= 0.66) {
+        return {
+            bar: 'bg-amber-500',
+            value: 'text-amber-700',
+            percent: 'text-amber-600',
+        };
+    }
+
+    return {
+        bar: 'bg-rose-500',
+        value: 'text-rose-700',
+        percent: 'text-rose-600',
+    };
+};
+
+const getRemainingTone = (remaining, provided) => {
+    const safeProvided = Math.max(1, Number(provided ?? 0));
+    const ratio = Math.max(0, Number(remaining ?? 0)) / safeProvided;
+
+    if (ratio <= 0.1) {
+        return {
+            badge: 'bg-emerald-100 text-emerald-700',
+            label: 'Efisien',
+        };
+    }
+
+    if (ratio <= 0.3) {
+        return {
+            badge: 'bg-amber-100 text-amber-700',
+            label: 'Waspada',
+        };
+    }
+
+    return {
+        badge: 'bg-rose-100 text-rose-700',
+        label: 'Tinggi',
+    };
+};
+
+function NotEatenChart({ title, points, group }) {
     const maxValue = Math.max(1, ...(points ?? []).map((item) => item.remaining ?? 0));
 
     return (
@@ -23,28 +145,45 @@ function NotEatenChart({ title, points }) {
 
             {!!points?.length && (
                 <div className="mt-4 space-y-2">
-                    {points.map((item) => (
+                    {points.map((item) => {
+                        const currentValue = Number(item.remaining ?? 0);
+                        const ratio = Math.max(0, Math.min(1, currentValue / maxValue));
+                        const percent = Math.round(ratio * 100);
+                        const tone = getBarTone(ratio);
+
+                        return (
                         <div key={item.label} className="space-y-1">
                             <div className="flex items-center justify-between text-xs">
-                                <span className="font-medium text-slate-600">{item.label}</span>
-                                <span className="font-semibold text-rose-700">{item.remaining}</span>
+                                <span className="font-medium text-slate-600">{formatChartLabel(group, item.label)}</span>
+                                <div className="flex items-center gap-2">
+                                    <span className={`font-semibold ${tone.value}`}>{currentValue}</span>
+                                    <span className={`text-[11px] font-medium ${tone.percent}`}>{percent}%</span>
+                                </div>
                             </div>
                             <div className="h-2 rounded-full bg-slate-100">
                                 <div
-                                    className="h-2 rounded-full bg-rose-500"
+                                    className={`h-2 rounded-full ${tone.bar}`}
                                     style={{ width: `${Math.max(6, Math.round(((item.remaining ?? 0) / maxValue) * 100))}%` }}
                                 />
                             </div>
                         </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
         </div>
     );
 }
 
-export default function Index({ orderMeals, summary, notEatenCharts, mode, createRouteName, showRouteName, editRouteName, destroyRouteName }) {
+export default function Index({ orderMeals, summary, notEatenCharts, mode, createRouteName, showRouteName, editRouteName, destroyRouteName, indexRouteName, filters }) {
     const isExitPermitMode = mode === 'exit_permit';
+    const [search, setSearch] = useState(filters?.search ?? '');
+    const [menuFilter, setMenuFilter] = useState(filters?.menu ?? '');
+    const [shiftFilter, setShiftFilter] = useState(filters?.shift ?? '');
+    const [dateFrom, setDateFrom] = useState(filters?.date_from ?? '');
+    const [dateTo, setDateTo] = useState(filters?.date_to ?? '');
+    const firstRender = useRef(true);
+    const skipAutoFilter = useRef(false);
 
     const todayLabel = new Intl.DateTimeFormat('id-ID', {
         weekday: 'long',
@@ -54,6 +193,56 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
     }).format(new Date());
 
     const totalRows = orderMeals?.total ?? orderMeals?.data?.length ?? 0;
+    const providedTotal = Number(summary?.provided_total ?? 0);
+    const actualTotal = Number(summary?.actual_total ?? 0);
+    const utilizationPct = providedTotal > 0
+        ? Math.round((actualTotal / providedTotal) * 1000) / 10
+        : 0;
+    const wastePct = Math.max(0, Math.round((100 - utilizationPct) * 10) / 10);
+
+    const hasActiveFilter = Boolean(search || dateFrom || dateTo || menuFilter || shiftFilter);
+
+    useEffect(() => {
+        if (firstRender.current) {
+            firstRender.current = false;
+            return;
+        }
+
+        if (skipAutoFilter.current) {
+            skipAutoFilter.current = false;
+            return;
+        }
+
+        const timeoutId = setTimeout(() => {
+            router.get(route(indexRouteName), {
+                search: search || undefined,
+                menu: menuFilter || undefined,
+                date_from: dateFrom || undefined,
+                date_to: dateTo || undefined,
+                shift: shiftFilter || undefined,
+            }, {
+                preserveState: true,
+                replace: true,
+                preserveScroll: true,
+            });
+        }, 350);
+
+        return () => clearTimeout(timeoutId);
+    }, [indexRouteName, search, menuFilter, dateFrom, dateTo, shiftFilter]);
+
+    const resetFilters = () => {
+        skipAutoFilter.current = true;
+        setSearch('');
+        setMenuFilter('');
+        setDateFrom('');
+        setDateTo('');
+        setShiftFilter('');
+
+        router.get(route(indexRouteName), {}, {
+            preserveState: true,
+            replace: true,
+        });
+    };
 
     const handleDelete = (id) => {
         if (confirm('Hapus data order meal ini?')) {
@@ -117,10 +306,32 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                     </div>
                 </div>
 
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Efisiensi Distribusi</p>
+                            <p className="mt-1 text-sm text-slate-600">Paket terpakai dibanding paket disediakan.</p>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-3xl font-black text-cyan-700">{utilizationPct}%</p>
+                            <p className="text-xs text-slate-500">Waste {wastePct}%</p>
+                        </div>
+                    </div>
+                    <div className="mt-4 h-3 overflow-hidden rounded-full bg-slate-100">
+                        <div
+                            className="h-3 rounded-full bg-cyan-600"
+                            style={{ width: `${Math.max(2, Math.min(100, utilizationPct))}%` }}
+                        />
+                    </div>
+                    <p className="mt-2 text-xs text-slate-500">
+                        {actualTotal} dari {providedTotal} paket sudah dikonsumsi.
+                    </p>
+                </div>
+
                 <div className="grid gap-4 xl:grid-cols-3">
-                    <NotEatenChart title="Grafik Harian" points={notEatenCharts?.daily ?? []} />
-                    <NotEatenChart title="Grafik Mingguan" points={notEatenCharts?.weekly ?? []} />
-                    <NotEatenChart title="Grafik Bulanan" points={notEatenCharts?.monthly ?? []} />
+                    <NotEatenChart title="Grafik Harian" points={notEatenCharts?.daily ?? []} group="daily" />
+                    <NotEatenChart title="Grafik Mingguan" points={notEatenCharts?.weekly ?? []} group="weekly" />
+                    <NotEatenChart title="Grafik Bulanan" points={notEatenCharts?.monthly ?? []} group="monthly" />
                 </div>
 
                 <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
@@ -128,6 +339,77 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                         <div>
                             <p className="text-sm font-semibold text-slate-900">Daftar Order Meal</p>
                             <p className="text-xs text-slate-500">Total data: {totalRows}</p>
+                            {!isExitPermitMode && (
+                                <p className="mt-1 text-xs text-slate-500">
+                                    Amount dihitung dari paket disediakan (quantity) x unit price + pajak, bukan dari realisasi makan.
+                                </p>
+                            )}
+                        </div>
+                        <div className="grid w-full gap-2 md:w-auto md:grid-cols-7">
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Cari karyawan/menu"
+                                className="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700"
+                            />
+                            <input
+                                type="date"
+                                value={dateFrom}
+                                onChange={(e) => setDateFrom(e.target.value)}
+                                className="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700"
+                            />
+                            <input
+                                type="date"
+                                value={dateTo}
+                                onChange={(e) => setDateTo(e.target.value)}
+                                className="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700"
+                            />
+                            <select
+                                value={menuFilter}
+                                onChange={(e) => setMenuFilter(e.target.value)}
+                                className="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700"
+                            >
+                                <option value="">Semua Menu</option>
+                                {(orderMeals?.data ?? [])
+                                    .map((item) => String(item.menu_name ?? '').trim())
+                                    .filter(Boolean)
+                                    .filter((menu, index, all) => all.indexOf(menu) === index)
+                                    .map((menu) => (
+                                        <option key={menu} value={menu}>{menu}</option>
+                                    ))}
+                            </select>
+                            <select
+                                value={shiftFilter}
+                                onChange={(e) => setShiftFilter(e.target.value)}
+                                className="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700"
+                            >
+                                <option value="">Semua Shift</option>
+                                {isExitPermitMode ? (
+                                    <>
+                                        <option value="single">Single</option>
+                                        <option value="daily">Daily</option>
+                                        <option value="weekly">Weekly</option>
+                                    </>
+                                ) : (
+                                    <>
+                                        <option value="day">Day Shift</option>
+                                        <option value="ot_day">OT Day</option>
+                                        <option value="night">Night Shift</option>
+                                        <option value="ot_night">OT Night</option>
+                                    </>
+                                )}
+                            </select>
+                            <div className="flex items-center rounded-md border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs font-semibold text-cyan-700">
+                                Auto Filter Aktif
+                            </div>
+                            <button
+                                type="button"
+                                onClick={resetFilters}
+                                className="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
+                            >
+                                Reset
+                            </button>
                         </div>
                     </div>
 
@@ -159,10 +441,15 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
-                                {orderMeals.data.map((item) => (
+                                {(orderMeals?.data ?? []).map((item) => {
+                                    const remaining = Number(item.remaining_quantity ?? 0);
+                                    const provided = Number(item.quantity ?? 0);
+                                    const remainingTone = getRemainingTone(remaining, provided);
+
+                                    return (
                                     <tr key={item.id} className="transition hover:bg-slate-50">
                                         <td className="px-4 py-3 font-semibold text-slate-800">{item.employee_name}</td>
-                                        <td className="px-4 py-3 text-slate-700">{item.meal_date}</td>
+                                        <td className="px-4 py-3 text-slate-700">{formatShortIdDate(item.meal_date)}</td>
                                         <td className="px-4 py-3 text-slate-700">{item.menu_name}</td>
                                         {isExitPermitMode ? (
                                             <>
@@ -179,9 +466,21 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                         )}
                                         <td className="px-4 py-3 text-slate-700">{item.quantity}</td>
                                         <td className="px-4 py-3 text-slate-700">{item.actual_quantity}</td>
-                                        <td className="px-4 py-3 font-semibold text-emerald-600">{item.remaining_quantity}</td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-semibold text-slate-800">{remaining}</span>
+                                                <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${remainingTone.badge}`}>
+                                                    {remainingTone.label}
+                                                </span>
+                                            </div>
+                                        </td>
                                         {!isExitPermitMode && (
-                                            <td className="px-4 py-3 text-slate-700">{currencyFormatter.format(item.total_amount ?? 0)}</td>
+                                            <td className="px-4 py-3 text-slate-700">
+                                                <p>{currencyFormatter.format(item.total_amount ?? 0)}</p>
+                                                {Number(item.actual_quantity ?? 0) === 0 && (
+                                                    <p className="text-[11px] text-slate-500">Realisasi 0, biaya tetap dari paket disediakan.</p>
+                                                )}
+                                            </td>
                                         )}
                                         <td className="px-4 py-3">
                                             <div className="flex gap-2">
@@ -207,13 +506,20 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                             </div>
                                         </td>
                                     </tr>
-                                ))}
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
 
-                    {!orderMeals.data.length && (
+                    {!(orderMeals?.data ?? []).length && (
                         <div className="px-4 py-10 text-center text-sm text-slate-500">Belum ada data order meal.</div>
+                    )}
+
+                    {hasActiveFilter && (
+                        <div className="border-t border-slate-200 px-4 py-3 text-xs text-slate-500">
+                            Filter aktif diterapkan lintas seluruh data dan pagination.
+                        </div>
                     )}
 
                     {orderMeals.links && orderMeals.links.length > 3 && (

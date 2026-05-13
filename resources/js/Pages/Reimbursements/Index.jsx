@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
+import { useEffect, useRef, useState } from 'react';
 
 const currencyFormatter = new Intl.NumberFormat('id-ID');
 
@@ -12,9 +13,76 @@ const statusClass = {
     rejected: 'bg-rose-100 text-rose-700',
 };
 
-export default function Index({ reimbursements, canCreate, eligibleExitPermits, viewerRole, isRequester = false, pageMode = 'personal' }) {
+const statusLabel = {
+    pending_manager: 'Pending Manager',
+    pending_md: 'Pending MD',
+    pending_ratna: 'Pending Ratna',
+    submitted_to_accounting: 'Submitted to Accounting',
+    finished: 'Finished',
+    rejected: 'Rejected',
+};
+
+export default function Index({
+    reimbursements,
+    canCreate,
+    eligibleExitPermits,
+    viewerRole,
+    isRequester = false,
+    pageMode = 'personal',
+    filters,
+    statusOptions = [],
+    stageOptions = [],
+}) {
     const totalItems = reimbursements?.total ?? reimbursements?.data?.length ?? 0;
     const isApprovalMode = pageMode === 'approval';
+    const [employee, setEmployee] = useState(filters?.employee ?? '');
+    const [exitPermit, setExitPermit] = useState(filters?.exit_permit ?? '');
+    const [requestDate, setRequestDate] = useState(filters?.date ?? '');
+    const [amount, setAmount] = useState(filters?.amount ?? '');
+    const [status, setStatus] = useState(filters?.status ?? '');
+    const [stage, setStage] = useState(filters?.stage ?? '');
+    const firstRender = useRef(true);
+    const hasActiveFilters = Boolean(employee || exitPermit || requestDate || amount || status || stage);
+    const indexRouteName = isApprovalMode ? 'reimbursement-approvals.index' : 'reimbursements.index';
+
+    useEffect(() => {
+        if (firstRender.current) {
+            firstRender.current = false;
+            return;
+        }
+
+        const timeoutId = setTimeout(() => {
+            router.get(route(indexRouteName), {
+                employee: employee || undefined,
+                exit_permit: exitPermit || undefined,
+                date: requestDate || undefined,
+                amount: amount || undefined,
+                status: status || undefined,
+                stage: stage || undefined,
+            }, {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+            });
+        }, 350);
+
+        return () => clearTimeout(timeoutId);
+    }, [indexRouteName, employee, exitPermit, requestDate, amount, status, stage]);
+
+    const resetFilters = () => {
+        setEmployee('');
+        setExitPermit('');
+        setRequestDate('');
+        setAmount('');
+        setStatus('');
+        setStage('');
+
+        router.get(route(indexRouteName), {}, {
+            preserveState: true,
+            replace: true,
+            preserveScroll: true,
+        });
+    };
 
     return (
         <AuthenticatedLayout
@@ -69,6 +137,96 @@ export default function Index({ reimbursements, canCreate, eligibleExitPermits, 
                 </div>
 
                 <div className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
+                    <div className="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-cyan-50/40 px-4 py-4">
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                            <div>
+                                <p className="text-sm font-semibold text-slate-900">Pencarian Reimbursement</p>
+                                <p className="text-xs text-slate-500">Data terfilter otomatis saat input berubah.</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="inline-flex items-center rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700">
+                                    Auto Filter Aktif
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={resetFilters}
+                                    disabled={!hasActiveFilters}
+                                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    Reset
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                            <div className="space-y-1">
+                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Karyawan</label>
+                                <input
+                                    type="text"
+                                    value={employee}
+                                    onChange={(e) => setEmployee(e.target.value)}
+                                    placeholder="Nama karyawan"
+                                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Exit Permit</label>
+                                <input
+                                    type="text"
+                                    value={exitPermit}
+                                    onChange={(e) => setExitPermit(e.target.value)}
+                                    placeholder="ID, tanggal, atau tujuan"
+                                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Tanggal</label>
+                                <input
+                                    type="date"
+                                    value={requestDate}
+                                    onChange={(e) => setRequestDate(e.target.value)}
+                                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Nominal</label>
+                                <input
+                                    type="text"
+                                    value={amount}
+                                    onChange={(e) => setAmount(e.target.value)}
+                                    placeholder="Contoh: 24000"
+                                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Status</label>
+                                <select
+                                    value={status}
+                                    onChange={(e) => setStatus(e.target.value)}
+                                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700"
+                                >
+                                    <option value="">Semua Status</option>
+                                    {statusOptions.map((option) => (
+                                        <option key={option} value={option}>{statusLabel[option] ?? option}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="space-y-1 xl:col-span-3">
+                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Tahap</label>
+                                <select
+                                    value={stage}
+                                    onChange={(e) => setStage(e.target.value)}
+                                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700"
+                                >
+                                    <option value="">Semua Tahap</option>
+                                    {stageOptions.map((option) => (
+                                        <option key={option.value} value={option.value}>{option.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-slate-200 text-sm">
                             <thead className="bg-slate-100">
@@ -96,7 +254,7 @@ export default function Index({ reimbursements, canCreate, eligibleExitPermits, 
                                                     (statusClass[item.status] ?? 'bg-slate-100 text-slate-700')
                                                 }
                                             >
-                                                {item.status}
+                                                {statusLabel[item.status] ?? item.status}
                                             </span>
                                         </td>
                                         <td className="px-4 py-3 text-xs font-semibold text-cyan-700">{item.approval_stage}</td>

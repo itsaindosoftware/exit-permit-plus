@@ -109,6 +109,11 @@ class OrderMealController extends Controller
     private function indexByScope(string $scope): Response
     {
         $user = request()->user();
+        $search = trim((string) request()->query('search', ''));
+        $menu = trim((string) request()->query('menu', ''));
+        $dateFrom = trim((string) request()->query('date_from', ''));
+        $dateTo = trim((string) request()->query('date_to', ''));
+        $shift = trim((string) request()->query('shift', ''));
 
         if ($scope === OrderMeal::SCOPE_GENERAL) {
             $this->exitPermitLunchConversionService->applyPendingForDate(now()->toDateString());
@@ -126,6 +131,42 @@ class OrderMealController extends Controller
 
         if (!$this->canApprove($user)) {
             $query->where('user_id', $user->id);
+        }
+
+        if ($search !== '') {
+            $query->where(function ($subQuery) use ($search) {
+                $subQuery->where('menu_name', 'like', '%' . $search . '%')
+                    ->orWhereHas('user', function ($userQuery) use ($search) {
+                        $userQuery->where('name', 'like', '%' . $search . '%');
+                    })
+                    ->orWhere('schedule_type', 'like', '%' . $search . '%');
+            });
+        }
+
+        if ($menu !== '') {
+            $query->where('menu_name', 'like', '%' . $menu . '%');
+        }
+
+        if ($dateFrom !== '') {
+            $query->whereDate('meal_date', '>=', $dateFrom);
+        }
+
+        if ($dateTo !== '') {
+            $query->whereDate('meal_date', '<=', $dateTo);
+        }
+
+        if ($shift !== '') {
+            if ($scope === OrderMeal::SCOPE_EXIT_PERMIT) {
+                $query->where('schedule_type', $shift);
+            } else {
+                match ($shift) {
+                    'day' => $query->where('day_shift_qty', '>', 0),
+                    'ot_day' => $query->where('overtime_day_shift_qty', '>', 0),
+                    'night' => $query->where('night_shift_qty', '>', 0),
+                    'ot_night' => $query->where('overtime_night_shift_qty', '>', 0),
+                    default => null,
+                };
+            }
         }
 
         $summary = (clone $query)
@@ -149,6 +190,7 @@ class OrderMealController extends Controller
             'destroyRouteName' => $this->routeName($scope, 'destroy'),
             'orderMeals' => $query
                 ->paginate(10)
+                ->withQueryString()
                 ->through(fn(OrderMeal $orderMeal) => [
                     'id' => $orderMeal->id,
                     'employee_name' => $orderMeal->user?->name,
@@ -182,6 +224,13 @@ class OrderMealController extends Controller
                 'daily' => $this->dailyNotEatenTrend($dailyAggregation),
                 'weekly' => $this->weeklyNotEatenTrend($dailyAggregation),
                 'monthly' => $this->monthlyNotEatenTrend($dailyAggregation),
+            ],
+            'filters' => [
+                'search' => $search,
+                'menu' => $menu,
+                'date_from' => $dateFrom,
+                'date_to' => $dateTo,
+                'shift' => $shift,
             ],
         ]);
     }
