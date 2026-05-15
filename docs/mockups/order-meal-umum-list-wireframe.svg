@@ -19,7 +19,7 @@
   <text x="26" y="208" class="t">Exit Permit</text>
   <text x="26" y="240" class="t">Exit Permit Approval</text>
   <rect x="14" y="264" width="176" height="28" rx="6" class="l"/>
-  <text x="26" y="282" class="t">Order Meal Umum</text>
+  <text x="26" y="282" class="t">Order Meal</text>
   <text x="26" y="314" class="t">Reimbursement</text>
   <text x="26" y="346" class="t">Profile</text>
 
@@ -31,7 +31,7 @@
   <text x="34" y="457" class="ts">HR</text>
 
   <rect x="236" y="4" width="1190" height="46" class="l"/>
-  <text x="390" y="34" class="th">Order Meal Umum</text>
+  <text x="390" y="34" class="th">Order Meal</text>
   <rect x="1152" y="10" width="140" height="34" rx="6" class="l"/>
   <circle cx="1174" cy="27" r="10" class="l"/>
   <text x="1192" y="31" class="t">Sisca Dewiyani</text>
@@ -40,7 +40,7 @@
 
   <rect x="390" y="78" width="900" height="98" rx="12" class="l"/>
   <text x="408" y="104" class="ts">MEAL OPERATIONS</text>
-  <text x="408" y="134" class="th" style="font-size:40px;">Order Meal Umum</text>
+  <text x="408" y="134" class="th" style="font-size:40px;">Order Meal</text>
   <text x="408" y="156" class="t">Pantau distribusi paket umum, realisasi konsumsi, dan additional visitor.</text>
   <rect x="1012" y="112" width="120" height="46" rx="8" class="l"/>
   <text x="1024" y="130" class="ts">TODAY</text>
@@ -108,5 +108,5 @@
   <rect x="1192" y="560" width="34" height="22" rx="4" class="l"/>
   <rect x="1230" y="560" width="40" height="22" rx="4" class="l"/>
 
-  <text x="10" y="784" class="ts">Wireframe order meal umum list - low fidelity black/white sketch</text>
+  <text x="10" y="784" class="ts">Wireframe Order Meal list - low fidelity black/white sketch</text>
 </svg>

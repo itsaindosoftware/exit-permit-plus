@@ -21,7 +21,7 @@ export default function AuthenticatedLayout({ header, children }) {
         ...(isRatna ? [{ label: 'Schedule Car', routeName: 'schedule-cars.index' }] : []),
         { label: 'Exit Permit', routeName: 'exit-permits.index' },
         ...(isExitPermitApprovalUser ? [{ label: 'Exit Permit Approval', routeName: 'exit-permit-approvals.index' }] : []),
-        ...(isSisca ? [{ label: 'Order Meal Umum', routeName: 'order-meals.index' }] : []),
+        ...(isSisca ? [{ label: 'Order Meal', routeName: 'order-meals.index' }] : []),
         { label: 'Reimbursement', routeName: 'reimbursements.index' },
         ...(isReimbursementApprovalUser ? [{ label: 'Reimbursement Approval', routeName: 'reimbursement-approvals.index' }] : []),
         { label: 'Profile', routeName: 'profile.edit' },

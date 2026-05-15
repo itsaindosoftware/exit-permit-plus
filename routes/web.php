@@ -45,8 +45,12 @@ Route::middleware('auth')->group(function () {
     Route::get('reimbursement-approvals', [ReimbursementController::class, 'approvalIndex'])
         ->name('reimbursement-approvals.index');
     Route::resource('exit-permits', ExitPermitController::class);
+    Route::get('order-meals/print', [OrderMealController::class, 'print'])->name('order-meals.print');
+    Route::get('order-meals/{orderMeal}/print', [OrderMealController::class, 'printItem'])->name('order-meals.print-item');
     Route::resource('order-meals', OrderMealController::class)->except([]);
     Route::get('exit-permit-meals', [OrderMealController::class, 'indexExitPermit'])->name('exit-permit-meals.index');
+    Route::get('exit-permit-meals/print', [OrderMealController::class, 'printExitPermit'])->name('exit-permit-meals.print');
+    Route::get('exit-permit-meals/{orderMeal}/print', [OrderMealController::class, 'printExitPermitItem'])->name('exit-permit-meals.print-item');
     Route::get('exit-permit-meals/create', [OrderMealController::class, 'createExitPermit'])->name('exit-permit-meals.create');
     Route::post('exit-permit-meals', [OrderMealController::class, 'storeExitPermit'])->name('exit-permit-meals.store');
     Route::get('exit-permit-meals/{orderMeal}', [OrderMealController::class, 'showExitPermit'])->name('exit-permit-meals.show');

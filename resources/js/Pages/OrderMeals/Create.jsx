@@ -117,11 +117,11 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-bold leading-tight text-slate-800">
-                    {isExitPermitMode ? 'Tambah Order Meal Exit Permit' : 'Tambah Order Meal Umum'}
+                    {isExitPermitMode ? 'Tambah Order Meal Exit Permit' : 'Tambah Order Meal'}
                 </h2>
             }
         >
-            <Head title={isExitPermitMode ? 'Tambah Order Meal Exit Permit' : 'Tambah Order Meal Umum'} />
+            <Head title={isExitPermitMode ? 'Tambah Order Meal Exit Permit' : 'Tambah Order Meal'} />
 
             <div className="space-y-6">
                 <div className="rounded-2xl border border-cyan-200 bg-gradient-to-r from-cyan-50 via-white to-slate-50 p-5 shadow-sm">
@@ -129,7 +129,7 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
                     <p className="mt-2 text-sm text-slate-700">
                         {isExitPermitMode
                             ? 'Order meal khusus Exit Permit. Hanya dapat diajukan setelah verifikasi absensi Sisca dengan hasil matching requestor bernilai Y.'
-                            : 'Order meal umum untuk kebutuhan harian karyawan dan additional visitor.'}
+                            : 'Order Meal untuk kebutuhan harian karyawan dan additional visitor.'}
                     </p>
                 </div>
 

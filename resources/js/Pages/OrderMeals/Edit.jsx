@@ -97,11 +97,11 @@ export default function Edit({ orderMeal, canApprove, mode, indexRouteName, upda
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-bold leading-tight text-slate-800">
-                    {isExitPermitMode ? 'Edit Order Meal Exit Permit' : 'Edit Order Meal Umum'}
+                    {isExitPermitMode ? 'Edit Order Meal Exit Permit' : 'Edit Order Meal'}
                 </h2>
             }
         >
-            <Head title={isExitPermitMode ? 'Edit Order Meal Exit Permit' : 'Edit Order Meal Umum'} />
+            <Head title={isExitPermitMode ? 'Edit Order Meal Exit Permit' : 'Edit Order Meal'} />
 
             <div className="space-y-6">
                 <div className="rounded-2xl border border-cyan-200 bg-gradient-to-r from-cyan-50 via-white to-slate-50 p-5 shadow-sm">
@@ -109,7 +109,7 @@ export default function Edit({ orderMeal, canApprove, mode, indexRouteName, upda
                     <p className="mt-2 text-sm text-slate-700">
                         {isExitPermitMode
                             ? 'Perbarui order meal yang berasal dari alur Exit Permit.'
-                            : 'Perbarui order meal umum untuk rekap operasional canteen.'}
+                            : 'Perbarui Order Meal untuk rekap operasional canteen.'}
                     </p>
                 </div>
 

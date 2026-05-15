@@ -13,13 +13,13 @@
   <text x="16" y="166" class="t">List Exit Permit</text>
   <text x="16" y="196" class="t">Exit Permit</text>
   <text x="16" y="226" class="t">Exit Permit Approval</text>
-  <text x="16" y="256" class="t">Order Meal Umum</text>
+  <text x="16" y="256" class="t">Order Meal</text>
   <text x="16" y="286" class="t">Reimbursement</text>
   <text x="16" y="316" class="t">Profile</text>
   <rect x="16" y="362" width="160" height="76" rx="8" class="l"/>
 
   <rect x="194" y="4" width="1232" height="48" class="l"/>
-  <text x="442" y="34" class="th">Edit Order Meal Umum</text>
+  <text x="442" y="34" class="th">Edit Order Meal</text>
   <rect x="1142" y="10" width="118" height="34" rx="6" class="l"/>
   <circle cx="1162" cy="27" r="10" class="l"/>
   <text x="1180" y="31" class="t">Sisca Dewiyani</text>
@@ -27,7 +27,7 @@
   <rect x="194" y="52" width="1232" height="734" class="l"/>
   <rect x="442" y="76" width="820" height="54" rx="8" class="l"/>
   <text x="454" y="96" class="ts">MEAL MONITORING</text>
-  <text x="454" y="114" class="t">Perbarui order meal umum untuk rekap operasional canteen.</text>
+  <text x="454" y="114" class="t">Perbarui Order Meal untuk rekap operasional canteen.</text>
 
   <rect x="442" y="148" width="820" height="594" rx="12" class="l"/>
 
@@ -75,5 +75,5 @@
   <rect x="1198" y="700" width="48" height="26" rx="4" class="l"/>
   <text x="1212" y="718" class="t">Batal</text>
 
-  <text x="10" y="784" class="ts">Wireframe order meal umum edit - low fidelity black/white sketch</text>
+  <text x="10" y="784" class="ts">Wireframe Order Meal edit - low fidelity black/white sketch</text>
 </svg>

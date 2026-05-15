@@ -18,7 +18,7 @@
   <text x="34" y="198" class="t">List Exit Permit</text>
   <text x="34" y="236" class="t">Exit Permit</text>
   <text x="34" y="274" class="t">Exit Permit Approval</text>
-  <text x="34" y="312" class="t">Order Meal Umum</text>
+  <text x="34" y="312" class="t">Order Meal</text>
   <text x="34" y="350" class="t">Reimbursement</text>
   <text x="34" y="388" class="t">Profile</text>
 
@@ -30,7 +30,7 @@
   <text x="40" y="504" class="ts">HR</text>
 
   <rect x="240" y="4" width="1595" height="52" class="l"/>
-  <text x="540" y="36" class="th" style="font-size:34px;">Detail Order Meal Umum</text>
+  <text x="540" y="36" class="th" style="font-size:34px;">Detail Order Meal</text>
   <rect x="1384" y="12" width="152" height="38" rx="6" class="l"/>
   <circle cx="1406" cy="31" r="10" class="l"/>
   <text x="1424" y="35" class="t">Sisca Dewiyani</text>
@@ -73,5 +73,5 @@
   <rect x="1488" y="410" width="46" height="30" rx="6" class="l"/>
   <text x="1502" y="430" class="t">Edit</text>
 
-  <text x="10" y="762" class="ts">Wireframe order meal umum detail - low fidelity black/white sketch</text>
+  <text x="10" y="762" class="ts">Wireframe Order Meal detail - low fidelity black/white sketch</text>
 </svg>

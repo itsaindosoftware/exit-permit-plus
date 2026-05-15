@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\ExitPermit;
 use App\Models\OrderMeal;
 use App\Services\ExitPermitLunchConversionService;
@@ -106,6 +107,34 @@ class OrderMealController extends Controller
         return $this->destroyByScope($orderMeal, OrderMeal::SCOPE_EXIT_PERMIT);
     }
 
+    public function print(Request $request)
+    {
+        $this->ensureSisca($request->user());
+
+        return $this->printByScope($request, OrderMeal::SCOPE_GENERAL);
+    }
+
+    public function printExitPermit(Request $request)
+    {
+        $this->ensureSisca($request->user());
+
+        return $this->printByScope($request, OrderMeal::SCOPE_EXIT_PERMIT);
+    }
+
+    public function printItem(OrderMeal $orderMeal)
+    {
+        $this->ensureSisca(request()->user());
+
+        return $this->printItemByScope($orderMeal, OrderMeal::SCOPE_GENERAL);
+    }
+
+    public function printExitPermitItem(OrderMeal $orderMeal)
+    {
+        $this->ensureSisca(request()->user());
+
+        return $this->printItemByScope($orderMeal, OrderMeal::SCOPE_EXIT_PERMIT);
+    }
+
     private function indexByScope(string $scope): Response
     {
         $user = request()->user();
@@ -184,6 +213,8 @@ class OrderMealController extends Controller
         return Inertia::render('OrderMeals/Index', [
             'mode' => $scope,
             'indexRouteName' => $this->routeName($scope, 'index'),
+            'printRouteName' => $this->routeName($scope, 'print'),
+            'printItemRouteName' => $this->routeName($scope, 'print-item'),
             'createRouteName' => $this->routeName($scope, 'create'),
             'showRouteName' => $this->routeName($scope, 'show'),
             'editRouteName' => $this->routeName($scope, 'edit'),
@@ -593,6 +624,195 @@ class OrderMealController extends Controller
         $orderMeal->delete();
 
         return redirect()->route($this->routeName($scope, 'index'))->with('success', 'Data order meal berhasil dihapus.');
+    }
+
+    private function printByScope(Request $request, string $scope)
+    {
+        $user = $request->user();
+        $search = trim((string) $request->query('search', ''));
+        $menu = trim((string) $request->query('menu', ''));
+        $dateFrom = trim((string) $request->query('date_from', ''));
+        $dateTo = trim((string) $request->query('date_to', ''));
+        $shift = trim((string) $request->query('shift', ''));
+        $period = trim(strtolower((string) $request->query('period', 'daily')));
+
+        if (!in_array($period, ['daily', 'weekly', 'monthly'], true)) {
+            $period = 'daily';
+        }
+
+        $query = OrderMeal::query()
+            ->with('user:id,name')
+            ->where('meal_type', 'lunch')
+            ->where('order_scope', $scope)
+            ->orderBy('meal_date')
+            ->orderBy('id');
+
+        if (!$this->canApprove($user)) {
+            $query->where('user_id', $user->id);
+        }
+
+        if ($search !== '') {
+            $query->where(function ($subQuery) use ($search) {
+                $subQuery->where('menu_name', 'like', '%' . $search . '%')
+                    ->orWhereHas('user', function ($userQuery) use ($search) {
+                        $userQuery->where('name', 'like', '%' . $search . '%');
+                    })
+                    ->orWhere('schedule_type', 'like', '%' . $search . '%');
+            });
+        }
+
+        if ($menu !== '') {
+            $query->where('menu_name', 'like', '%' . $menu . '%');
+        }
+
+        if ($dateFrom !== '') {
+            $query->whereDate('meal_date', '>=', $dateFrom);
+        }
+
+        if ($dateTo !== '') {
+            $query->whereDate('meal_date', '<=', $dateTo);
+        }
+
+        if ($shift !== '') {
+            if ($scope === OrderMeal::SCOPE_EXIT_PERMIT) {
+                $query->where('schedule_type', $shift);
+            } else {
+                match ($shift) {
+                    'day' => $query->where('day_shift_qty', '>', 0),
+                    'ot_day' => $query->where('overtime_day_shift_qty', '>', 0),
+                    'night' => $query->where('night_shift_qty', '>', 0),
+                    'ot_night' => $query->where('overtime_night_shift_qty', '>', 0),
+                    default => null,
+                };
+            }
+        }
+
+        $orderMeals = $query->get();
+        $summaryRows = $this->aggregateOrderMealsByPeriod($orderMeals, $period, $scope);
+
+        $scopeLabel = $scope === OrderMeal::SCOPE_EXIT_PERMIT
+            ? 'Exit Permit'
+            : 'General';
+
+        $periodLabel = match ($period) {
+            'weekly' => 'Mingguan',
+            'monthly' => 'Bulanan',
+            default => 'Harian',
+        };
+
+        $fileName = sprintf(
+            'order-meal-%s-%s-%s.pdf',
+            $scope,
+            $period,
+            now()->format('Ymd-His')
+        );
+
+        return Pdf::loadView('pdf.order-meal-report', [
+            'scopeLabel' => $scopeLabel,
+            'periodLabel' => $periodLabel,
+            'period' => $period,
+            'summaryRows' => $summaryRows,
+            'orderMeals' => $orderMeals,
+            'filters' => [
+                'search' => $search,
+                'menu' => $menu,
+                'date_from' => $dateFrom,
+                'date_to' => $dateTo,
+                'shift' => $shift,
+            ],
+            'printedAt' => now(),
+        ])
+            ->setPaper('a4', 'portrait')
+            ->stream($fileName);
+    }
+
+    private function aggregateOrderMealsByPeriod(Collection $orderMeals, string $period, string $scope): array
+    {
+        $monthNames = [
+            1 => 'Jan',
+            2 => 'Feb',
+            3 => 'Mar',
+            4 => 'Apr',
+            5 => 'Mei',
+            6 => 'Jun',
+            7 => 'Jul',
+            8 => 'Agu',
+            9 => 'Sep',
+            10 => 'Okt',
+            11 => 'Nov',
+            12 => 'Des',
+        ];
+
+        return $orderMeals
+            ->groupBy(function (OrderMeal $orderMeal) use ($period) {
+                $mealDate = Carbon::parse((string) $orderMeal->meal_date);
+
+                return match ($period) {
+                    'weekly' => sprintf('%d-W%02d', $mealDate->isoWeekYear, $mealDate->isoWeek),
+                    'monthly' => $mealDate->format('Y-m'),
+                    default => $mealDate->format('Y-m-d'),
+                };
+            })
+            ->map(function (Collection $group, string $groupKey) use ($period, $scope, $monthNames) {
+                $firstDate = Carbon::parse((string) $group->first()->meal_date);
+
+                $label = match ($period) {
+                    'weekly' => sprintf('Minggu Ke %d, %d', $firstDate->isoWeek, $firstDate->isoWeekYear),
+                    'monthly' => sprintf('%s %d', $monthNames[(int) $firstDate->format('n')] ?? $firstDate->format('m'), (int) $firstDate->format('Y')),
+                    default => $firstDate->format('d/m/Y'),
+                };
+
+                $provided = (int) $group->sum('quantity');
+                $actual = (int) $group->sum('actual_quantity');
+                $remaining = max(0, $provided - $actual);
+
+                return [
+                    'group_key' => $groupKey,
+                    'label' => $label,
+                    'provided_total' => $provided,
+                    'actual_total' => $actual,
+                    'remaining_total' => $remaining,
+                    'amount_total' => $scope === OrderMeal::SCOPE_GENERAL
+                        ? (int) $group->sum('total_amount')
+                        : 0,
+                    'row_count' => $group->count(),
+                ];
+            })
+            ->sortBy('group_key')
+            ->values()
+            ->all();
+    }
+
+    private function printItemByScope(OrderMeal $orderMeal, string $scope)
+    {
+        if ($orderMeal->order_scope !== $scope) {
+            abort(404);
+        }
+
+        $this->authorizeUser($orderMeal);
+
+        $orderMeal->load([
+            'user:id,name,email',
+            'exitPermit:id,permit_date,destination',
+        ]);
+
+        $scopeLabel = $scope === OrderMeal::SCOPE_EXIT_PERMIT
+            ? 'Exit Permit'
+            : 'General';
+
+        $fileName = sprintf(
+            'order-meal-%d-%s.pdf',
+            $orderMeal->id,
+            now()->format('Ymd-His')
+        );
+
+        return Pdf::loadView('pdf.order-meal-item', [
+            'orderMeal' => $orderMeal,
+            'scopeLabel' => $scopeLabel,
+            'printedAt' => now(),
+        ])
+            ->setPaper('a4', 'portrait')
+            ->stream($fileName);
     }
 
     private function canApprove($user): bool

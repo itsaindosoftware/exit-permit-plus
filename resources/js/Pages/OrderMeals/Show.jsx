@@ -23,47 +23,92 @@ function translateConversionNotes(text) {
     );
 }
 
+function DetailTable({ rows, headerClass = 'bg-slate-100 text-slate-700', borderClass = 'border-slate-300' }) {
+    return (
+        <div className={`overflow-x-auto rounded-lg border ${borderClass}`}>
+            <table className="min-w-full border-collapse text-xs md:text-sm">
+                <thead className={headerClass}>
+                    <tr>
+                        <th className={`w-56 border ${borderClass} px-3 py-2 text-left font-semibold`}>Field</th>
+                        <th className={`border ${borderClass} px-3 py-2 text-left font-semibold`}>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {rows.map((row) => (
+                        <tr key={row.label}>
+                            <td className={`border ${borderClass} px-3 py-2 font-semibold text-slate-700`}>{row.label}</td>
+                            <td className={`border ${borderClass} px-3 py-2 text-slate-800`}>{row.value ?? '-'}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+}
+
 export default function Show({ mode, orderMeal, exitPermit, indexRouteName, editRouteName }) {
     const isExitPermitMode = mode === 'exit_permit';
     const readableNotes = translateConversionNotes(orderMeal.notes);
+
+    const mainRows = [
+        { label: 'Karyawan', value: orderMeal.employee_name || '-' },
+        { label: 'Email', value: orderMeal.employee_email || '-' },
+        { label: 'Tanggal Makan', value: orderMeal.meal_date || '-' },
+        { label: 'Menu', value: orderMeal.menu_name || '-' },
+        { label: 'Schedule', value: orderMeal.schedule_type || '-' },
+        { label: 'Status', value: orderMeal.status || '-' },
+        ...(!isExitPermitMode
+            ? [
+                { label: 'Day Shift', value: orderMeal.day_shift_qty ?? 0 },
+                { label: 'Overtime Day Shift', value: orderMeal.overtime_day_shift_qty ?? 0 },
+                { label: 'Night Shift', value: orderMeal.night_shift_qty ?? 0 },
+                { label: 'Overtime Night Shift', value: orderMeal.overtime_night_shift_qty ?? 0 },
+            ]
+            : []),
+        { label: 'Paket Disediakan', value: orderMeal.quantity ?? 0 },
+        { label: 'Realisasi', value: orderMeal.actual_quantity ?? 0 },
+        { label: 'Sisa', value: orderMeal.remaining_quantity ?? 0 },
+        ...(!isExitPermitMode
+            ? [
+                { label: 'Amount / Porsi', value: currencyFormatter.format(orderMeal.meal_unit_price ?? 0) },
+                { label: 'Local Tax', value: `${orderMeal.local_tax_rate ?? 0}%` },
+                { label: 'Service Tax', value: `${orderMeal.service_tax_rate ?? 0}%` },
+                { label: 'Subtotal', value: currencyFormatter.format(orderMeal.subtotal_amount ?? 0) },
+                { label: 'Nominal Local Tax', value: currencyFormatter.format(orderMeal.local_tax_amount ?? 0) },
+                { label: 'Nominal Service Tax', value: currencyFormatter.format(orderMeal.service_tax_amount ?? 0) },
+                { label: 'Grand Total', value: currencyFormatter.format(orderMeal.total_amount ?? 0) },
+            ]
+            : []),
+    ];
+
+    const exitPermitRows = exitPermit
+        ? [
+            { label: 'Exit Permit ID', value: `#${exitPermit.id}` },
+            { label: 'Permit Date', value: exitPermit.permit_date || '-' },
+            { label: 'Destination', value: exitPermit.destination || '-' },
+            { label: 'Attendance Verified', value: exitPermit.attendance_checked_at || '-' },
+            { label: 'Pemohon', value: exitPermit.owner_name || '-' },
+            { label: 'Email Pemohon', value: exitPermit.owner_email || '-' },
+        ]
+        : [];
 
     return (
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-bold leading-tight text-slate-800">
-                    {isExitPermitMode ? 'Detail Order Meal Exit Permit' : 'Detail Order Meal Umum'}
+                    {isExitPermitMode ? 'Detail Order Meal Exit Permit' : 'Detail Order Meal'}
                 </h2>
             }
         >
-            <Head title={isExitPermitMode ? 'Detail Order Meal Exit Permit' : 'Detail Order Meal Umum'} />
+            <Head title={isExitPermitMode ? 'Detail Order Meal Exit Permit' : 'Detail Order Meal'} />
 
             <div className="space-y-6">
-                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <div className="grid gap-4 text-sm text-slate-700 md:grid-cols-3">
-                        <p><span className="font-semibold">Karyawan:</span> {orderMeal.employee_name || '-'}</p>
-                        <p><span className="font-semibold">Email:</span> {orderMeal.employee_email || '-'}</p>
-                        <p><span className="font-semibold">Tanggal Makan:</span> {orderMeal.meal_date || '-'}</p>
-                        <p><span className="font-semibold">Menu:</span> {orderMeal.menu_name || '-'}</p>
-                        <p><span className="font-semibold">Schedule:</span> {orderMeal.schedule_type || '-'}</p>
-                        <p><span className="font-semibold">Status:</span> {orderMeal.status || '-'}</p>
-                        {!isExitPermitMode && <p><span className="font-semibold">Day Shift:</span> {orderMeal.day_shift_qty ?? 0}</p>}
-                        {!isExitPermitMode && <p><span className="font-semibold">Overtime Day Shift:</span> {orderMeal.overtime_day_shift_qty ?? 0}</p>}
-                        {!isExitPermitMode && <p><span className="font-semibold">Night Shift:</span> {orderMeal.night_shift_qty ?? 0}</p>}
-                        {!isExitPermitMode && <p><span className="font-semibold">Overtime Night Shift:</span> {orderMeal.overtime_night_shift_qty ?? 0}</p>}
-                        <p><span className="font-semibold">Paket Disediakan:</span> {orderMeal.quantity ?? 0}</p>
-                        <p><span className="font-semibold">Realisasi:</span> {orderMeal.actual_quantity ?? 0}</p>
-                        <p><span className="font-semibold">Sisa:</span> {orderMeal.remaining_quantity ?? 0}</p>
-                        {!isExitPermitMode && <p><span className="font-semibold">Amount / Porsi:</span> {currencyFormatter.format(orderMeal.meal_unit_price ?? 0)}</p>}
-                        {!isExitPermitMode && <p><span className="font-semibold">Local Tax:</span> {(orderMeal.local_tax_rate ?? 0)}%</p>}
-                        {!isExitPermitMode && <p><span className="font-semibold">Service Tax:</span> {(orderMeal.service_tax_rate ?? 0)}%</p>}
-                        {!isExitPermitMode && <p><span className="font-semibold">Subtotal:</span> {currencyFormatter.format(orderMeal.subtotal_amount ?? 0)}</p>}
-                        {!isExitPermitMode && <p><span className="font-semibold">Nominal Local Tax:</span> {currencyFormatter.format(orderMeal.local_tax_amount ?? 0)}</p>}
-                        {!isExitPermitMode && <p><span className="font-semibold">Nominal Service Tax:</span> {currencyFormatter.format(orderMeal.service_tax_amount ?? 0)}</p>}
-                        {!isExitPermitMode && <p><span className="font-semibold">Grand Total:</span> {currencyFormatter.format(orderMeal.total_amount ?? 0)}</p>}
-                    </div>
+                <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Informasi Utama</p>
+                    <DetailTable rows={mainRows} />
 
                     {readableNotes && (
-                        <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+                        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
                             <p className="font-semibold text-slate-900">Catatan</p>
                             <p className="mt-1 whitespace-pre-line">{readableNotes}</p>
                         </div>
@@ -73,14 +118,11 @@ export default function Show({ mode, orderMeal, exitPermit, indexRouteName, edit
                 {isExitPermitMode && exitPermit && (
                     <div className="space-y-3 rounded-2xl border border-cyan-200 bg-cyan-50 p-6 shadow-sm">
                         <p className="text-sm font-semibold text-cyan-900">Referensi Exit Permit</p>
-                        <div className="grid gap-3 text-sm text-cyan-900 md:grid-cols-2">
-                            <p><span className="font-semibold">Exit Permit ID:</span> #{exitPermit.id}</p>
-                            <p><span className="font-semibold">Permit Date:</span> {exitPermit.permit_date || '-'}</p>
-                            <p><span className="font-semibold">Destination:</span> {exitPermit.destination || '-'}</p>
-                            <p><span className="font-semibold">Attendance Verified:</span> {exitPermit.attendance_checked_at || '-'}</p>
-                            <p><span className="font-semibold">Pemohon:</span> {exitPermit.owner_name || '-'}</p>
-                            <p><span className="font-semibold">Email Pemohon:</span> {exitPermit.owner_email || '-'}</p>
-                        </div>
+                        <DetailTable
+                            rows={exitPermitRows}
+                            headerClass="bg-cyan-100 text-cyan-900"
+                            borderClass="border-cyan-200"
+                        />
 
                         <div className="overflow-x-auto rounded-md border border-cyan-200 bg-white">
                             <table className="min-w-full border-collapse text-xs">

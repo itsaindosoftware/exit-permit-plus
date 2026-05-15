@@ -14,14 +14,14 @@
   <text x="16" y="144" class="t">List Exit Permit</text>
   <text x="16" y="174" class="t">Exit Permit</text>
   <text x="16" y="204" class="t">Exit Permit Approval</text>
-  <text x="16" y="234" class="t">Order Meal Umum</text>
+  <text x="16" y="234" class="t">Order Meal</text>
   <text x="16" y="264" class="t">Reimbursement</text>
   <text x="16" y="294" class="t">Profile</text>
   <rect x="16" y="330" width="150" height="70" rx="8" class="l"/>
   <text x="26" y="350" class="t">Sisca Dewiyani</text>
 
   <rect x="182" y="4" width="1179" height="46" class="l"/>
-  <text x="404" y="34" class="th">Tambah Order Meal Umum</text>
+  <text x="404" y="34" class="th">Tambah Order Meal</text>
   <rect x="1048" y="10" width="120" height="34" rx="6" class="l"/>
   <circle cx="1068" cy="27" r="10" class="l"/>
   <text x="1084" y="31" class="t">Sisca Dewiyani</text>
@@ -29,7 +29,7 @@
   <rect x="182" y="50" width="1179" height="716" class="l"/>
   <rect x="406" y="62" width="764" height="52" rx="8" class="l"/>
   <text x="420" y="82" class="ts">CANTEEN REQUEST</text>
-  <text x="420" y="98" class="t">Order meal umum untuk kebutuhan harian karyawan dan additional visitor.</text>
+  <text x="420" y="98" class="t">Order Meal untuk kebutuhan harian karyawan dan additional visitor.</text>
 
   <rect x="406" y="132" width="764" height="636" rx="10" class="l"/>
 
@@ -92,5 +92,5 @@
   <rect x="1112" y="736" width="42" height="24" rx="4" class="l"/>
   <text x="1124" y="752" class="t">Batal</text>
 
-  <text x="10" y="760" class="ts">Wireframe order meal umum create - low fidelity black/white sketch</text>
+  <text x="10" y="760" class="ts">Wireframe Order Meal create - low fidelity black/white sketch</text>
 </svg>

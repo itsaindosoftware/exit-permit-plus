@@ -52,7 +52,7 @@ const formatWeeklyLabel = (value) => {
         return text || '-';
     }
 
-    return `Minggu ${Number(match[2])}, ${match[1]}`;
+    return `Minggu Ke ${Number(match[2])}, ${match[1]}`;
 };
 
 const formatMonthlyLabel = (value) => {
@@ -175,7 +175,7 @@ function NotEatenChart({ title, points, group }) {
     );
 }
 
-export default function Index({ orderMeals, summary, notEatenCharts, mode, createRouteName, showRouteName, editRouteName, destroyRouteName, indexRouteName, filters }) {
+export default function Index({ orderMeals, summary, notEatenCharts, mode, createRouteName, showRouteName, editRouteName, destroyRouteName, indexRouteName, printRouteName, printItemRouteName, filters }) {
     const isExitPermitMode = mode === 'exit_permit';
     const [search, setSearch] = useState(filters?.search ?? '');
     const [menuFilter, setMenuFilter] = useState(filters?.menu ?? '');
@@ -250,15 +250,43 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
         }
     };
 
+    const buildPrintHref = (period) => {
+        const params = new URLSearchParams();
+
+        params.set('period', period);
+
+        if (search) {
+            params.set('search', search);
+        }
+
+        if (menuFilter) {
+            params.set('menu', menuFilter);
+        }
+
+        if (dateFrom) {
+            params.set('date_from', dateFrom);
+        }
+
+        if (dateTo) {
+            params.set('date_to', dateTo);
+        }
+
+        if (shiftFilter) {
+            params.set('shift', shiftFilter);
+        }
+
+        return `${route(printRouteName)}?${params.toString()}`;
+    };
+
     return (
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-bold leading-tight text-slate-800">
-                    {isExitPermitMode ? 'Order Meal Exit Permit' : 'Order Meal Umum'}
+                    {isExitPermitMode ? 'Order Meal Exit Permit' : 'Order Meal'}
                 </h2>
             }
         >
-            <Head title={isExitPermitMode ? 'Order Meal Exit Permit' : 'Order Meal Umum'} />
+            <Head title={isExitPermitMode ? 'Order Meal Exit Permit' : 'Order Meal'} />
 
             <div className="space-y-6">
                 <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -268,7 +296,7 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                         <div>
                             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">Meal Operations</p>
                             <h3 className="mt-2 text-3xl font-black tracking-tight text-slate-900">
-                                {isExitPermitMode ? 'Order Meal Exit Permit' : 'Order Meal Umum'}
+                                {isExitPermitMode ? 'Order Meal Exit Permit' : 'Order Meal'}
                             </h3>
                             <p className="mt-2 text-sm text-slate-600">
                                 {isExitPermitMode
@@ -280,6 +308,32 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                             <div className="rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm shadow-sm backdrop-blur">
                                 <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Today</p>
                                 <p className="mt-1 font-semibold text-slate-700">{todayLabel}</p>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2">
+                                <a
+                                    href={buildPrintHref('daily')}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
+                                >
+                                    Print Harian
+                                </a>
+                                <a
+                                    href={buildPrintHref('weekly')}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
+                                >
+                                    Print Mingguan
+                                </a>
+                                <a
+                                    href={buildPrintHref('monthly')}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
+                                >
+                                    Print Bulanan
+                                </a>
                             </div>
                             <Link
                                 href={route(createRouteName)}
@@ -483,23 +537,31 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                             </td>
                                         )}
                                         <td className="px-4 py-3">
-                                            <div className="flex gap-2">
+                                            <div className="flex flex-nowrap items-center gap-2">
                                                 <Link
                                                     href={route(showRouteName, item.id)}
-                                                    className="rounded bg-slate-700 px-3 py-1 text-xs font-semibold text-white transition hover:bg-slate-600"
+                                                    className="inline-flex h-9 min-w-[78px] items-center justify-center whitespace-nowrap rounded bg-slate-700 px-3 text-center text-xs font-semibold leading-none text-white transition hover:bg-slate-600"
                                                 >
                                                     Detail
                                                 </Link>
+                                                <a
+                                                    href={route(printItemRouteName, item.id)}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="inline-flex h-9 min-w-[88px] items-center justify-center whitespace-nowrap rounded bg-indigo-700 px-3 text-center text-xs font-semibold leading-none text-white transition hover:bg-indigo-600"
+                                                >
+                                                    Print PDF
+                                                </a>
                                                 <Link
                                                     href={route(editRouteName, item.id)}
-                                                    className="rounded bg-cyan-700 px-3 py-1 text-xs font-semibold text-white transition hover:bg-cyan-600"
+                                                    className="inline-flex h-9 min-w-[78px] items-center justify-center whitespace-nowrap rounded bg-cyan-700 px-3 text-center text-xs font-semibold leading-none text-white transition hover:bg-cyan-600"
                                                 >
                                                     Edit
                                                 </Link>
                                                 <button
                                                     type="button"
                                                     onClick={() => handleDelete(item.id)}
-                                                    className="rounded bg-rose-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-rose-500"
+                                                    className="inline-flex h-9 min-w-[78px] items-center justify-center whitespace-nowrap rounded bg-rose-600 px-3 text-center text-xs font-semibold leading-none text-white transition hover:bg-rose-500"
                                                 >
                                                     Hapus
                                                 </button>

@@ -11,16 +11,68 @@ const postMdPathLabel = {
     reimbursement: 'Reimbursement',
 };
 
-function InfoItem({ label, value }) {
+function DetailTable({ rows }) {
     return (
-        <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
-            <p className="mt-1 text-sm text-slate-800">{value ?? '-'}</p>
+        <div className="overflow-x-auto rounded-lg border border-slate-300">
+            <table className="min-w-full border-collapse text-xs md:text-sm">
+                <thead className="bg-slate-100 text-slate-700">
+                    <tr>
+                        <th className="w-56 border border-slate-300 px-3 py-2 text-left font-semibold">Field</th>
+                        <th className="border border-slate-300 px-3 py-2 text-left font-semibold">Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {rows.map((row) => (
+                        <tr key={row.label}>
+                            <td className="border border-slate-300 px-3 py-2 font-semibold text-slate-700">{row.label}</td>
+                            <td className="border border-slate-300 px-3 py-2 text-slate-800">{row.value ?? '-'}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
     );
 }
 
 export default function Show({ exitPermit, approvalStage }) {
+    const mainRows = [
+        { label: 'Karyawan', value: exitPermit.employee_name },
+        { label: 'Email', value: exitPermit.employee_email },
+        { label: 'Status', value: exitPermit.status_label ?? exitPermit.status?.toUpperCase() },
+        { label: 'Tanggal Permit', value: exitPermit.permit_date },
+        { label: 'Jam Keluar', value: exitPermit.start_time },
+        { label: 'Jam Kembali', value: exitPermit.end_time },
+        { label: 'Jenis Exit', value: exitTypeLabel[exitPermit.exit_type] ?? exitPermit.exit_type },
+        { label: 'Tujuan', value: exitPermit.destination },
+        { label: 'Cost Center', value: exitPermit.cost_center_name ?? '-' },
+        { label: 'No. Police Car (1.4)', value: exitPermit.vehicle_plate ?? 'Belum diisi' },
+        { label: 'Nama Supir', value: exitPermit.driver_name ?? 'Belum diisi' },
+        { label: 'Returned To Office', value: exitPermit.returned_to_office ? 'Ya' : 'Tidak' },
+        { label: 'Eligible Meal', value: exitPermit.eligible_for_meal ? 'Ya' : 'Tidak' },
+    ];
+
+    const noteRows = [
+        { label: 'Alasan', value: exitPermit.reason },
+        { label: 'Catatan', value: exitPermit.notes ?? '-' },
+    ];
+
+    const approvalRows = [
+        { label: 'Manager Approved By', value: exitPermit.manager_approved_by_name ?? '-' },
+        { label: 'Manager Approved At', value: exitPermit.manager_approved_at ?? '-' },
+        { label: 'MD Approved By', value: exitPermit.md_approved_by_name ?? '-' },
+        { label: 'MD Approved At', value: exitPermit.md_approved_at ?? '-' },
+        { label: 'PIC HR', value: exitPermit.hr_approver_name ?? '-' },
+        { label: 'HR Verified By', value: exitPermit.hr_verified_by_name ?? '-' },
+        { label: 'HR Verified At', value: exitPermit.hr_verified_at ?? '-' },
+        { label: 'Attendance Checked By', value: exitPermit.attendance_checked_by_name ?? '-' },
+        { label: 'Attendance Checked At', value: exitPermit.attendance_checked_at ?? '-' },
+        {
+            label: 'Has Valid Check-in',
+            value: exitPermit.has_valid_checkin === null ? '-' : (exitPermit.has_valid_checkin ? 'Ya' : 'Tidak'),
+        },
+        { label: 'Post MD Path', value: postMdPathLabel[exitPermit.post_md_path] ?? '-' },
+    ];
+
     return (
         <AuthenticatedLayout
             header={
@@ -40,25 +92,14 @@ export default function Show({ exitPermit, approvalStage }) {
                     </p>
                 </div>
 
-                <div className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:grid-cols-3">
-                    <InfoItem label="Karyawan" value={exitPermit.employee_name} />
-                    <InfoItem label="Email" value={exitPermit.employee_email} />
-                    <InfoItem label="Status" value={exitPermit.status_label ?? exitPermit.status?.toUpperCase()} />
-                    <InfoItem label="Tanggal Permit" value={exitPermit.permit_date} />
-                    <InfoItem label="Jam Keluar" value={exitPermit.start_time} />
-                    <InfoItem label="Jam Kembali" value={exitPermit.end_time} />
-                    <InfoItem label="Jenis Exit" value={exitTypeLabel[exitPermit.exit_type] ?? exitPermit.exit_type} />
-                    <InfoItem label="Tujuan" value={exitPermit.destination} />
-                    <InfoItem label="Cost Center" value={exitPermit.cost_center_name ?? '-'} />
-                    <InfoItem label="No. Police Car (1.4)" value={exitPermit.vehicle_plate ?? 'Belum diisi'} />
-                    <InfoItem label="Nama Supir" value={exitPermit.driver_name ?? 'Belum diisi'} />
-                    <InfoItem label="Returned To Office" value={exitPermit.returned_to_office ? 'Ya' : 'Tidak'} />
-                    <InfoItem label="Eligible Meal" value={exitPermit.eligible_for_meal ? 'Ya' : 'Tidak'} />
+                <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Informasi Utama</p>
+                    <DetailTable rows={mainRows} />
                 </div>
 
-                <div className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:grid-cols-2">
-                    <InfoItem label="Alasan" value={exitPermit.reason} />
-                    <InfoItem label="Catatan" value={exitPermit.notes ?? '-'} />
+                <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Alasan dan Catatan</p>
+                    <DetailTable rows={noteRows} />
                 </div>
 
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -114,18 +155,9 @@ export default function Show({ exitPermit, approvalStage }) {
                     )}
                 </div>
 
-                <div className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:grid-cols-2 xl:grid-cols-3">
-                    <InfoItem label="Manager Approved By" value={exitPermit.manager_approved_by_name ?? '-'} />
-                    <InfoItem label="Manager Approved At" value={exitPermit.manager_approved_at ?? '-'} />
-                    <InfoItem label="MD Approved By" value={exitPermit.md_approved_by_name ?? '-'} />
-                    <InfoItem label="MD Approved At" value={exitPermit.md_approved_at ?? '-'} />
-                    <InfoItem label="PIC HR" value={exitPermit.hr_approver_name ?? '-'} />
-                    <InfoItem label="HR Verified By" value={exitPermit.hr_verified_by_name ?? '-'} />
-                    <InfoItem label="HR Verified At" value={exitPermit.hr_verified_at ?? '-'} />
-                    <InfoItem label="Attendance Checked By" value={exitPermit.attendance_checked_by_name ?? '-'} />
-                    <InfoItem label="Attendance Checked At" value={exitPermit.attendance_checked_at ?? '-'} />
-                    <InfoItem label="Has Valid Check-in" value={exitPermit.has_valid_checkin === null ? '-' : (exitPermit.has_valid_checkin ? 'Ya' : 'Tidak')} />
-                    <InfoItem label="Post MD Path" value={postMdPathLabel[exitPermit.post_md_path] ?? '-'} />
+                <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Approval History</p>
+                    <DetailTable rows={approvalRows} />
                 </div>
 
                 <div className="flex justify-end">
