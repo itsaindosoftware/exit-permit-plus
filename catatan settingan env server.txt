@@ -1,5 +1,7 @@
 nanti di server pakai contoh setupan ini, ganti app_name, nama DB_DATABASE, dan APP_URL nya
 
+jangan lupa php artisan serve dan npm run dev (kalau pakai react / vue)
+
 APP_NAME="ITSA HUB"
 APP_ENV=local
 APP_KEY=base64:mKtBd0dblJpV8RfpagYoZdXi8A8dIuPVRdSI/va0SL8=
