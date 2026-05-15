@@ -347,6 +347,18 @@ export default function Edit({
                             />
                             <InputError message={errors.amount_in_words} className="mt-2" />
                         </div>
+
+                        <div>
+                            <label htmlFor="cost_center_name" className="text-sm font-semibold text-slate-800">Cost Center (Departemen)</label>
+                            <input
+                                id="cost_center_name"
+                                type="text"
+                                className={inputClass}
+                                value={reimbursement.cost_center_name ?? '-'}
+                                readOnly
+                                disabled
+                            />
+                        </div>
                     </div>
 
                     <div>

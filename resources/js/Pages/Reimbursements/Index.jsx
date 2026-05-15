@@ -24,7 +24,8 @@ const statusLabel = {
 
 export default function Index({
     reimbursements,
-    canCreate,
+    canCreateInternal,
+    canCreateFromExitPermit,
     eligibleExitPermits,
     viewerRole,
     isRequester = false,
@@ -110,17 +111,30 @@ export default function Index({
                             </p>
                         </div>
                         {!isApprovalMode && isRequester && (
-                            <Link
-                                href={route('reimbursements.create')}
-                                className={
-                                    `inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-semibold text-white transition ` +
-                                    (canCreate
-                                        ? 'bg-slate-900 hover:bg-slate-700'
-                                        : 'bg-slate-700 hover:bg-slate-600')
-                                }
-                            >
-                                + Ajukan Reimbursement
-                            </Link>
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Link
+                                    href={`${route('reimbursements.create')}?source=internal`}
+                                    className={
+                                        `inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-semibold text-white transition ` +
+                                        (canCreateInternal
+                                            ? 'bg-slate-900 hover:bg-slate-700'
+                                            : 'bg-slate-700 hover:bg-slate-600')
+                                    }
+                                >
+                                    + Create New
+                                </Link>
+                                <Link
+                                    href={`${route('reimbursements.create')}?source=exit_permit`}
+                                    className={
+                                        `inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-semibold text-white transition ` +
+                                        (canCreateFromExitPermit
+                                            ? 'bg-cyan-700 hover:bg-cyan-600'
+                                            : 'pointer-events-none bg-cyan-400 opacity-70')
+                                    }
+                                >
+                                    + From Exit Permit
+                                </Link>
+                            </div>
                         )}
                     </div>
                 </div>

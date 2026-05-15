@@ -64,20 +64,24 @@ const numberToBahasaWords = (value) => {
 const inputClass =
     'mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-cyan-600 focus:ring-2 focus:ring-cyan-200';
 
-export default function Create({ eligibleExitPermits }) {
-    const firstPermitId = eligibleExitPermits?.[0]?.id ?? '';
-    const selectedPermit = eligibleExitPermits?.find((permit) => String(permit.id) === String(firstPermitId)) ?? null;
+export default function Create({ eligibleExitPermits, formSource = 'internal' }) {
+    const isFromExitPermit = formSource === 'exit_permit';
+    const firstPermitId = isFromExitPermit ? (eligibleExitPermits?.[0]?.id ?? '') : '';
+    const selectedPermit = isFromExitPermit
+        ? (eligibleExitPermits?.find((permit) => String(permit.id) === String(firstPermitId)) ?? null)
+        : null;
 
     const { data, setData, post, processing, errors } = useForm({
+        source: formSource,
         exit_permit_id: firstPermitId,
         request_date: selectedPermit?.permit_date ?? new Date().toISOString().slice(0, 10),
-        paid_to: selectedPermit?.paid_to_default ?? '',
+        paid_to: selectedPermit?.paid_to_default ?? 'Internal Request',
         amount: Number(selectedPermit?.suggested_amount ?? 0),
         amount_order_meal: Number(selectedPermit?.amount_order_meal_default ?? selectedPermit?.suggested_amount ?? 0),
         amount_fuel: Number(selectedPermit?.amount_fuel_default ?? 0),
         amount_toll: Number(selectedPermit?.amount_toll_default ?? 0),
         amount_in_words: '',
-        expense_type: selectedPermit?.expense_type_default ?? '',
+        expense_type: selectedPermit?.expense_type_default ?? (isFromExitPermit ? '' : 'Pengajuan Barang ITSA'),
         purpose: selectedPermit?.purpose_default ?? '',
         ref_document: selectedPermit?.ref_document_default ?? '',
         documents: [
@@ -86,12 +90,17 @@ export default function Create({ eligibleExitPermits }) {
                 attachment_file: null,
             },
         ],
+        attachment_file: null,
         description: selectedPermit?.description_default ?? '',
     });
 
     const activePermit = eligibleExitPermits?.find((permit) => String(permit.id) === String(data.exit_permit_id)) ?? null;
 
     useEffect(() => {
+        if (!isFromExitPermit) {
+            return;
+        }
+
         if (!activePermit) {
             return;
         }
@@ -112,7 +121,7 @@ export default function Create({ eligibleExitPermits }) {
             },
         ]);
         setData('description', activePermit.description_default ?? '');
-    }, [data.exit_permit_id, eligibleExitPermits]);
+    }, [isFromExitPermit, data.exit_permit_id, eligibleExitPermits]);
 
     useEffect(() => {
         const totalAmount = Number(data.amount_order_meal || 0)
@@ -171,25 +180,31 @@ export default function Create({ eligibleExitPermits }) {
         setData('documents', nextRows);
     };
 
+    const updateInternalAttachment = (file) => {
+        setData('attachment_file', file);
+    };
+
     return (
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-bold leading-tight text-slate-800">
-                    Ajukan Reimbursement
+                    {isFromExitPermit ? 'From Exit Permit' : 'Create New Reimbursement'}
                 </h2>
             }
         >
-            <Head title="Ajukan Reimbursement" />
+            <Head title={isFromExitPermit ? 'From Exit Permit' : 'Create New Reimbursement'} />
 
             <div className="space-y-6">
                 <div className="rounded-2xl border border-cyan-200 bg-gradient-to-r from-cyan-50 via-white to-slate-50 p-5">
                     <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">Reimbursement Form</p>
                     <p className="mt-2 text-sm text-slate-700">
-                        Pilih Exit Permit berstatus Checked By HR: Sisca untuk mengajukan claim reimbursement (bensin, tol, dan biaya terkait) ke alur approval.
+                        {isFromExitPermit
+                            ? 'Pilih Exit Permit berstatus Checked By HR: Sisca untuk memproses reimbursement dari alur Exit Permit.'
+                            : 'Gunakan form ini untuk pengajuan reimbursement internal barang/keperluan ITSA di luar alur Exit Permit.'}
                     </p>
                 </div>
 
-                {!eligibleExitPermits?.length && (
+                {isFromExitPermit && !eligibleExitPermits?.length && (
                     <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
                         Tidak ada Exit Permit yang memenuhi syarat reimbursement saat ini.
                     </div>
@@ -199,7 +214,7 @@ export default function Create({ eligibleExitPermits }) {
                     onSubmit={submit}
                     className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
                 >
-                    {activePermit && (
+                    {isFromExitPermit && activePermit && (
                         <div className="rounded-xl border border-cyan-200 bg-cyan-50 p-4 text-sm text-cyan-900">
                             <p className="font-semibold">Draft Konversi Lunch Box</p>
                             <p className="mt-1">
@@ -210,7 +225,8 @@ export default function Create({ eligibleExitPermits }) {
                         </div>
                     )}
 
-                    <div>
+                    {isFromExitPermit && (
+                        <div>
                         <label htmlFor="exit_permit_id" className="text-sm font-semibold text-slate-800">Exit Permit</label>
                         <select
                             id="exit_permit_id"
@@ -225,198 +241,264 @@ export default function Create({ eligibleExitPermits }) {
                             ))}
                         </select>
                         <InputError message={errors.exit_permit_id} className="mt-2" />
-                    </div>
-
-                    <div className="grid gap-4 md:grid-cols-2">
-                        <div>
-                            <label htmlFor="request_date" className="text-sm font-semibold text-slate-800">Tgl Bayar / Payment Date</label>
-                            <input
-                                id="request_date"
-                                type="date"
-                                className={inputClass}
-                                value={data.request_date}
-                                onChange={(e) => setData('request_date', e.target.value)}
-                                required
-                            />
-                            <InputError message={errors.request_date} className="mt-2" />
                         </div>
+                    )}
 
-                        <div>
-                            <label htmlFor="paid_to" className="text-sm font-semibold text-slate-800">Dibayar Kepada / Paid To</label>
-                            <input
-                                id="paid_to"
-                                type="text"
-                                className={inputClass}
-                                value={data.paid_to}
-                                onChange={(e) => setData('paid_to', e.target.value)}
-                                required
-                            />
-                            <InputError message={errors.paid_to} className="mt-2" />
-                        </div>
-
-                        <div>
-                            <label htmlFor="amount_order_meal" className="text-sm font-semibold text-slate-800">Biaya Order Meal</label>
-                            <input
-                                id="amount_order_meal"
-                                type="number"
-                                min="0"
-                                className={inputClass}
-                                value={data.amount_order_meal}
-                                onChange={(e) => setData('amount_order_meal', Number(e.target.value || 0))}
-                                required
-                            />
-                            <InputError message={errors.amount_order_meal} className="mt-2" />
-                        </div>
-
-                        <div>
-                            <label htmlFor="amount_fuel" className="text-sm font-semibold text-slate-800">Biaya Bensin</label>
-                            <input
-                                id="amount_fuel"
-                                type="number"
-                                min="0"
-                                className={inputClass}
-                                value={data.amount_fuel}
-                                onChange={(e) => setData('amount_fuel', Number(e.target.value || 0))}
-                                required
-                            />
-                            <InputError message={errors.amount_fuel} className="mt-2" />
-                        </div>
-
-                        <div>
-                            <label htmlFor="amount_toll" className="text-sm font-semibold text-slate-800">Biaya Tol</label>
-                            <input
-                                id="amount_toll"
-                                type="number"
-                                min="0"
-                                className={inputClass}
-                                value={data.amount_toll}
-                                onChange={(e) => setData('amount_toll', Number(e.target.value || 0))}
-                                required
-                            />
-                            <InputError message={errors.amount_toll} className="mt-2" />
-                        </div>
-
-                        <div>
-                            <label htmlFor="amount" className="text-sm font-semibold text-slate-800">Jumlah / Amount (Total Otomatis)</label>
-                            <input
-                                id="amount"
-                                type="number"
-                                min="0"
-                                className={inputClass}
-                                value={data.amount}
-                                readOnly
-                                disabled
-                            />
-                            <p className="mt-1 text-xs text-slate-500">Rp {currencyFormatter.format(data.amount ?? 0)}</p>
-                            <InputError message={errors.amount} className="mt-2" />
-                        </div>
-
-                        <div>
-                            <label htmlFor="amount_in_words" className="text-sm font-semibold text-slate-800">Terbilang / Stated</label>
-                            <input
-                                id="amount_in_words"
-                                type="text"
-                                className={inputClass}
-                                value={data.amount_in_words}
-                                readOnly
-                                disabled
-                                required
-                            />
-                            <InputError message={errors.amount_in_words} className="mt-2" />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label htmlFor="expense_type" className="text-sm font-semibold text-slate-800">Jenis Biaya / Expense Type</label>
-                        <input
-                            id="expense_type"
-                            type="text"
-                            className={inputClass}
-                            value={data.expense_type}
-                            onChange={(e) => setData('expense_type', e.target.value)}
-                            required
-                        />
-                        <InputError message={errors.expense_type} className="mt-2" />
-                    </div>
-
-                    <div>
-                        <label htmlFor="purpose" className="text-sm font-semibold text-slate-800">Tujuan / Purpose</label>
-                        <textarea
-                            id="purpose"
-                            rows="3"
-                            className={inputClass}
-                            value={data.purpose}
-                            onChange={(e) => setData('purpose', e.target.value)}
-                            required
-                        />
-                        <InputError message={errors.purpose} className="mt-2" />
-                    </div>
-
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                            <p className="text-sm font-semibold text-slate-800">Dok Ref / Attachment</p>
-                            <button
-                                type="button"
-                                onClick={addDocumentRow}
-                                className="rounded-md border border-cyan-300 bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-800 transition hover:bg-cyan-100"
-                            >
-                                + Tambah Baris
-                            </button>
-                        </div>
-
-                        {(data.documents ?? []).map((doc, index) => (
-                            <div key={`doc-row-${index}`} className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 md:grid-cols-[1fr_1fr_auto]">
+                    {isFromExitPermit ? (
+                        <>
+                            <div className="grid gap-4 md:grid-cols-2">
                                 <div>
-                                    <label htmlFor={`documents-${index}-ref`} className="text-xs font-semibold uppercase tracking-wider text-slate-600">Dok Ref</label>
+                                    <label htmlFor="request_date" className="text-sm font-semibold text-slate-800">Tgl Bayar / Payment Date</label>
                                     <input
-                                        id={`documents-${index}-ref`}
-                                        type="text"
+                                        id="request_date"
+                                        type="date"
                                         className={inputClass}
-                                        value={doc.ref_document ?? ''}
-                                        onChange={(e) => updateDocumentRef(index, e.target.value)}
+                                        value={data.request_date}
+                                        onChange={(e) => setData('request_date', e.target.value)}
+                                        required
                                     />
-                                    <InputError message={errors[`documents.${index}.ref_document`]} className="mt-2" />
+                                    <InputError message={errors.request_date} className="mt-2" />
                                 </div>
 
                                 <div>
-                                    <label htmlFor={`documents-${index}-file`} className="text-xs font-semibold uppercase tracking-wider text-slate-600">Attachment (JPG/PNG/PDF)</label>
+                                    <label htmlFor="paid_to" className="text-sm font-semibold text-slate-800">Dibayar Kepada / Paid To</label>
                                     <input
-                                        id={`documents-${index}-file`}
+                                        id="paid_to"
+                                        type="text"
+                                        className={inputClass}
+                                        value={data.paid_to}
+                                        onChange={(e) => setData('paid_to', e.target.value)}
+                                        required
+                                    />
+                                    <InputError message={errors.paid_to} className="mt-2" />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="amount_order_meal" className="text-sm font-semibold text-slate-800">Biaya Order Meal</label>
+                                    <input
+                                        id="amount_order_meal"
+                                        type="number"
+                                        min="0"
+                                        className={inputClass}
+                                        value={data.amount_order_meal}
+                                        onChange={(e) => setData('amount_order_meal', Number(e.target.value || 0))}
+                                        required
+                                    />
+                                    <InputError message={errors.amount_order_meal} className="mt-2" />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="amount_fuel" className="text-sm font-semibold text-slate-800">Biaya Bensin</label>
+                                    <input
+                                        id="amount_fuel"
+                                        type="number"
+                                        min="0"
+                                        className={inputClass}
+                                        value={data.amount_fuel}
+                                        onChange={(e) => setData('amount_fuel', Number(e.target.value || 0))}
+                                        required
+                                    />
+                                    <InputError message={errors.amount_fuel} className="mt-2" />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="amount_toll" className="text-sm font-semibold text-slate-800">Biaya Tol</label>
+                                    <input
+                                        id="amount_toll"
+                                        type="number"
+                                        min="0"
+                                        className={inputClass}
+                                        value={data.amount_toll}
+                                        onChange={(e) => setData('amount_toll', Number(e.target.value || 0))}
+                                        required
+                                    />
+                                    <InputError message={errors.amount_toll} className="mt-2" />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="amount" className="text-sm font-semibold text-slate-800">Jumlah / Amount (Total Otomatis)</label>
+                                    <input
+                                        id="amount"
+                                        type="number"
+                                        min="0"
+                                        className={inputClass}
+                                        value={data.amount}
+                                        readOnly
+                                        disabled
+                                    />
+                                    <p className="mt-1 text-xs text-slate-500">Rp {currencyFormatter.format(data.amount ?? 0)}</p>
+                                    <InputError message={errors.amount} className="mt-2" />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="amount_in_words" className="text-sm font-semibold text-slate-800">Terbilang / Stated</label>
+                                    <input
+                                        id="amount_in_words"
+                                        type="text"
+                                        className={inputClass}
+                                        value={data.amount_in_words}
+                                        readOnly
+                                        disabled
+                                        required
+                                    />
+                                    <InputError message={errors.amount_in_words} className="mt-2" />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="cost_center_name" className="text-sm font-semibold text-slate-800">Cost Center (Departemen)</label>
+                                    <input
+                                        id="cost_center_name"
+                                        type="text"
+                                        className={inputClass}
+                                        value={isFromExitPermit ? (activePermit?.cost_center_name ?? '-') : '-'}
+                                        readOnly
+                                        disabled
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label htmlFor="expense_type" className="text-sm font-semibold text-slate-800">Jenis Biaya / Expense Type</label>
+                                <input
+                                    id="expense_type"
+                                    type="text"
+                                    className={inputClass}
+                                    value={data.expense_type}
+                                    onChange={(e) => setData('expense_type', e.target.value)}
+                                    required
+                                />
+                                <InputError message={errors.expense_type} className="mt-2" />
+                            </div>
+
+                            <div>
+                                <label htmlFor="purpose" className="text-sm font-semibold text-slate-800">Tujuan / Purpose</label>
+                                <textarea
+                                    id="purpose"
+                                    rows="3"
+                                    className={inputClass}
+                                    value={data.purpose}
+                                    onChange={(e) => setData('purpose', e.target.value)}
+                                    required
+                                />
+                                <InputError message={errors.purpose} className="mt-2" />
+                            </div>
+
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <p className="text-sm font-semibold text-slate-800">Dok Ref / Attachment</p>
+                                    <button
+                                        type="button"
+                                        onClick={addDocumentRow}
+                                        className="rounded-md border border-cyan-300 bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-800 transition hover:bg-cyan-100"
+                                    >
+                                        + Tambah Baris
+                                    </button>
+                                </div>
+
+                                {(data.documents ?? []).map((doc, index) => (
+                                    <div key={`doc-row-${index}`} className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 md:grid-cols-[1fr_1fr_auto]">
+                                        <div>
+                                            <label htmlFor={`documents-${index}-ref`} className="text-xs font-semibold uppercase tracking-wider text-slate-600">Dok Ref</label>
+                                            <input
+                                                id={`documents-${index}-ref`}
+                                                type="text"
+                                                className={inputClass}
+                                                value={doc.ref_document ?? ''}
+                                                onChange={(e) => updateDocumentRef(index, e.target.value)}
+                                            />
+                                            <InputError message={errors[`documents.${index}.ref_document`]} className="mt-2" />
+                                        </div>
+
+                                        <div>
+                                            <label htmlFor={`documents-${index}-file`} className="text-xs font-semibold uppercase tracking-wider text-slate-600">Attachment (JPG/PNG/PDF)</label>
+                                            <input
+                                                id={`documents-${index}-file`}
+                                                type="file"
+                                                accept=".jpg,.jpeg,.png,.pdf"
+                                                className={inputClass}
+                                                onChange={(e) => updateDocumentFile(index, e.target.files?.[0] ?? null)}
+                                            />
+                                            <InputError message={errors[`documents.${index}.attachment_file`]} className="mt-2" />
+                                        </div>
+
+                                        <div className="flex items-end">
+                                            <button
+                                                type="button"
+                                                onClick={() => removeDocumentRow(index)}
+                                                disabled={(data.documents ?? []).length <= 1}
+                                                className="rounded-md bg-rose-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                Hapus
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+
+                                <InputError message={errors.documents} className="mt-2" />
+                            </div>
+
+                            <div>
+                                <label htmlFor="description" className="text-sm font-semibold text-slate-800">Catatan Tambahan</label>
+                                <textarea
+                                    id="description"
+                                    rows="4"
+                                    className={inputClass}
+                                    value={data.description}
+                                    onChange={(e) => setData('description', e.target.value)}
+                                />
+                                <InputError message={errors.description} className="mt-2" />
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <div>
+                                    <label htmlFor="amount_order_meal" className="text-sm font-semibold text-slate-800">Biaya Pengajuan</label>
+                                    <input
+                                        id="amount_order_meal"
+                                        type="number"
+                                        min="0"
+                                        className={inputClass}
+                                        value={data.amount_order_meal}
+                                        onChange={(e) => {
+                                            const value = Number(e.target.value || 0);
+                                            setData('amount_order_meal', value);
+                                            setData('amount_fuel', 0);
+                                            setData('amount_toll', 0);
+                                        }}
+                                        required
+                                    />
+                                    <InputError message={errors.amount_order_meal} className="mt-2" />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="purpose" className="text-sm font-semibold text-slate-800">Item yang Ingin Diajukan</label>
+                                    <input
+                                        id="purpose"
+                                        type="text"
+                                        className={inputClass}
+                                        value={data.purpose}
+                                        onChange={(e) => setData('purpose', e.target.value)}
+                                        required
+                                    />
+                                    <InputError message={errors.purpose} className="mt-2" />
+                                </div>
+
+                                <div className="md:col-span-2">
+                                    <label htmlFor="attachment_file" className="text-sm font-semibold text-slate-800">Attachment Struk Pembayaran</label>
+                                    <input
+                                        id="attachment_file"
                                         type="file"
                                         accept=".jpg,.jpeg,.png,.pdf"
                                         className={inputClass}
-                                        onChange={(e) => updateDocumentFile(index, e.target.files?.[0] ?? null)}
+                                        onChange={(e) => updateInternalAttachment(e.target.files?.[0] ?? null)}
+                                        required
                                     />
-                                    <InputError message={errors[`documents.${index}.attachment_file`]} className="mt-2" />
-                                </div>
-
-                                <div className="flex items-end">
-                                    <button
-                                        type="button"
-                                        onClick={() => removeDocumentRow(index)}
-                                        disabled={(data.documents ?? []).length <= 1}
-                                        className="rounded-md bg-rose-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-50"
-                                    >
-                                        Hapus
-                                    </button>
+                                    <InputError message={errors.attachment_file} className="mt-2" />
                                 </div>
                             </div>
-                        ))}
-
-                        <InputError message={errors.documents} className="mt-2" />
-                    </div>
-
-                    <div>
-                        <label htmlFor="description" className="text-sm font-semibold text-slate-800">Catatan Tambahan</label>
-                        <textarea
-                            id="description"
-                            rows="4"
-                            className={inputClass}
-                            value={data.description}
-                            onChange={(e) => setData('description', e.target.value)}
-                        />
-                        <InputError message={errors.description} className="mt-2" />
-                    </div>
+                        </>
+                    )}
 
                     <div className="flex flex-col-reverse gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:justify-end">
                         <Link
@@ -427,10 +509,10 @@ export default function Create({ eligibleExitPermits }) {
                         </Link>
                         <button
                             type="submit"
-                            disabled={processing || !eligibleExitPermits?.length}
+                            disabled={processing || (isFromExitPermit && !eligibleExitPermits?.length)}
                             className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                            Submit Reimbursement
+                            {isFromExitPermit ? 'Submit From Exit Permit' : 'Submit Create New'}
                         </button>
                     </div>
                 </form>

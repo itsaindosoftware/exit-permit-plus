@@ -20,6 +20,10 @@ class ReimbursementController extends Controller
 {
     private const RATNA_EMAIL = 'ratna@example.com';
 
+    private const FORM_SOURCE_INTERNAL = 'internal';
+
+    private const FORM_SOURCE_EXIT_PERMIT = 'exit_permit';
+
     public function attachment(Reimbursement $reimbursement): StreamedResponse
     {
         $this->authorizeUser($reimbursement);
@@ -96,7 +100,8 @@ class ReimbursementController extends Controller
             'viewerRole' => $user?->role?->code,
             'pageMode' => 'personal',
             'isRequester' => $isRequester,
-            'canCreate' => $isRequester && count($eligibleExitPermits) > 0,
+            'canCreateInternal' => $isRequester,
+            'canCreateFromExitPermit' => $isRequester && count($eligibleExitPermits) > 0,
             'eligibleExitPermits' => $eligibleExitPermits,
             'filters' => $filters,
             'statusOptions' => Reimbursement::STATUSES,
@@ -134,7 +139,8 @@ class ReimbursementController extends Controller
             'viewerRole' => $user?->role?->code,
             'pageMode' => 'approval',
             'isRequester' => false,
-            'canCreate' => false,
+            'canCreateInternal' => false,
+            'canCreateFromExitPermit' => false,
             'eligibleExitPermits' => [],
             'filters' => $filters,
             'statusOptions' => Reimbursement::STATUSES,
@@ -234,14 +240,21 @@ class ReimbursementController extends Controller
             abort(403);
         }
 
+        $source = (string) request()->query('source', self::FORM_SOURCE_INTERNAL);
+
+        if (!in_array($source, [self::FORM_SOURCE_INTERNAL, self::FORM_SOURCE_EXIT_PERMIT], true)) {
+            $source = self::FORM_SOURCE_INTERNAL;
+        }
+
         $eligibleExitPermits = $this->eligibleExitPermitsForUser($user->id);
 
-        if (count($eligibleExitPermits) === 0) {
+        if ($source === self::FORM_SOURCE_EXIT_PERMIT && count($eligibleExitPermits) === 0) {
             return redirect()->route('reimbursements.index')
-                ->with('warning', 'Form reimbursement hanya tersedia setelah Exit Permit diverifikasi Sisca.');
+                ->with('warning', 'Form From Exit Permit hanya tersedia setelah Exit Permit diverifikasi Sisca.');
         }
 
         return Inertia::render('Reimbursements/Create', [
+            'formSource' => $source,
             'eligibleExitPermits' => $eligibleExitPermits,
         ]);
     }
@@ -254,13 +267,20 @@ class ReimbursementController extends Controller
             abort(403);
         }
 
+        $source = (string) $request->input('source', self::FORM_SOURCE_INTERNAL);
+
+        if (!in_array($source, [self::FORM_SOURCE_INTERNAL, self::FORM_SOURCE_EXIT_PERMIT], true)) {
+            $source = self::FORM_SOURCE_INTERNAL;
+        }
+
         $validated = $request->validate([
-            'exit_permit_id' => ['required', 'integer', 'exists:exit_permits,id'],
+            'source' => ['nullable', Rule::in([self::FORM_SOURCE_INTERNAL, self::FORM_SOURCE_EXIT_PERMIT])],
+            'exit_permit_id' => [Rule::requiredIf($source === self::FORM_SOURCE_EXIT_PERMIT), 'nullable', 'integer', 'exists:exit_permits,id'],
             'request_date' => ['required', 'date'],
             'paid_to' => ['required', 'string', 'max:255'],
             'amount_order_meal' => ['required', 'integer', 'min:0'],
-            'amount_fuel' => ['required', 'integer', 'min:0'],
-            'amount_toll' => ['required', 'integer', 'min:0'],
+            'amount_fuel' => ['nullable', 'integer', 'min:0'],
+            'amount_toll' => ['nullable', 'integer', 'min:0'],
             'amount_in_words' => ['required', 'string', 'max:255'],
             'expense_type' => ['required', 'string', 'max:255'],
             'purpose' => ['required', 'string'],
@@ -269,30 +289,40 @@ class ReimbursementController extends Controller
             'documents.*.ref_document' => ['nullable', 'string', 'max:255'],
             'documents.*.attachment_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:4096'],
             'description' => ['nullable', 'string'],
-            'attachment_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:4096'],
+            'attachment_file' => [Rule::requiredIf($source === self::FORM_SOURCE_INTERNAL), 'nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:4096'],
         ]);
 
-        $exitPermit = ExitPermit::query()->findOrFail($validated['exit_permit_id']);
-        $this->ensureEligibleForReimbursementPath($exitPermit, $user->id);
+        $exitPermit = null;
 
-        $alreadyFinished = Reimbursement::query()
-            ->where('exit_permit_id', $exitPermit->id)
-            ->where('status', Reimbursement::STATUS_FINISHED)
-            ->exists();
+        if ($source === self::FORM_SOURCE_EXIT_PERMIT) {
+            if (empty($validated['exit_permit_id'])) {
+                throw ValidationException::withMessages([
+                    'exit_permit_id' => 'Exit Permit wajib dipilih untuk form From Exit Permit.',
+                ]);
+            }
 
-        if ($alreadyFinished) {
-            throw ValidationException::withMessages([
-                'exit_permit_id' => 'Reimbursement untuk Exit Permit ini sudah berstatus Sudah Dibayarkan oleh Accounting.',
-            ]);
+            $exitPermit = ExitPermit::query()->findOrFail((int) $validated['exit_permit_id']);
+            $this->ensureEligibleForReimbursementPath($exitPermit, $user->id);
+
+            $alreadyFinished = Reimbursement::query()
+                ->where('exit_permit_id', $exitPermit->id)
+                ->where('status', Reimbursement::STATUS_FINISHED)
+                ->exists();
+
+            if ($alreadyFinished) {
+                throw ValidationException::withMessages([
+                    'exit_permit_id' => 'Reimbursement untuk Exit Permit ini sudah berstatus Sudah Dibayarkan oleh Accounting.',
+                ]);
+            }
         }
 
         $amountOrderMeal = (int) $validated['amount_order_meal'];
-        $amountFuel = (int) $validated['amount_fuel'];
-        $amountToll = (int) $validated['amount_toll'];
+        $amountFuel = (int) ($validated['amount_fuel'] ?? 0);
+        $amountToll = (int) ($validated['amount_toll'] ?? 0);
         $totalAmount = $amountOrderMeal + $amountFuel + $amountToll;
 
         $reimbursement = Reimbursement::create([
-            'exit_permit_id' => $exitPermit->id,
+            'exit_permit_id' => $exitPermit?->id,
             'user_id' => $user->id,
             'request_date' => $validated['request_date'],
             'paid_to' => $validated['paid_to'],
@@ -318,7 +348,7 @@ class ReimbursementController extends Controller
     public function edit(Reimbursement $reimbursement): Response
     {
         $this->authorizeUser($reimbursement);
-        $reimbursement->load('documents');
+        $reimbursement->load(['documents', 'exitPermit.costCenter:id,name']);
 
         $user = request()->user();
 
@@ -335,6 +365,7 @@ class ReimbursementController extends Controller
                 'amount_fuel' => (int) ($reimbursement->amount_fuel ?? 0),
                 'amount_toll' => (int) ($reimbursement->amount_toll ?? 0),
                 'amount_in_words' => $reimbursement->amount_in_words,
+                'cost_center_name' => $reimbursement->exitPermit?->costCenter?->name,
                 'expense_type' => $reimbursement->expense_type,
                 'purpose' => $reimbursement->purpose,
                 'ref_document' => $reimbursement->ref_document,
@@ -481,8 +512,8 @@ class ReimbursementController extends Controller
                 $query->where('status', Reimbursement::STATUS_FINISHED);
             })
             ->latest('permit_date')
-            ->with(['user:id,name', 'requestors:id,exit_permit_id,name,row_number,reimburs_lunch_box'])
-            ->get(['id', 'user_id', 'permit_date', 'destination', 'reimbursement_amount'])
+            ->with(['user:id,name', 'requestors:id,exit_permit_id,name,row_number,reimburs_lunch_box', 'costCenter:id,name'])
+            ->get(['id', 'user_id', 'permit_date', 'destination', 'reimbursement_amount', 'cost_center_id'])
             ->map(function (ExitPermit $exitPermit): array {
                 $requestorNames = $exitPermit->requestors
                     ->filter(fn($requestor) => strtoupper(trim((string) ($requestor->reimburs_lunch_box ?? 'N'))) === 'Y')
@@ -508,6 +539,7 @@ class ReimbursementController extends Controller
                     'id' => $exitPermit->id,
                     'label' => $this->exitPermitLabel($exitPermit),
                     'permit_date' => $exitPermit->permit_date ? (string) $exitPermit->permit_date : null,
+                    'cost_center_name' => $exitPermit->costCenter?->name,
                     'requestor_count' => $requestorCount,
                     'requestor_names' => $requestorNames,
                     'unit_amount' => $unitAmount,
