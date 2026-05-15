@@ -103,12 +103,12 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
                                 {isApprovalMode ? 'Approval Workflow' : 'Personal Request'}
                             </p>
                             <h3 className="mt-2 text-2xl font-black uppercase tracking-wide text-slate-900">
-                                {isApprovalMode ? 'Exit Permit Approval Monitoring' : 'Exit Permit Pengajuan Pribadi'}
+                                {isApprovalMode ? 'Exit Permit Approval Monitoring' : 'Exit Permit'}
                             </h3>
                             <p className="mt-2 text-sm text-slate-600">
                                 {isApprovalMode
                                     ? 'Menu khusus approver untuk proses review, approval, dan verifikasi absensi pengajuan Exit Permit.'
-                                    : 'Menu khusus user untuk membuat dan memantau pengajuan Exit Permit pribadi.'}
+                                    : 'Menu khusus user untuk membuat dan memantau pengajuan Exit Permit.'}
                             </p>
                         </div>
                         {canCreate && (

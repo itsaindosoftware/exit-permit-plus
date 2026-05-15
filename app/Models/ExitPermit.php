@@ -37,6 +37,7 @@ class ExitPermit extends Model
         'destination',
         'exit_type',
         'order_car',
+        'cost_center_id',
         'vehicle_plate',
         'driver_name',
         'arrange_template_override',
@@ -108,6 +109,11 @@ class ExitPermit extends Model
     public function hrApprover(): BelongsTo
     {
         return $this->belongsTo(User::class, 'hr_approver_id');
+    }
+
+    public function costCenter(): BelongsTo
+    {
+        return $this->belongsTo(CostCenter::class);
     }
 
     public function managerApprover(): BelongsTo

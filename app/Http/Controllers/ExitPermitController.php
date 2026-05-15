@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AttendanceImportLog;
 use App\Models\Car;
+use App\Models\CostCenter;
 use App\Models\Driver;
 use App\Models\ExitPermit;
 use App\Models\User;
@@ -237,6 +238,7 @@ class ExitPermitController extends Controller
             'exitTypes' => ExitPermit::EXIT_TYPES,
             'carOptions' => $this->carOptions(),
             'driverOptions' => $this->driverOptions(),
+            'costCenterOptions' => $this->costCenterOptions(),
             'requestorLookupRouteName' => 'exit-permits.requestor-options',
         ]);
     }
@@ -338,6 +340,7 @@ class ExitPermitController extends Controller
             'mdApprover:id,name',
             'hrVerifier:id,name',
             'attendanceChecker:id,name',
+            'costCenter:id,name',
             'requestors',
         ]);
 
@@ -354,6 +357,7 @@ class ExitPermitController extends Controller
                 'destination' => $exitPermit->destination,
                 'exit_type' => $exitPermit->exit_type,
                 'order_car' => (bool) $exitPermit->order_car,
+                'cost_center_name' => $exitPermit->costCenter?->name,
                 'vehicle_plate' => $exitPermit->vehicle_plate,
                 'driver_name' => $exitPermit->driver_name,
                 'returned_to_office' => (bool) $exitPermit->returned_to_office,
@@ -449,6 +453,7 @@ class ExitPermitController extends Controller
                 'destination' => $exitPermit->destination,
                 'exit_type' => $exitPermit->exit_type,
                 'order_car' => (bool) $exitPermit->order_car,
+                'cost_center_id' => $exitPermit->cost_center_id,
                 'vehicle_plate' => $exitPermit->vehicle_plate,
                 'driver_name' => $exitPermit->driver_name,
                 'car_id' => Car::query()
@@ -491,6 +496,7 @@ class ExitPermitController extends Controller
             'exitTypes' => ExitPermit::EXIT_TYPES,
             'carOptions' => $this->carOptions(),
             'driverOptions' => $this->driverOptions(),
+            'costCenterOptions' => $this->costCenterOptions(),
             'requestorLookupRouteName' => 'exit-permits.requestor-options',
             'attendancePreview' => $request->session()->get($this->attendancePreviewSessionKey($exitPermit->id)),
         ]);
@@ -952,6 +958,7 @@ class ExitPermitController extends Controller
             'requestor_items.*.department' => ['nullable', 'string', 'max:120'],
             'requestor_items.*.reimburs_lunch_box' => ['nullable', 'string', 'max:10'],
             'order_car' => ['nullable', 'boolean'],
+            'cost_center_id' => ['nullable', 'integer', 'exists:cost_centers,id'],
             'car_id' => ['nullable', 'integer', 'exists:cars,id'],
             'driver_id' => ['nullable', 'integer', 'exists:drivers,id'],
             'returned_to_office' => ['required', 'boolean'],
@@ -968,6 +975,10 @@ class ExitPermitController extends Controller
 
         $validated['order_car'] = $request->boolean('order_car');
         $validated['returned_to_office'] = $request->boolean('returned_to_office');
+
+        if ($validated['exit_type'] !== ExitPermit::EXIT_TYPE_BUSINESS_TRIP) {
+            $validated['cost_center_id'] = null;
+        }
 
         if (
             $validated['exit_type'] === ExitPermit::EXIT_TYPE_BUSINESS_TRIP
@@ -1057,6 +1068,19 @@ class ExitPermitController extends Controller
             ->map(fn(Driver $driver) => [
                 'id' => $driver->id,
                 'name' => $driver->name,
+            ])
+            ->values()
+            ->all();
+    }
+
+    private function costCenterOptions(): array
+    {
+        return CostCenter::query()
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn(CostCenter $costCenter) => [
+                'id' => $costCenter->id,
+                'name' => $costCenter->name,
             ])
             ->values()
             ->all();

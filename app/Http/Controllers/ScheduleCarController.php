@@ -187,6 +187,7 @@ class ScheduleCarController extends Controller
         $exitPermit->loadMissing([
             'user:id,name',
             'requestors:id,exit_permit_id,name,department,reimburs_lunch_box',
+            'costCenter:id,name',
         ]);
 
         $history = $exitPermit->scheduleCarArrangementLogs()
@@ -210,6 +211,7 @@ class ScheduleCarController extends Controller
                 'start_time' => $this->toHourMinute($exitPermit->start_time),
                 'end_time' => $this->toHourMinute($exitPermit->end_time),
                 'destination' => $exitPermit->destination,
+                'cost_center_name' => $exitPermit->costCenter?->name,
                 'vehicle_plate' => $exitPermit->vehicle_plate,
                 'driver_name' => $exitPermit->driver_name,
                 'template' => $this->buildArrangeTemplate($exitPermit),
@@ -250,6 +252,7 @@ class ScheduleCarController extends Controller
             ->with([
                 'user:id,name',
                 'requestors:id,exit_permit_id,name,department,reimburs_lunch_box',
+                'costCenter:id,name',
             ])
             ->where('exit_type', ExitPermit::EXIT_TYPE_BUSINESS_TRIP)
             ->where('order_car', true)
@@ -289,17 +292,10 @@ class ScheduleCarController extends Controller
 
     private function buildArrangeTemplate(ExitPermit $permit): array
     {
+        $costCenterName = trim((string) ($permit->costCenter?->name ?? ''));
         $requestorNames = $permit->requestors
             ->pluck('name')
             ->filter()
-            ->values();
-
-        $departmentLabels = $permit->requestors
-            ->pluck('department')
-            ->filter()
-            ->map(fn(string $department) => trim($department))
-            ->filter()
-            ->unique()
             ->values();
 
         $autoTemplate = [
@@ -314,9 +310,7 @@ class ScheduleCarController extends Controller
             'user_yang_pergi' => $requestorNames->isNotEmpty()
                 ? $requestorNames->join(', ')
                 : ($permit->user?->name ?: '-'),
-            'budget_dept_cost_center' => $departmentLabels->isNotEmpty()
-                ? $departmentLabels->map(fn(string $department) => sprintf('%s (Cost Center: -)', $department))->join('; ')
-                : '-',
+            'budget_dept_cost_center' => $costCenterName !== '' ? $costCenterName : '-',
             'alasan_pergi' => $permit->reason ?: '-',
             'detail_barang_delivery' => $permit->notes ?: '-',
             'permintaan_kurangi_catering' => $this->cateringReductionSummary($permit),

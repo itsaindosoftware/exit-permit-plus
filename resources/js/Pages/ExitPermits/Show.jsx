@@ -49,6 +49,7 @@ export default function Show({ exitPermit, approvalStage }) {
                     <InfoItem label="Jam Kembali" value={exitPermit.end_time} />
                     <InfoItem label="Jenis Exit" value={exitTypeLabel[exitPermit.exit_type] ?? exitPermit.exit_type} />
                     <InfoItem label="Tujuan" value={exitPermit.destination} />
+                    <InfoItem label="Cost Center" value={exitPermit.cost_center_name ?? '-'} />
                     <InfoItem label="No. Police Car (1.4)" value={exitPermit.vehicle_plate ?? 'Belum diisi'} />
                     <InfoItem label="Nama Supir" value={exitPermit.driver_name ?? 'Belum diisi'} />
                     <InfoItem label="Returned To Office" value={exitPermit.returned_to_office ? 'Ya' : 'Tidak'} />

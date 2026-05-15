@@ -13,6 +13,12 @@ export default {
 
     theme: {
         extend: {
+            fontSize: {
+                // Accessibility-oriented text scale for broad age range users.
+                xs: ['1.0rem', { lineHeight: '1.35rem' }],
+                sm: ['1.05rem', { lineHeight: '1.5rem' }],
+                base: ['1.0625rem', { lineHeight: '1.65rem' }],
+            },
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
             },

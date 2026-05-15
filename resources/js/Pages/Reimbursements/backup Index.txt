@@ -32,7 +32,7 @@ export default function Index({ reimbursements, canCreate, eligibleExitPermits, 
                         <div>
                             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">Claim Flow</p>
                             <h3 className="mt-2 text-2xl font-black uppercase tracking-wide text-slate-900">
-                                {isApprovalMode ? 'Reimbursement Approval Monitoring' : 'Reimbursement Pribadi'}
+                                {isApprovalMode ? 'Reimbursement Approval Monitoring' : 'Reimbursement'}
                             </h3>
                             {/* Proses approval dipantau melalui menu Reimbursement Approval. */}
                             <p className="mt-2 text-sm text-slate-600">

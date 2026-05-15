@@ -21,6 +21,7 @@ export default function Create({
     exitTypes,
     carOptions = [],
     driverOptions = [],
+    costCenterOptions = [],
     requestorLookupRouteName = 'exit-permits.requestor-options',
 }) {
     const { data, setData, post, processing, errors } = useForm({
@@ -39,6 +40,7 @@ export default function Create({
         destination: '',
         exit_type: exitTypes[0] ?? 'sick',
         order_car: false,
+        cost_center_id: '',
         car_id: '',
         driver_id: '',
         returned_to_office: false,
@@ -483,6 +485,24 @@ export default function Create({
                                     Jika Yes, tim HR akan melakukan arrange mobil dan supir pada tahap berikutnya.
                                 </p>
                                 <InputError message={errors.order_car} className="mt-2" />
+
+                                <div className="mt-4">
+                                    <label htmlFor="cost_center_id" className="text-sm font-semibold text-slate-800">Cost Center (Departemen)</label>
+                                    <select
+                                        id="cost_center_id"
+                                        className={inputClass}
+                                        value={data.cost_center_id}
+                                        onChange={(e) => setData('cost_center_id', e.target.value)}
+                                    >
+                                        <option value="">Pilih departemen cost center</option>
+                                        {costCenterOptions.map((costCenter) => (
+                                            <option key={costCenter.id} value={costCenter.id}>
+                                                {costCenter.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <InputError message={errors.cost_center_id} className="mt-2" />
+                                </div>
                             </div>
                         )}
 

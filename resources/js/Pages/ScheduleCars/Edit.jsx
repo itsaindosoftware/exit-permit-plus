@@ -53,6 +53,9 @@ export default function Edit({ scheduleItem, carOptions = [], driverOptions = []
                     <p className="text-sm text-indigo-900">
                         Exit Permit #{scheduleItem.id} | {scheduleItem.permit_date} | {scheduleItem.start_time ?? '-'}-{scheduleItem.end_time ?? '-'} | {scheduleItem.destination}
                     </p>
+                    <p className="mt-1 text-sm text-indigo-900">
+                        Cost Center (Departemen): {scheduleItem.cost_center_name || '-'}
+                    </p>
                 </div>
 
                 <form onSubmit={submit} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">

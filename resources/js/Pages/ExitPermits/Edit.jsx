@@ -29,6 +29,7 @@ export default function Edit({
     exitTypes,
     carOptions = [],
     driverOptions = [],
+    costCenterOptions = [],
     requestorLookupRouteName = 'exit-permits.requestor-options',
 }) {
     const createEmptyRequestorRow = () => ({
@@ -70,6 +71,7 @@ export default function Edit({
         destination: exitPermit.destination ?? '',
         exit_type: exitPermit.exit_type ?? exitTypes[0] ?? 'sick',
         order_car: !!exitPermit.order_car,
+        cost_center_id: exitPermit.cost_center_id ? String(exitPermit.cost_center_id) : '',
         car_id: exitPermit.car_id ?? '',
         driver_id: exitPermit.driver_id ?? '',
         vehicle_plate: exitPermit.vehicle_plate ?? '',
@@ -709,6 +711,25 @@ export default function Edit({
                                 </p>
                                 <InputError message={errors.order_car} className="mt-2" />
 
+                                <div className="mt-4">
+                                    <label htmlFor="cost_center_id" className="text-base font-semibold text-slate-800">Cost Center (Departemen)</label>
+                                    <select
+                                        id="cost_center_id"
+                                        className={`${inputClass} text-base`}
+                                        value={data.cost_center_id}
+                                        disabled={formLocked}
+                                        onChange={(e) => setData('cost_center_id', e.target.value)}
+                                    >
+                                        <option value="">Pilih departemen cost center</option>
+                                        {costCenterOptions.map((costCenter) => (
+                                            <option key={costCenter.id} value={costCenter.id}>
+                                                {costCenter.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <InputError message={errors.cost_center_id} className="mt-2" />
+                                </div>
+
                                 {data.order_car && (data.vehicle_plate || data.driver_name) && (
                                     <div className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
                                         <p><span className="font-semibold">No. Polisi:</span> {data.vehicle_plate || '-'}</p>
@@ -839,7 +860,7 @@ export default function Edit({
                                                     Attendance rows (by date): {attendancePreview?.summary?.attendance_rows_for_date ?? 0}
                                                 </p>
                                                 <p className="mt-1 text-xs text-cyan-900">
-                                                    Tanggal matching: {attendancePreview?.summary?.match_date ?? attendancePreview?.match_date ?? '-'}
+                                                    Tanggal matching Data Absensi: {attendancePreview?.summary?.match_date ?? attendancePreview?.match_date ?? '-'}
                                                 </p>
 
                                                 <div className="mt-3 overflow-x-auto rounded-md border border-cyan-200 bg-white">

@@ -55,7 +55,7 @@ export default function AuthenticatedLayout({ header, children }) {
             <div className="flex min-h-screen">
                 <aside
                     className={
-                        `fixed inset-y-0 left-0 z-40 w-72 transform border-r border-slate-700/70 bg-slate-900 p-6 text-slate-100 transition-transform duration-200 lg:static lg:translate-x-0 ` +
+                        `fixed inset-y-0 left-0 z-40 w-80 transform border-r border-slate-700/70 bg-slate-900 p-6 text-slate-100 transition-transform duration-200 lg:static lg:translate-x-0 ` +
                         (showSidebar ? 'translate-x-0' : '-translate-x-full')
                     }
                 >
@@ -102,7 +102,7 @@ export default function AuthenticatedLayout({ header, children }) {
                             )}
                             <div>
                                 <p className="font-semibold text-white">{user.name}</p>
-                                <p className="text-slate-300">{user.email}</p>
+                                <p className="break-all text-slate-300">{user.email}</p>
                             </div>
                         </div>
                         <p className="mt-3 inline-block rounded-full bg-slate-700 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-cyan-100">
