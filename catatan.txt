@@ -7,6 +7,8 @@ nanti kedepannya kalau sudah setup .env ke server, masukkan file .env ke list .g
 php artisan key:generate
 
 php artisan serve --port=8080
+php artisan serve --host=192.168.1.7 --port=8030
+npm run dev
 
 ====== WEB =======
 exit permit sudah dikondisikan ke user, manager, md

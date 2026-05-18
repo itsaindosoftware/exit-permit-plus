@@ -98,7 +98,7 @@ VALUES
 (94, '961.01.26', 'Azwan Qornain', NULL, 'T9', 'Production', 'Assembly', 61067221, 'B2.1 Robot Spot Welding', 'DL', 'Factory', '2026-01-12', 0.3, 'C', 'Operator'),
 (95, '963.02.26', 'Ahmad Gifari Fadilah', NULL, 'T9', 'Production', 'Assembly', 61067221, 'B2.1 Robot Spot Welding', 'DL', 'Factory', '2026-02-12', 0.2, 'C', 'Operator'),
 (96, '964.02.26', 'Didy Supardi', NULL, 'T9', 'Quality Assurance', 'Quality Assurance 4W', 61054180, 'Final Quality Assurance - FQA', 'INDL', 'Factory', '2026-02-12', 0.2, 'C', 'Operator'),
-(97, '965.04.26', 'Eltha Restu Sedio Laksono', NULL, 'M1', 'PPIC & Sales Delivery (Inbound)', 'PPIC & Sales Delivery', 60090002, 'PLANT CENTER', 'INDL', 'Factory', '2026-04-01', '#REF!', 'Pr', 'Manager'),
+(97, '965.04.26', 'Eltha Restu Sedio Laksono', NULL, 'M1', 'PPIC & Sales Delivery (Inbound)', 'PPIC & Sales Delivery',60090002, 'PLANT CENTER', 'INDL', 'Factory', '2026-04-01', NULL, 'Pr', 'Manager')
 (98, '966.04.26', 'Fakhrul Ramadhan Susanto', 'T1', 'T1', 'SYD & IT', 'IT Dev. Section', 60041700, 'IT & System Development', 'SGA', 'Office', '2026-04-02', 0.1, 'C', 'Staff'),
 (99, '967.04.26', 'Dede Suherman', NULL, 'T9', 'Production', 'Assembly', 61067221, 'B2.1 Robot Spot Welding', 'DL', 'Factory', '2026-04-13', 0.1, 'C', 'Operator'),
 (100, '968.04.26', 'Muhammad Faizal Sofyan', NULL, 'T1', 'Quality Assurance', 'Quality Assurance 4 Wheel', 61054110, 'Incoming Quality Assurance-IQA', 'INDL', 'Factory', '2026-04-14', 0.1, 'C', 'Staff'),
