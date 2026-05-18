@@ -1,0 +1,11 @@
+1. ke cmder -> cd c:\laragon\www
+2. git clone url_repo_github 
+3. masuk ke folder caranya cd nama_folder_repo
+4. copy file .env.example ke .env
+5. edit file .env -> atur sesuai server internal itsa
+6. sesuaikan file vite.config.js -> atur APP_URL sesuai server internal itsa
+7. composer install 
+8. npm install 
+9. php artisan key:generate 
+10. php artisan migrate
+11. 
