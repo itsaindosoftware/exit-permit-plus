@@ -26,3 +26,7 @@ bikin integrasi api dan ui untuk login, dashboard, absen masuk, absen pulang, da
  Baik ibu sisca Terima kasih infonya
 
 Paling nanti saya dibedain di nik nya saja ibu yang karyawan, magang, dan outsourcing. Soalnya ikutin contoh yang sudah ada di Excel ibu
+
+php artisan serve --host=192.168.1.7 --port=8080
+
+password itsa di server: itsa2026
