@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 export default function AuthenticatedLayout({ header, children }) {
     const user = usePage().props.auth.user;
     const flash = usePage().props.flash;
-    const notifications = usePage().props.notifications ?? { unread: [], unread_count: 0, exit_permit_approval_count: 0, schedule_car_count: 0, reimbursement_approval_count: 0 };
+    const notifications = usePage().props.notifications ?? { unread: [], unread_count: 0 };
     const [showSidebar, setShowSidebar] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
     const userMenuRef = useRef(null);
@@ -18,12 +18,12 @@ export default function AuthenticatedLayout({ header, children }) {
     const menuItems = [
         { label: 'Dashboard', routeName: 'dashboard' },
         ...(isHr ? [{ label: 'List Exit Permit', routeName: 'exit-permit-list.index' }] : []),
-        ...(isRatna ? [{ label: 'Schedule Car', routeName: 'schedule-cars.index', badgeCount: notifications.schedule_car_count }] : []),
+        ...(isRatna ? [{ label: 'Schedule Car', routeName: 'schedule-cars.index' }] : []),
         { label: 'Exit Permit', routeName: 'exit-permits.index' },
-        ...(isExitPermitApprovalUser ? [{ label: 'Exit Permit Approval', routeName: 'exit-permit-approvals.index', badgeCount: notifications.exit_permit_approval_count }] : []),
+        ...(isExitPermitApprovalUser ? [{ label: 'Exit Permit Approval', routeName: 'exit-permit-approvals.index' }] : []),
         ...(isSisca ? [{ label: 'Order Meal', routeName: 'order-meals.index' }] : []),
         { label: 'Reimbursement', routeName: 'reimbursements.index' },
-        ...(isReimbursementApprovalUser ? [{ label: 'Reimbursement Approval', routeName: 'reimbursement-approvals.index', badgeCount: notifications.reimbursement_approval_count }] : []),
+        ...(isReimbursementApprovalUser ? [{ label: 'Reimbursement Approval', routeName: 'reimbursement-approvals.index' }] : []),
         { label: 'Profile', routeName: 'profile.edit' },
     ];
 
@@ -74,19 +74,14 @@ export default function AuthenticatedLayout({ header, children }) {
                                     key={item.routeName}
                                     href={route(item.routeName)}
                                     className={
-                                        `block rounded-lg border px-4 py-2 text-sm font-semibold transition flex items-center justify-between ` +
+                                        `block rounded-lg border px-4 py-2 text-sm font-semibold transition ` +
                                         (isActive
                                             ? 'border-cyan-400/50 bg-cyan-500/20 text-white'
                                             : 'border-transparent text-slate-200 hover:border-slate-600 hover:bg-slate-800')
                                     }
                                     onClick={() => setShowSidebar(false)}
                                 >
-                                    <span>{item.label}</span>
-                                    {item.badgeCount > 0 && (
-                                        <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-orange-500 px-1.5 text-[10px] text-white">
-                                            {item.badgeCount > 99 ? '99+' : item.badgeCount}
-                                        </span>
-                                    )}
+                                    {item.label}
                                 </Link>
                             );
                         })}
@@ -139,13 +134,11 @@ export default function AuthenticatedLayout({ header, children }) {
                             </div>
 
                             <div className="relative flex items-center gap-2" ref={userMenuRef}>
+                                <div className="mr-3 text-sm text-slate-700">Notifikasi: {notifications.unread_count}</div>
                                  <button
                                      type="button"
                                      className="flex items-center gap-3 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
-                                     onClick={() => {
-                                         setShowUserMenu((prev) => !prev);
-                                         setShowNotifications(false);
-                                     }}
+                                     onClick={() => setShowUserMenu((prev) => !prev)}
                                  >
                                      {user.profile_photo_url ? (
                                          <img
@@ -159,18 +152,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                          </span>
                                      )}
                                      <span className="hidden sm:block">{user.name}</span>
-                                     <svg
-                                         aria-hidden="true"
-                                         className="h-4 w-4 text-slate-400 dark:text-slate-300"
-                                         fill="none"
-                                         stroke="currentColor"
-                                         strokeLinecap="round"
-                                         strokeLinejoin="round"
-                                         strokeWidth="2"
-                                         viewBox="0 0 24 24"
-                                     >
-                                         <path d="m6 9 6 6 6-6" />
-                                     </svg>
+                                     <span className="text-xs text-slate-400 dark:text-slate-300">▾</span>
                                  </button>
                                 {showUserMenu && (
                                     <div className="absolute right-0 z-30 mt-2 w-60 rounded-xl border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900">

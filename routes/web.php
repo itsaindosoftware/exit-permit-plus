@@ -5,6 +5,7 @@ use App\Http\Controllers\ExitPermitListController;
 use App\Http\Controllers\ExitPermitController;
 use App\Http\Controllers\OrderMealController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ReimbursementController;
 use App\Http\Controllers\ScheduleCarController;
 use Illuminate\Support\Facades\Route;
@@ -21,6 +22,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', DashboardController::class)->middleware(['auth'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+    Route::post('notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::get('exit-permit-list', ExitPermitListController::class)->name('exit-permit-list.index');
     Route::get('exit-permit-approvals', [ExitPermitController::class, 'approvalIndex'])->name('exit-permit-approvals.index');
     Route::get('exit-permits/requestor-options', [ExitPermitController::class, 'requestorLookup'])

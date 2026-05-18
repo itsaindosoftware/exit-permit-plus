@@ -9,6 +9,7 @@ use App\Models\Driver;
 use App\Models\ExitPermit;
 use App\Models\User;
 use App\Notifications\ArrangeCarDriverRequested;
+use App\Notifications\ExitPermitApprovalRequested;
 use App\Services\AttendanceMatchingService;
 use App\Services\ExitPermitLunchConversionService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -430,6 +431,16 @@ class ExitPermitController extends Controller
             }
         }
 
+        // Notify managers that a new exit permit needs approval
+        $managers = User::query()
+            ->whereHas('role', fn($q) => $q->where('code', 'manager'))
+            ->where('is_available_for_approval', true)
+            ->get();
+
+        foreach ($managers as $manager) {
+            $manager->notify(new ExitPermitApprovalRequested($exitPermit, 'manager'));
+        }
+
         return redirect()->route('exit-permits.index')
             ->with('success', 'Data exit permit berhasil ditambahkan.');
     }
@@ -593,6 +604,21 @@ class ExitPermitController extends Controller
 
                         $exitPermit->hr_approver_id = $hrApproverId;
                         $exitPermit->status = 'pending';
+                        // Notify the assigned HR Manager
+                        $hrUser = User::query()->find($hrApproverId);
+                        if ($hrUser) {
+                            $hrUser->notify(new ExitPermitApprovalRequested($exitPermit, 'hr_manager'));
+                        }
+
+                        // Notify MDs that manager has approved and MD action is required
+                        $mds = User::query()
+                            ->whereHas('role', fn($q) => $q->where('code', 'md'))
+                            ->where('is_available_for_approval', true)
+                            ->get();
+
+                        foreach ($mds as $md) {
+                            $md->notify(new ExitPermitApprovalRequested($exitPermit, 'md'));
+                        }
                     } else {
                         $exitPermit->status = 'rejected';
                     }
@@ -667,6 +693,14 @@ class ExitPermitController extends Controller
                         $exitPermit->attendance_checked_at = null;
                         $exitPermit->has_valid_checkin = null;
                         $exitPermit->post_md_path = null;
+                        // Notify attendance verifier (Sisca) that HR Manager approved
+                        $sisca = User::query()
+                            ->where('email', self::ATTENDANCE_VERIFIER_EMAIL)
+                            ->first();
+
+                        if ($sisca) {
+                            $sisca->notify(new ExitPermitApprovalRequested($exitPermit, 'attendance_verifier'));
+                        }
                     }
                 }
             }
