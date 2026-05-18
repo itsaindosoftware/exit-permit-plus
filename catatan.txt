@@ -30,3 +30,4 @@ Paling nanti saya dibedain di nik nya saja ibu yang karyawan, magang, dan outsou
 php artisan serve --host=192.168.1.7 --port=8080
 
 password itsa di server: Itsa2026
+password itsa di lokal: Itsa2026

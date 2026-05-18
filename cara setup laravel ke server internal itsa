@@ -1,3 +1,4 @@
+cara setup laravel ke server internal itsa:
 1. ke cmder -> cd c:\laragon\www
 2. git clone url_repo_github 
 3. masuk ke folder caranya cd nama_folder_repo
@@ -8,4 +9,3 @@
 8. npm install 
 9. php artisan key:generate 
 10. php artisan migrate
-11. 
