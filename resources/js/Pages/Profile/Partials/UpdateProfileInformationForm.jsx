@@ -56,11 +56,11 @@ export default function UpdateProfileInformation({
         <section className={className}>
             <header className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                    <h2 className="text-lg font-medium text-gray-900 dark:text-slate-100">
+                    <h2 className="text-lg font-medium text-gray-900">
                         Profile Information
                     </h2>
 
-                    <p className="mt-1 text-sm text-gray-600 dark:text-slate-300">
+                    <p className="mt-1 text-sm text-gray-600">
                         Update your account's profile information and email address.
                     </p>
                 </div>
@@ -69,7 +69,7 @@ export default function UpdateProfileInformation({
 
             <form onSubmit={submit} className="mt-6 space-y-6">
                 <div>
-                    <InputLabel htmlFor="profile_photo" value="Profile Photo" className="dark:text-slate-200" />
+                    <InputLabel htmlFor="profile_photo" value="Profile Photo" />
 
                     <div className="mt-3 flex items-center gap-4">
                         {previewPhotoUrl ? (
@@ -88,21 +88,21 @@ export default function UpdateProfileInformation({
                             id="profile_photo"
                             type="file"
                             accept="image/*"
-                            className="block w-full text-sm text-slate-700 file:mr-3 file:rounded-md file:border-0 file:bg-slate-900 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-slate-700 dark:text-slate-200 dark:file:bg-cyan-700 dark:hover:file:bg-cyan-600"
+                            className="block w-full text-sm text-slate-700 file:mr-3 file:rounded-md file:border-0 file:bg-slate-900 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-slate-700"
                             onChange={(e) => setData('profile_photo', e.target.files?.[0] ?? null)}
                         />
                     </div>
 
-                    <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">Format gambar: JPG/PNG, maksimal 2MB.</p>
-                    <InputError className="mt-2 dark:text-rose-300" message={errors.profile_photo} />
+                    <p className="mt-1 text-xs text-gray-500">Format gambar: JPG/PNG, maksimal 2MB.</p>
+                    <InputError className="mt-2" message={errors.profile_photo} />
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="name" value="Name" className="dark:text-slate-200" />
+                    <InputLabel htmlFor="name" value="Name" />
 
                     <TextInput
                         id="name"
-                        className="mt-1 block w-full dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-400 dark:focus:border-cyan-500 dark:focus:ring-cyan-500"
+                        className="mt-1 block w-full"
                         value={data.name}
                         onChange={(e) => setData('name', e.target.value)}
                         required
@@ -110,41 +110,41 @@ export default function UpdateProfileInformation({
                         autoComplete="name"
                     />
 
-                    <InputError className="mt-2 dark:text-rose-300" message={errors.name} />
+                    <InputError className="mt-2" message={errors.name} />
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="email" value="Email" className="dark:text-slate-200" />
+                    <InputLabel htmlFor="email" value="Email" />
 
                     <TextInput
                         id="email"
                         type="email"
-                        className="mt-1 block w-full dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-400 dark:focus:border-cyan-500 dark:focus:ring-cyan-500"
+                        className="mt-1 block w-full"
                         value={data.email}
                         onChange={(e) => setData('email', e.target.value)}
                         required
                         autoComplete="username"
                     />
 
-                    <InputError className="mt-2 dark:text-rose-300" message={errors.email} />
+                    <InputError className="mt-2" message={errors.email} />
                 </div>
 
                 {mustVerifyEmail && user.email_verified_at === null && (
                     <div>
-                        <p className="mt-2 text-sm text-gray-800 dark:text-slate-200">
+                        <p className="mt-2 text-sm text-gray-800">
                             Your email address is unverified.
                             <Link
                                 href={route('verification.send')}
                                 method="post"
                                 as="button"
-                                className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:text-slate-300 dark:hover:text-slate-100 dark:focus:ring-cyan-500 dark:focus:ring-offset-slate-900"
+                                className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                             >
                                 Click here to re-send the verification email.
                             </Link>
                         </p>
 
                         {status === 'verification-link-sent' && (
-                            <div className="mt-2 text-sm font-medium text-green-600 dark:text-emerald-300">
+                            <div className="mt-2 text-sm font-medium text-green-600">
                                 A new verification link has been sent to your
                                 email address.
                             </div>
@@ -153,7 +153,7 @@ export default function UpdateProfileInformation({
                 )}
 
                 <div className="flex items-center gap-4">
-                    <PrimaryButton className="dark:bg-cyan-700 dark:hover:bg-cyan-600 dark:focus:bg-cyan-600 dark:active:bg-cyan-800 dark:focus:ring-cyan-500 dark:focus:ring-offset-slate-900" disabled={processing}>Save</PrimaryButton>
+                    <PrimaryButton disabled={processing}>Save</PrimaryButton>
 
                     <Transition
                         show={recentlySuccessful}
@@ -162,7 +162,7 @@ export default function UpdateProfileInformation({
                         leave="transition ease-in-out"
                         leaveTo="opacity-0"
                     >
-                        <p className="text-sm text-gray-600 dark:text-slate-300">
+                        <p className="text-sm text-gray-600">
                             Saved.
                         </p>
                     </Transition>
