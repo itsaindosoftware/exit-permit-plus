@@ -6,7 +6,4 @@
 	body {
 		@apply bg-slate-100 text-slate-900 transition-colors duration-200;
 	}
-	.dark table {
-		color: rgb(226 232 240);
-	}
 }
