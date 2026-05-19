@@ -10,6 +10,8 @@ php artisan serve --port=8080
 php artisan serve --host=192.168.1.7 --port=8030
 npm run dev
 
+git pull origin fakhrul-dev --no-commit
+
 ====== WEB =======
 exit permit sudah dikondisikan ke user, manager, md
 order meal biasa (umum) = sudah bisa 
