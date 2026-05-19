@@ -317,7 +317,7 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
                                                     )}
                                                     className={
                                                         `inline-flex w-28 items-center justify-center rounded bg-cyan-700 px-3 text-xs font-semibold text-white transition hover:bg-cyan-600 ` +
-                                                        (item.can_submit_approval ? 'h-19' : 'h-8')
+                                                        (item.can_submit_approval || item.can_verify_attendance ? 'h-19' : 'h-8')
                                                     }
                                                 >
                                                     {item.can_submit_approval
