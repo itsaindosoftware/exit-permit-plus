@@ -315,7 +315,10 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
                                                             : 'exit-permits.show',
                                                         item.id,
                                                     )}
-                                                    className="inline-flex h-8 w-28 items-center justify-center rounded bg-cyan-700 px-3 text-xs font-semibold text-white transition hover:bg-cyan-600"
+                                                    className={
+                                                        `inline-flex w-28 items-center justify-center rounded bg-cyan-700 px-3 text-xs font-semibold text-white transition hover:bg-cyan-600 ` +
+                                                        (item.can_submit_approval ? 'h-19' : 'h-8')
+                                                    }
                                                 >
                                                     {item.can_submit_approval
                                                         ? 'Detail & Approval'
