@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 
+// s
 const exitTypeLabel = {
     business_trip: 'Perjalanan Dinas',
     sick: 'Sakit',
