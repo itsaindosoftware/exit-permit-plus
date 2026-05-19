@@ -12,16 +12,6 @@ export default function UpdateProfileInformation({
     className = '',
 }) {
     const user = usePage().props.auth.user;
-    const [isDarkMode, setIsDarkMode] = useState(() => {
-        if (typeof window === 'undefined') return false;
-
-        const storedTheme = window.localStorage.getItem('theme');
-        if (storedTheme === 'dark') return true;
-        if (storedTheme === 'light') return false;
-
-        return window.matchMedia('(prefers-color-scheme: dark)').matches;
-    });
-
     const { data, setData, post, errors, processing, recentlySuccessful } =
         useForm({
             name: user.name,
@@ -44,11 +34,6 @@ export default function UpdateProfileInformation({
             URL.revokeObjectURL(objectUrl);
         };
     }, [data.profile_photo, user.profile_photo_url]);
-
-    useEffect(() => {
-        document.documentElement.classList.toggle('dark', isDarkMode);
-        window.localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-    }, [isDarkMode]);
 
     const initials = (user?.name ?? 'U')
         .split(' ')
@@ -80,15 +65,6 @@ export default function UpdateProfileInformation({
                     </p>
                 </div>
 
-                {/*
-                <button
-                    type="button"
-                    className="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-700 transition hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
-                    onClick={() => setIsDarkMode((prev) => !prev)}
-                >
-                    {isDarkMode ? 'Disable Dark Mode' : 'Enable Dark Mode'}
-                </button>
-                */}
             </header>
 
             <form onSubmit={submit} className="mt-6 space-y-6">
