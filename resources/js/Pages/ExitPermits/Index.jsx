@@ -253,7 +253,7 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Meal</th>
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Status</th>
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Tahap Approval</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Aksi</th>
+                                    <th className="w-52 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
@@ -305,8 +305,8 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
                                             </span>
                                         </td>
                                         <td className="px-4 py-3 text-xs font-semibold text-cyan-700">{item.approval_stage}</td>
-                                        <td className="px-4 py-3">
-                                            <div className="flex gap-2">
+                                        <td className="w-52 px-4 py-3 align-middle">
+                                            <div className="flex flex-wrap items-center content-center gap-3">
                                                 <Link
                                                     href={route(
                                                         item.can_submit_approval || item.can_arrange_car || item.can_update_request || item.can_verify_attendance
@@ -314,7 +314,7 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
                                                             : 'exit-permits.show',
                                                         item.id,
                                                     )}
-                                                    className="rounded bg-cyan-700 px-3 py-1 text-xs font-semibold text-white transition hover:bg-cyan-600"
+                                                    className="inline-flex h-8 w-28 items-center justify-center rounded bg-cyan-700 px-3 text-xs font-semibold text-white transition hover:bg-cyan-600"
                                                 >
                                                     {item.can_submit_approval
                                                         ? 'Detail & Approval'
@@ -328,7 +328,7 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
                                                     <button
                                                         type="button"
                                                         onClick={() => handleDelete(item.id)}
-                                                        className="rounded bg-rose-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-rose-500"
+                                                        className="inline-flex h-8 w-28 items-center justify-center rounded bg-rose-600 px-3 text-xs font-semibold text-white transition hover:bg-rose-500"
                                                     >
                                                         Hapus
                                                     </button>
@@ -338,7 +338,7 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
                                                     href={route('exit-permits.print', item.id)}
                                                     target="_blank"
                                                     rel="noreferrer"
-                                                    className="rounded bg-slate-700 px-3 py-1 text-xs font-semibold text-white transition hover:bg-slate-600"
+                                                    className="inline-flex h-8 w-28 items-center justify-center rounded bg-slate-700 px-3 text-xs font-semibold text-white transition hover:bg-slate-600"
                                                 >
                                                     Print PDF
                                                 </a>
