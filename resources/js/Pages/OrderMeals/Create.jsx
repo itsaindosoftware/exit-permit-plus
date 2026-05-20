@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 const inputClass =
     'mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-cyan-600 focus:ring-2 focus:ring-cyan-200';
 
-const currencyFormatter = new Intl.NumberFormat('id-ID', {
+const currencyFormatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'IDR',
     maximumFractionDigits: 0,
@@ -117,25 +117,25 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-bold leading-tight text-slate-800">
-                    {isExitPermitMode ? 'Tambah Order Meal Exit Permit' : 'Tambah Order Meal'}
+                    {isExitPermitMode ? 'Add Exit Permit Meal Order' : 'Add Meal Order'}
                 </h2>
             }
         >
-            <Head title={isExitPermitMode ? 'Tambah Order Meal Exit Permit' : 'Tambah Order Meal'} />
+            <Head title={isExitPermitMode ? 'Add Exit Permit Meal Order' : 'Add Meal Order'} />
 
             <div className="space-y-6">
                 <div className="rounded-2xl border border-cyan-200 bg-gradient-to-r from-cyan-50 via-white to-slate-50 p-5 shadow-sm">
                     <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">Canteen Request</p>
                     <p className="mt-2 text-sm text-slate-700">
                         {isExitPermitMode
-                            ? 'Order meal khusus Exit Permit. Hanya dapat diajukan setelah verifikasi absensi Sisca dengan hasil matching requestor bernilai Y.'
-                            : 'Order Meal untuk kebutuhan harian karyawan dan additional visitor.'}
+                            ? 'Exit Permit meal order. Can only be submitted after Sisca attendance verification with requestor match = Y.'
+                            : 'Meal order for daily employee needs and additional visitors.'}
                     </p>
                 </div>
 
                 {isExitPermitMode && !hasEligiblePermits && (
                     <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                        {eligibilityWarning ?? 'Belum ada Exit Permit yang memenuhi syarat untuk order meal mode Exit Permit.'}
+                        {eligibilityWarning ?? 'No Exit Permit qualifies for Exit Permit meal order mode yet.'}
                     </div>
                 )}
 
@@ -170,14 +170,14 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
                                 onChange={(e) => setData('schedule_type', e.target.value)}
                             >
                                 <option value="single">Single</option>
-                                <option value="daily">Harian</option>
-                                <option value="weekly">Mingguan</option>
+                                <option value="daily">Daily</option>
+                                <option value="weekly">Weekly</option>
                             </select>
                             <InputError message={errors.schedule_type} className="mt-2" />
                         </div>
 
                         <div>
-                            <label htmlFor="repeat_count" className="text-sm font-semibold text-slate-800">Jumlah Jadwal</label>
+                            <label htmlFor="repeat_count" className="text-sm font-semibold text-slate-800">Repeat Count</label>
                             <input
                                 id="repeat_count"
                                 type="number"
@@ -195,10 +195,10 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
                             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Info</p>
                             <p className="mt-2 text-sm text-slate-700">
                                 {data.schedule_type === 'single'
-                                    ? 'Buat 1 order meal pada tanggal terpilih.'
+                                    ? 'Create one meal order on the selected date.'
                                     : data.schedule_type === 'daily'
-                                        ? 'Buat order meal berulang per hari sesuai jumlah jadwal.'
-                                        : 'Buat order meal berulang per minggu sesuai jumlah jadwal.'}
+                                        ? 'Create recurring daily meal orders based on the repeat count.'
+                                        : 'Create recurring weekly meal orders based on the repeat count.'}
                             </p>
                         </div>
                     </div>
@@ -215,7 +215,7 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
                                     onChange={(e) => setData('exit_permit_id', Number(e.target.value))}
                                     required
                                 >
-                                    {!hasEligiblePermits && <option value="">Belum ada data eligible</option>}
+                                    {!hasEligiblePermits && <option value="">No eligible data yet</option>}
                                     {eligibleExitPermits?.map((permit) => (
                                         <option key={permit.id} value={permit.id}>{permit.label}</option>
                                     ))}
@@ -225,7 +225,7 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
                         )}
 
                         <div>
-                            <label htmlFor="meal_date" className="text-sm font-semibold text-slate-800">Tanggal Makan</label>
+                            <label htmlFor="meal_date" className="text-sm font-semibold text-slate-800">Meal Date</label>
                             <input
                                 id="meal_date"
                                 type="date"
@@ -236,14 +236,14 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
                             <InputError message={errors.meal_date} className="mt-2" />
                         </div>
                         <div>
-                            <label htmlFor="menu_name" className="text-sm font-semibold text-slate-800">Menu Makan Siang</label>
+                            <label htmlFor="menu_name" className="text-sm font-semibold text-slate-800">Lunch Menu</label>
                             <input
                                 id="menu_name"
                                 type="text"
                                 value={data.menu_name}
                                 className={inputClass}
                                 onChange={(e) => setData('menu_name', e.target.value)}
-                                placeholder="Contoh: Nasi Ayam, Sayur Sop, Buah"
+                                placeholder="Example: Chicken rice, soup vegetables, fruit"
                             />
                             <InputError message={errors.menu_name} className="mt-2" />
                         </div>
@@ -251,7 +251,7 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
 
                     {!isExitPermitMode && (
                         <div className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                            <p className="text-sm font-semibold text-slate-900">Calculation for Catering Cost (Format Excel)</p>
+                            <p className="text-sm font-semibold text-slate-900">Calculation for Catering Cost (Excel Format)</p>
 
                             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                                 <div>
@@ -313,7 +313,7 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
                                     <input id="quantity" type="number" value={shiftTotal} className={inputClass} readOnly />
                                 </div>
                                 <div>
-                                    <label htmlFor="meal_unit_price" className="text-sm font-semibold text-slate-800">Amount / Porsi</label>
+                                    <label htmlFor="meal_unit_price" className="text-sm font-semibold text-slate-800">Amount / Portion</label>
                                     <input
                                         id="meal_unit_price"
                                         type="number"
@@ -363,9 +363,9 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
 
                     {isExitPermitMode && selectedPermit && (
                         <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                            <p className="text-sm font-semibold text-slate-900">Detail Exit Permit Terpilih</p>
+                            <p className="text-sm font-semibold text-slate-900">Selected Exit Permit Details</p>
                             <div className="grid gap-3 text-sm text-slate-700 md:grid-cols-2">
-                                <p><span className="font-semibold">Pemohon:</span> {selectedPermit.owner_name || '-'}</p>
+                                <p><span className="font-semibold">Requester:</span> {selectedPermit.owner_name || '-'}</p>
                                 <p><span className="font-semibold">Email:</span> {selectedPermit.owner_email || '-'}</p>
                             </div>
 
@@ -398,7 +398,7 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
 
                     <div className="grid gap-4 md:grid-cols-3">
                         <div>
-                            <label htmlFor="quantity" className="text-sm font-semibold text-slate-800">Paket Dasar Karyawan</label>
+                            <label htmlFor="quantity" className="text-sm font-semibold text-slate-800">Base Employee Packs</label>
                             <input
                                 id="quantity"
                                 type="number"
@@ -409,9 +409,9 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
                                 onChange={(e) => setData('quantity', Number(e.target.value))}
                             />
                             {isExitPermitMode && (
-                                <p className="mt-1 text-xs text-slate-500">Otomatis mengikuti jumlah karyawan di Detail Exit Permit Terpilih.</p>
+                                <p className="mt-1 text-xs text-slate-500">Automatically matches employee count from Selected Exit Permit Details.</p>
                             )}
-                            {!isExitPermitMode && <p className="mt-1 text-xs text-slate-500">Otomatis hasil penjumlahan 4 kolom shift.</p>}
+                            {!isExitPermitMode && <p className="mt-1 text-xs text-slate-500">Automatically the sum of the 4 shift columns.</p>}
                             <InputError message={errors.quantity} className="mt-2" />
                         </div>
                         {isExitPermitMode && (
@@ -429,7 +429,7 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
                             </div>
                         )}
                         <div>
-                            <label htmlFor="actual_quantity" className="text-sm font-semibold text-slate-800">Realisasi Makan</label>
+                            <label htmlFor="actual_quantity" className="text-sm font-semibold text-slate-800">Actual Meals</label>
                             <input
                                 id="actual_quantity"
                                 type="number"
@@ -444,19 +444,19 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
 
                     <div className="rounded-lg border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-cyan-900">
                         {isExitPermitMode
-                            ? <>Total paket disediakan = <span className="font-semibold">{totalProvided}</span> (paket dasar + visitor).</>
-                            : <>Total paket disediakan = <span className="font-semibold">{shiftTotal}</span> (day shift + overtime day + night shift + overtime night).</>}
+                            ? <>Total packs provided = <span className="font-semibold">{totalProvided}</span> (base packs + visitors).</>
+                            : <>Total packs provided = <span className="font-semibold">{shiftTotal}</span> (day shift + overtime day + night shift + overtime night).</>}
                     </div>
 
                     <div>
-                        <label htmlFor="notes" className="text-sm font-semibold text-slate-800">Catatan</label>
+                        <label htmlFor="notes" className="text-sm font-semibold text-slate-800">Notes</label>
                         <textarea
                             id="notes"
                             className={inputClass}
                             rows="3"
                             value={data.notes}
                             onChange={(e) => setData('notes', e.target.value)}
-                            placeholder="Informasi tambahan untuk tim canteen / approver"
+                            placeholder="Additional info for the canteen team / approver"
                         />
                         <InputError message={errors.notes} className="mt-2" />
                     </div>
@@ -467,13 +467,13 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
                             disabled={processing || (isExitPermitMode && !hasEligiblePermits)}
                             className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                            Simpan
+                            Save
                         </button>
                         <Link
                             href={route(indexRouteName)}
                             className="rounded-md border border-slate-300 px-4 py-2 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
                         >
-                            Batal
+                            Cancel
                         </Link>
                     </div>
                 </form>

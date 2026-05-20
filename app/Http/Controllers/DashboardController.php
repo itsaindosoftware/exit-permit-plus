@@ -11,7 +11,7 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    private const ATTENDANCE_VERIFIER_EMAIL = 'sisca.dewiyani@example.com';
+    private const ATTENDANCE_VERIFIER_EMAIL = 'payroll.hr@thaisummit.co.id';
 
     public function __invoke(): Response
     {
@@ -21,8 +21,8 @@ class DashboardController extends Controller
         $monthStart = $now->copy()->startOfMonth()->toDateString();
         $monthEnd = $now->copy()->endOfMonth()->toDateString();
         $roleCode = $user?->role?->code;
-        $canViewMealAnalytics = in_array($user?->role?->code, ['hr', 'manager', 'md', 'hr_manager'], true);
-        $canAccessExitPermitApproval = in_array($roleCode, ['manager', 'md', 'hr_manager'], true)
+        $canViewMealAnalytics = in_array($user?->role?->code, ['hr', 'manager', 'md', 'hr_manager', 'admin'], true);
+        $canAccessExitPermitApproval = in_array($roleCode, ['manager', 'md', 'hr_manager', 'admin'], true)
             || ($roleCode === 'hr' && strtolower((string) $user?->email) === self::ATTENDANCE_VERIFIER_EMAIL);
 
         $myExitPermits = ExitPermit::query()->where('user_id', $userId);

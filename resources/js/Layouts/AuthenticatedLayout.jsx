@@ -9,19 +9,22 @@ export default function AuthenticatedLayout({ header, children }) {
     const [showUserMenu, setShowUserMenu] = useState(false);
     const userMenuRef = useRef(null);
     const isRatna = String(user?.email ?? '').toLowerCase() === 'ratna@example.com';
-    const isSisca = String(user?.email ?? '').toLowerCase() === 'sisca.dewiyani@example.com';
+    const isSisca = String(user?.email ?? '').toLowerCase() === 'payroll.hr@thaisummit.co.id';
     const isHr = user?.role?.code === 'hr';
-    const isExitPermitApprovalUser = ['manager', 'md', 'hr_manager'].includes(user?.role?.code)
+    const isAdmin = user?.role?.code === 'admin';
+    const isExitPermitApprovalUser = ['manager', 'md', 'hr_manager', 'admin'].includes(user?.role?.code)
         || (isHr && isSisca);
+    const isExitPermitHistoryUser = ['manager', 'md', 'hr_manager', 'admin'].includes(user?.role?.code);
     const isReimbursementApprovalUser = ['manager', 'md', 'hr', 'accounting', 'admin'].includes(user?.role?.code);
 
     const menuItems = [
         { label: 'Dashboard', routeName: 'dashboard' },
-        ...(isHr ? [{ label: 'List Exit Permit', routeName: 'exit-permit-list.index' }] : []),
-        ...(isRatna ? [{ label: 'Schedule Car', routeName: 'schedule-cars.index', badgeCount: notifications.schedule_car_count }] : []),
+        ...(isHr || isAdmin ? [{ label: 'List Exit Permit', routeName: 'exit-permit-list.index' }] : []),
+        ...(isRatna || isAdmin ? [{ label: 'Schedule Car', routeName: 'schedule-cars.index', badgeCount: notifications.schedule_car_count }] : []),
         { label: 'Exit Permit', routeName: 'exit-permits.index' },
         ...(isExitPermitApprovalUser ? [{ label: 'Exit Permit Approval', routeName: 'exit-permit-approvals.index', badgeCount: notifications.exit_permit_approval_count }] : []),
-        ...(isSisca ? [{ label: 'Order Meal', routeName: 'order-meals.index' }] : []),
+        ...(isExitPermitHistoryUser ? [{ label: 'Exit Permit History', routeName: 'exit-permit-history.index' }] : []),
+        ...(isSisca || isAdmin ? [{ label: 'Order Meal', routeName: 'order-meals.index' }] : []),
         { label: 'Reimbursement', routeName: 'reimbursements.index' },
         ...(isReimbursementApprovalUser ? [{ label: 'Reimbursement Approval', routeName: 'reimbursement-approvals.index', badgeCount: notifications.reimbursement_approval_count }] : []),
         { label: 'Profile', routeName: 'profile.edit' },

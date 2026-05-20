@@ -3,7 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useEffect } from 'react';
 
-const currencyFormatter = new Intl.NumberFormat('id-ID');
+const currencyFormatter = new Intl.NumberFormat('en-US');
 
 const toTitleCaseWords = (text) => {
     return String(text)
@@ -14,60 +14,82 @@ const toTitleCaseWords = (text) => {
         .join(' ');
 };
 
-const numberToBahasaWords = (value) => {
+const numberToEnglishWords = (value) => {
     const angka = Math.floor(Math.abs(Number(value) || 0));
 
-    const terbilang = (n) => {
-        const words = ['', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan', 'sepuluh', 'sebelas'];
-
-        if (n < 12) {
-            return words[n];
-        }
+    const toWords = (n) => {
+        const ones = [
+            '',
+            'one',
+            'two',
+            'three',
+            'four',
+            'five',
+            'six',
+            'seven',
+            'eight',
+            'nine',
+            'ten',
+            'eleven',
+            'twelve',
+            'thirteen',
+            'fourteen',
+            'fifteen',
+            'sixteen',
+            'seventeen',
+            'eighteen',
+            'nineteen',
+        ];
+        const tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
 
         if (n < 20) {
-            return `${terbilang(n - 10)} belas`;
+            return ones[n];
         }
 
         if (n < 100) {
-            return `${terbilang(Math.floor(n / 10))} puluh ${terbilang(n % 10)}`.trim();
-        }
-
-        if (n < 200) {
-            return `seratus ${terbilang(n - 100)}`.trim();
+            const ten = Math.floor(n / 10);
+            const rest = n % 10;
+            return `${tens[ten]}${rest ? ` ${ones[rest]}` : ''}`.trim();
         }
 
         if (n < 1000) {
-            return `${terbilang(Math.floor(n / 100))} ratus ${terbilang(n % 100)}`.trim();
-        }
-
-        if (n < 2000) {
-            return `seribu ${terbilang(n - 1000)}`.trim();
+            const hundred = Math.floor(n / 100);
+            const rest = n % 100;
+            return `${ones[hundred]} hundred${rest ? ` ${toWords(rest)}` : ''}`.trim();
         }
 
         if (n < 1000000) {
-            return `${terbilang(Math.floor(n / 1000))} ribu ${terbilang(n % 1000)}`.trim();
+            const thousand = Math.floor(n / 1000);
+            const rest = n % 1000;
+            return `${toWords(thousand)} thousand${rest ? ` ${toWords(rest)}` : ''}`.trim();
         }
 
         if (n < 1000000000) {
-            return `${terbilang(Math.floor(n / 1000000))} juta ${terbilang(n % 1000000)}`.trim();
+            const million = Math.floor(n / 1000000);
+            const rest = n % 1000000;
+            return `${toWords(million)} million${rest ? ` ${toWords(rest)}` : ''}`.trim();
         }
 
         if (n < 1000000000000) {
-            return `${terbilang(Math.floor(n / 1000000000))} miliar ${terbilang(n % 1000000000)}`.trim();
+            const billion = Math.floor(n / 1000000000);
+            const rest = n % 1000000000;
+            return `${toWords(billion)} billion${rest ? ` ${toWords(rest)}` : ''}`.trim();
         }
 
         if (n < 1000000000000000) {
-            return `${terbilang(Math.floor(n / 1000000000000))} triliun ${terbilang(n % 1000000000000)}`.trim();
+            const trillion = Math.floor(n / 1000000000000);
+            const rest = n % 1000000000000;
+            return `${toWords(trillion)} trillion${rest ? ` ${toWords(rest)}` : ''}`.trim();
         }
 
-        return 'terlalu besar';
+        return 'too large';
     };
 
     if (angka === 0) {
-        return toTitleCaseWords('nol rupiah');
+        return toTitleCaseWords('zero rupiah');
     }
 
-    return toTitleCaseWords(`${terbilang(angka).replace(/\s+/g, ' ').trim()} rupiah`);
+    return toTitleCaseWords(`${toWords(angka).replace(/\s+/g, ' ').trim()} rupiah`);
 };
 
 const inputClass =
@@ -229,7 +251,7 @@ export default function Edit({
             setData('amount', totalAmount);
         }
 
-        const words = numberToBahasaWords(totalAmount);
+        const words = numberToEnglishWords(totalAmount);
         if ((data.amount_in_words ?? '') !== words) {
             setData('amount_in_words', words);
         }
@@ -238,17 +260,17 @@ export default function Edit({
     const detailRows = [
         { label: 'Exit Permit', value: reimbursement.exit_permit_label },
         { label: 'Status', value: reimbursement.status },
-        { label: 'Tgl Bayar / Payment Date', value: data.request_date || '-' },
-        { label: 'Dibayar Kepada / Paid To', value: data.paid_to || '-' },
-        { label: 'Biaya Order Meal', value: `Rp ${currencyFormatter.format(data.amount_order_meal ?? 0)}` },
-        { label: 'Biaya Bensin', value: `Rp ${currencyFormatter.format(data.amount_fuel ?? 0)}` },
-        { label: 'Biaya Tol', value: `Rp ${currencyFormatter.format(data.amount_toll ?? 0)}` },
-        { label: 'Jumlah / Amount', value: `Rp ${currencyFormatter.format(data.amount ?? 0)}` },
-        { label: 'Terbilang / Stated', value: data.amount_in_words || '-' },
-        { label: 'Cost Center (Departemen)', value: reimbursement.cost_center_name ?? '-' },
-        { label: 'Jenis Biaya / Expense Type', value: data.expense_type || '-' },
-        { label: 'Tujuan / Purpose', value: data.purpose || '-' },
-        { label: 'Catatan Tambahan', value: data.description || '-' },
+        { label: 'Payment Date', value: data.request_date || '-' },
+        { label: 'Paid To', value: data.paid_to || '-' },
+        { label: 'Meal Order Cost', value: `Rp ${currencyFormatter.format(data.amount_order_meal ?? 0)}` },
+        { label: 'Fuel Cost', value: `Rp ${currencyFormatter.format(data.amount_fuel ?? 0)}` },
+        { label: 'Toll Cost', value: `Rp ${currencyFormatter.format(data.amount_toll ?? 0)}` },
+        { label: 'Amount', value: `Rp ${currencyFormatter.format(data.amount ?? 0)}` },
+        { label: 'Amount in Words', value: data.amount_in_words || '-' },
+        { label: 'Cost Center (Department)', value: reimbursement.cost_center_name ?? '-' },
+        { label: 'Expense Type', value: data.expense_type || '-' },
+        { label: 'Purpose', value: data.purpose || '-' },
+        { label: 'Additional Notes', value: data.description || '-' },
     ];
 
     return (
@@ -276,18 +298,18 @@ export default function Edit({
                     {formLocked ? (
                         <>
                             <div className="space-y-3">
-                                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Informasi Reimbursement</p>
+                                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Reimbursement Information</p>
                                 <DetailTable rows={detailRows} />
                             </div>
 
                             <div className="space-y-3">
-                                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Dok Ref / Attachment</p>
+                                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Reference Docs / Attachments</p>
                                 <div className="overflow-x-auto rounded-lg border border-slate-300">
                                     <table className="min-w-full border-collapse text-xs md:text-sm">
                                         <thead className="bg-slate-100 text-slate-700">
                                             <tr>
                                                 <th className="w-16 border border-slate-300 px-3 py-2 text-left font-semibold">No</th>
-                                                <th className="border border-slate-300 px-3 py-2 text-left font-semibold">Dok Ref</th>
+                                                <th className="border border-slate-300 px-3 py-2 text-left font-semibold">Reference Doc</th>
                                                 <th className="border border-slate-300 px-3 py-2 text-left font-semibold">Attachment</th>
                                             </tr>
                                         </thead>
@@ -314,7 +336,7 @@ export default function Edit({
                                             ) : (
                                                 <tr>
                                                     <td className="border border-slate-300 px-3 py-2 text-center text-slate-500" colSpan={3}>
-                                                        Tidak ada dokumen.
+                                                        No documents.
                                                     </td>
                                                 </tr>
                                             )}
@@ -338,7 +360,7 @@ export default function Edit({
 
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div>
-                                    <label htmlFor="request_date" className="text-sm font-semibold text-slate-800">Tgl Bayar / Payment Date</label>
+                                    <label htmlFor="request_date" className="text-sm font-semibold text-slate-800">Payment Date</label>
                                     <input
                                         id="request_date"
                                         type="date"
@@ -352,7 +374,7 @@ export default function Edit({
                                 </div>
 
                                 <div>
-                                    <label htmlFor="paid_to" className="text-sm font-semibold text-slate-800">Dibayar Kepada / Paid To</label>
+                                    <label htmlFor="paid_to" className="text-sm font-semibold text-slate-800">Paid To</label>
                                     <input
                                         id="paid_to"
                                         type="text"
@@ -366,7 +388,7 @@ export default function Edit({
                                 </div>
 
                                 <div>
-                                    <label htmlFor="amount_order_meal" className="text-sm font-semibold text-slate-800">Biaya Order Meal</label>
+                                    <label htmlFor="amount_order_meal" className="text-sm font-semibold text-slate-800">Meal Order Cost</label>
                                     <input
                                         id="amount_order_meal"
                                         type="number"
@@ -381,7 +403,7 @@ export default function Edit({
                                 </div>
 
                                 <div>
-                                    <label htmlFor="amount_fuel" className="text-sm font-semibold text-slate-800">Biaya Bensin</label>
+                                    <label htmlFor="amount_fuel" className="text-sm font-semibold text-slate-800">Fuel Cost</label>
                                     <input
                                         id="amount_fuel"
                                         type="number"
@@ -396,7 +418,7 @@ export default function Edit({
                                 </div>
 
                                 <div>
-                                    <label htmlFor="amount_toll" className="text-sm font-semibold text-slate-800">Biaya Tol</label>
+                                    <label htmlFor="amount_toll" className="text-sm font-semibold text-slate-800">Toll Cost</label>
                                     <input
                                         id="amount_toll"
                                         type="number"
@@ -411,7 +433,7 @@ export default function Edit({
                                 </div>
 
                                 <div>
-                                    <label htmlFor="amount" className="text-sm font-semibold text-slate-800">Jumlah / Amount (Total Otomatis)</label>
+                                    <label htmlFor="amount" className="text-sm font-semibold text-slate-800">Amount (Auto Total)</label>
                                     <input
                                         id="amount"
                                         type="number"
@@ -426,7 +448,7 @@ export default function Edit({
                                 </div>
 
                                 <div>
-                                    <label htmlFor="amount_in_words" className="text-sm font-semibold text-slate-800">Terbilang / Stated</label>
+                                    <label htmlFor="amount_in_words" className="text-sm font-semibold text-slate-800">Amount in Words</label>
                                     <input
                                         id="amount_in_words"
                                         type="text"
@@ -440,7 +462,7 @@ export default function Edit({
                                 </div>
 
                                 <div>
-                                    <label htmlFor="cost_center_name" className="text-sm font-semibold text-slate-800">Cost Center (Departemen)</label>
+                                    <label htmlFor="cost_center_name" className="text-sm font-semibold text-slate-800">Cost Center (Department)</label>
                                     <input
                                         id="cost_center_name"
                                         type="text"
@@ -453,7 +475,7 @@ export default function Edit({
                             </div>
 
                             <div>
-                                <label htmlFor="expense_type" className="text-sm font-semibold text-slate-800">Jenis Biaya / Expense Type</label>
+                                <label htmlFor="expense_type" className="text-sm font-semibold text-slate-800">Expense Type</label>
                                 <input
                                     id="expense_type"
                                     type="text"
@@ -467,7 +489,7 @@ export default function Edit({
                             </div>
 
                             <div>
-                                <label htmlFor="purpose" className="text-sm font-semibold text-slate-800">Tujuan / Purpose</label>
+                                <label htmlFor="purpose" className="text-sm font-semibold text-slate-800">Purpose</label>
                                 <textarea
                                     id="purpose"
                                     rows="3"
@@ -482,7 +504,7 @@ export default function Edit({
 
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between">
-                                    <p className="text-sm font-semibold text-slate-800">Dok Ref / Attachment</p>
+                                    <p className="text-sm font-semibold text-slate-800">Reference Docs / Attachments</p>
                                     {!formLocked && (
                                         <button
                                             type="button"
@@ -497,7 +519,7 @@ export default function Edit({
                                 {(data.documents ?? []).map((doc, index) => (
                                     <div key={`doc-row-${doc.id ?? 'new'}-${index}`} className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 md:grid-cols-[1fr_1fr_auto]">
                                         <div>
-                                            <label htmlFor={`documents-${index}-ref`} className="text-xs font-semibold uppercase tracking-wider text-slate-600">Dok Ref</label>
+                                            <label htmlFor={`documents-${index}-ref`} className="text-xs font-semibold uppercase tracking-wider text-slate-600">Reference Doc</label>
                                             <input
                                                 id={`documents-${index}-ref`}
                                                 type="text"
@@ -538,7 +560,7 @@ export default function Edit({
                                                     disabled={(data.documents ?? []).length <= 1}
                                                     className="rounded-md bg-rose-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-50"
                                                 >
-                                                    Hapus
+                                                        Remove
                                                 </button>
                                             )}
                                         </div>
@@ -549,7 +571,7 @@ export default function Edit({
                             </div>
 
                             <div>
-                                <label htmlFor="description" className="text-sm font-semibold text-slate-800">Catatan Tambahan</label>
+                                <label htmlFor="description" className="text-sm font-semibold text-slate-800">Additional Notes</label>
                                 <textarea
                                     id="description"
                                     rows="4"
@@ -572,7 +594,7 @@ export default function Edit({
                             href={route(backRouteName)}
                             className="rounded-md border border-slate-300 px-4 py-2 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
                         >
-                            Kembali
+                            Back
                         </Link>
 
                         {canUpdateRequest && (

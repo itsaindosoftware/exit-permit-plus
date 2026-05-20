@@ -3,24 +3,24 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 
 const exitTypeLabel = {
-    business_trip: 'Perjalanan Dinas',
-    sick: 'Sakit',
+    business_trip: 'Business Trip',
+    sick: 'Sick',
 };
 
 const monthOptions = [
-    { value: '', label: 'Semua Bulan' },
-    { value: '1', label: 'Januari' },
-    { value: '2', label: 'Februari' },
-    { value: '3', label: 'Maret' },
+    { value: '', label: 'All Months' },
+    { value: '1', label: 'January' },
+    { value: '2', label: 'February' },
+    { value: '3', label: 'March' },
     { value: '4', label: 'April' },
-    { value: '5', label: 'Mei' },
-    { value: '6', label: 'Juni' },
-    { value: '7', label: 'Juli' },
-    { value: '8', label: 'Agustus' },
+    { value: '5', label: 'May' },
+    { value: '6', label: 'June' },
+    { value: '7', label: 'July' },
+    { value: '8', label: 'August' },
     { value: '9', label: 'September' },
-    { value: '10', label: 'Oktober' },
+    { value: '10', label: 'October' },
     { value: '11', label: 'November' },
-    { value: '12', label: 'Desember' },
+    { value: '12', label: 'December' },
 ];
 
 export default function Index({ items, filters, exitTypes = [] }) {
@@ -78,18 +78,18 @@ export default function Index({ items, filters, exitTypes = [] }) {
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-bold leading-tight text-slate-800">
-                    List Exit Permit
+                    Exit Permit List
                 </h2>
             }
         >
-            <Head title="List Exit Permit" />
+            <Head title="Exit Permit List" />
 
             <div className="space-y-6">
                 <div className="rounded-2xl border border-cyan-200 bg-gradient-to-r from-cyan-50 via-white to-slate-50 p-6 shadow-sm">
                     <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">HR Monitoring</p>
-                    <h3 className="mt-2 text-2xl font-black uppercase tracking-wide text-slate-900">Semua Pengajuan Exit Permit</h3>
+                    <h3 className="mt-2 text-2xl font-black uppercase tracking-wide text-slate-900">All Exit Permit Requests</h3>
                     <p className="mt-2 text-sm text-slate-600">
-                        Menampilkan seluruh user beserta requestor yang pernah mengajukan exit permit, termasuk status dan tahap approval terbaru.
+                        Showing all users and requestors who have submitted exit permits, including the latest status and approval stage.
                     </p>
                 </div>
 
@@ -97,12 +97,12 @@ export default function Index({ items, filters, exitTypes = [] }) {
                     <div className="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-cyan-50/40 px-4 py-4">
                         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                             <div>
-                                <p className="text-sm font-semibold text-slate-900">Pencarian Exit Permit</p>
-                                <p className="text-xs text-slate-500">Data terfilter otomatis saat input berubah.</p>
+                                <p className="text-sm font-semibold text-slate-900">Exit Permit Search</p>
+                                <p className="text-xs text-slate-500">Data is filtered automatically as you type.</p>
                             </div>
                             <div className="flex items-center gap-2">
                                 <div className="inline-flex items-center rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700">
-                                    Auto Filter Aktif
+                                    Auto Filter On
                                 </div>
                                 <button
                                     type="button"
@@ -117,27 +117,27 @@ export default function Index({ items, filters, exitTypes = [] }) {
 
                         <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                             <div className="space-y-1">
-                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Pengaju</label>
+                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Submitter</label>
                                 <input
                                     type="text"
                                     value={submitter}
                                     onChange={(e) => setSubmitter(e.target.value)}
-                                    placeholder="Nama pengaju"
+                                    placeholder="Submitter name"
                                     className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700"
                                 />
                             </div>
                             <div className="space-y-1">
-                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Requestor</label>
+                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Requester</label>
                                 <input
                                     type="text"
                                     value={requestor}
                                     onChange={(e) => setRequestor(e.target.value)}
-                                    placeholder="Nama requestor"
+                                    placeholder="Requester name"
                                     className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700"
                                 />
                             </div>
                             <div className="space-y-1">
-                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Tanggal</label>
+                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Date</label>
                                 <input
                                     type="date"
                                     value={permitDate}
@@ -147,7 +147,7 @@ export default function Index({ items, filters, exitTypes = [] }) {
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
-                                    <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Bulan</label>
+                                    <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Month</label>
                                     <select
                                         value={month}
                                         onChange={(e) => setMonth(e.target.value)}
@@ -159,7 +159,7 @@ export default function Index({ items, filters, exitTypes = [] }) {
                                     </select>
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Tahun</label>
+                                    <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Year</label>
                                     <input
                                         type="number"
                                         min="1900"
@@ -172,25 +172,25 @@ export default function Index({ items, filters, exitTypes = [] }) {
                                 </div>
                             </div>
                             <div className="space-y-1">
-                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Jenis</label>
+                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Type</label>
                                 <select
                                     value={exitType}
                                     onChange={(e) => setExitType(e.target.value)}
                                     className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700"
                                 >
-                                    <option value="">Semua Jenis</option>
+                                    <option value="">All Types</option>
                                     {exitTypes.map((type) => (
                                         <option key={type} value={type}>{exitTypeLabel[type] ?? type}</option>
                                     ))}
                                 </select>
                             </div>
                             <div className="space-y-1 xl:col-span-3">
-                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Tujuan</label>
+                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Destination</label>
                                 <input
                                     type="text"
                                     value={destination}
                                     onChange={(e) => setDestination(e.target.value)}
-                                    placeholder="Ketik tujuan perjalanan"
+                                    placeholder="Type destination"
                                     className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700"
                                 />
                             </div>
@@ -202,14 +202,14 @@ export default function Index({ items, filters, exitTypes = [] }) {
                             <thead className="bg-slate-100">
                                 <tr>
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">ID</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">User Pengaju</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Submitter</th>
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Requestor</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Tanggal & Jam</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Jenis</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Tujuan</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Date & Time</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Type</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Destination</th>
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Status</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Tahapan</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Aksi</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Stage</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Action</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
@@ -268,7 +268,7 @@ export default function Index({ items, filters, exitTypes = [] }) {
 
                     {!items.data.length && (
                         <div className="px-6 py-10 text-center text-sm text-slate-500">
-                            Belum ada data exit permit.
+                            No exit permit data yet.
                         </div>
                     )}
 

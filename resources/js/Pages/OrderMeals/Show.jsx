@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 
-const currencyFormatter = new Intl.NumberFormat('id-ID', {
+const currencyFormatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'IDR',
     maximumFractionDigits: 0,
@@ -14,12 +14,17 @@ function translateConversionNotes(text) {
 
     const translatedFromLegacy = String(text).replace(
         /\[AUTO-CONVERT\s+EP#(\d+)\s*-\s*(\d+)\]/g,
-        '[Pengalihan jatah lunch box ke uang reimbursement karyawan EP#$1: -$2 paket]',
+        '[Lunch box allowance converted to reimbursement for employee EP#$1: -$2 packs]',
     );
 
-    return translatedFromLegacy.replace(
+    const translatedFromLegacyLabel = translatedFromLegacy.replace(
         /\[Konversi\s+Lunch\s+Box\s+EP#(\d+):\s*-(\d+)\s*paket\]/g,
-        '[Pengalihan jatah lunch box ke uang reimbursement karyawan EP#$1: -$2 paket]',
+        '[Lunch box allowance converted to reimbursement for employee EP#$1: -$2 packs]',
+    );
+
+    return translatedFromLegacyLabel.replace(
+        /\[Pengalihan\s+jatah\s+lunch\s+box\s+ke\s+uang\s+reimbursement\s+karyawan\s+EP#(\d+):\s*-(\d+)\s*paket\]/g,
+        '[Lunch box allowance converted to reimbursement for employee EP#$1: -$2 packs]',
     );
 }
 
@@ -51,9 +56,9 @@ export default function Show({ mode, orderMeal, exitPermit, indexRouteName, edit
     const readableNotes = translateConversionNotes(orderMeal.notes);
 
     const mainRows = [
-        { label: 'Karyawan', value: orderMeal.employee_name || '-' },
+        { label: 'Employee', value: orderMeal.employee_name || '-' },
         { label: 'Email', value: orderMeal.employee_email || '-' },
-        { label: 'Tanggal Makan', value: orderMeal.meal_date || '-' },
+        { label: 'Meal Date', value: orderMeal.meal_date || '-' },
         { label: 'Menu', value: orderMeal.menu_name || '-' },
         { label: 'Schedule', value: orderMeal.schedule_type || '-' },
         { label: 'Status', value: orderMeal.status || '-' },
@@ -65,12 +70,12 @@ export default function Show({ mode, orderMeal, exitPermit, indexRouteName, edit
                 { label: 'Overtime Night Shift', value: orderMeal.overtime_night_shift_qty ?? 0 },
             ]
             : []),
-        { label: 'Paket Disediakan', value: orderMeal.quantity ?? 0 },
-        { label: 'Realisasi', value: orderMeal.actual_quantity ?? 0 },
-        { label: 'Sisa', value: orderMeal.remaining_quantity ?? 0 },
+        { label: 'Provided Packs', value: orderMeal.quantity ?? 0 },
+        { label: 'Actual', value: orderMeal.actual_quantity ?? 0 },
+        { label: 'Remaining', value: orderMeal.remaining_quantity ?? 0 },
         ...(!isExitPermitMode
             ? [
-                { label: 'Amount / Porsi', value: currencyFormatter.format(orderMeal.meal_unit_price ?? 0) },
+                { label: 'Amount / Portion', value: currencyFormatter.format(orderMeal.meal_unit_price ?? 0) },
                 { label: 'Local Tax', value: `${orderMeal.local_tax_rate ?? 0}%` },
                 { label: 'Service Tax', value: `${orderMeal.service_tax_rate ?? 0}%` },
                 { label: 'Subtotal', value: currencyFormatter.format(orderMeal.subtotal_amount ?? 0) },
@@ -87,8 +92,8 @@ export default function Show({ mode, orderMeal, exitPermit, indexRouteName, edit
             { label: 'Permit Date', value: exitPermit.permit_date || '-' },
             { label: 'Destination', value: exitPermit.destination || '-' },
             { label: 'Attendance Verified', value: exitPermit.attendance_checked_at || '-' },
-            { label: 'Pemohon', value: exitPermit.owner_name || '-' },
-            { label: 'Email Pemohon', value: exitPermit.owner_email || '-' },
+            { label: 'Requester', value: exitPermit.owner_name || '-' },
+            { label: 'Requester Email', value: exitPermit.owner_email || '-' },
         ]
         : [];
 
@@ -104,12 +109,12 @@ export default function Show({ mode, orderMeal, exitPermit, indexRouteName, edit
 
             <div className="space-y-6">
                 <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Informasi Utama</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Main Information</p>
                     <DetailTable rows={mainRows} />
 
                     {readableNotes && (
                         <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
-                            <p className="font-semibold text-slate-900">Catatan</p>
+                            <p className="font-semibold text-slate-900">Notes</p>
                             <p className="mt-1 whitespace-pre-line">{readableNotes}</p>
                         </div>
                     )}
@@ -117,7 +122,7 @@ export default function Show({ mode, orderMeal, exitPermit, indexRouteName, edit
 
                 {isExitPermitMode && exitPermit && (
                     <div className="space-y-3 rounded-2xl border border-cyan-200 bg-cyan-50 p-6 shadow-sm">
-                        <p className="text-sm font-semibold text-cyan-900">Referensi Exit Permit</p>
+                        <p className="text-sm font-semibold text-cyan-900">Exit Permit Reference</p>
                         <DetailTable
                             rows={exitPermitRows}
                             headerClass="bg-cyan-100 text-cyan-900"
@@ -158,7 +163,7 @@ export default function Show({ mode, orderMeal, exitPermit, indexRouteName, edit
                         href={route(indexRouteName)}
                         className="rounded-md border border-slate-300 px-4 py-2 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
                     >
-                        Kembali
+                        Back
                     </Link>
                     <Link
                         href={route(editRouteName, orderMeal.id)}

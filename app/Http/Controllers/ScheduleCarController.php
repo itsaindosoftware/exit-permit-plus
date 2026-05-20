@@ -69,7 +69,7 @@ class ScheduleCarController extends Controller
                 return [
                     'id' => $permit->id,
                     'permit_date' => $date->toDateString(),
-                    'day_name' => $date->locale('id')->translatedFormat('l'),
+                    'day_name' => $date->locale('en')->translatedFormat('l'),
                     'start_time' => $this->toHourMinute($permit->start_time),
                     'end_time' => $this->toHourMinute($permit->end_time),
                     'destination' => $permit->destination,
@@ -177,7 +177,7 @@ class ScheduleCarController extends Controller
 
         $this->logArrangement($exitPermit, $car, $driver, 'create');
 
-        return redirect()->route('schedule-cars.edit', $exitPermit)->with('success', 'Arrange order car berhasil dibuat.');
+        return redirect()->route('schedule-cars.edit', $exitPermit)->with('success', 'Car arrangement created successfully.');
     }
 
     public function edit(ExitPermit $exitPermit): Response
@@ -243,7 +243,7 @@ class ScheduleCarController extends Controller
 
         $this->logArrangement($exitPermit, $car, $driver, 'update');
 
-        return redirect()->route('schedule-cars.edit', $exitPermit)->with('success', 'Arrange order car berhasil diperbarui.');
+        return redirect()->route('schedule-cars.edit', $exitPermit)->with('success', 'Car arrangement updated successfully.');
     }
 
     private function arrangeTargets(bool $onlyUnarranged = false): array
@@ -372,11 +372,11 @@ class ScheduleCarController extends Controller
             ->values();
 
         if ($requestorsAskReduction->isEmpty()) {
-            return 'Tidak ada permintaan pengurangan catering.';
+            return 'No request to reduce catering.';
         }
 
         return sprintf(
-            'Kurangi %d pax untuk: %s',
+            'Reduce %d pax for: %s',
             $requestorsAskReduction->count(),
             $requestorsAskReduction->join(', '),
         );
@@ -437,7 +437,12 @@ class ScheduleCarController extends Controller
 
     private function authorizeRatnaOnly(): void
     {
-        $email = strtolower((string) request()->user()?->email);
+        $user = request()->user();
+        $email = strtolower((string) $user?->email);
+
+        if ($user?->role?->code === 'admin') {
+            return;
+        }
 
         if ($email !== self::RATNA_EMAIL) {
             abort(403);

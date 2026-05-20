@@ -13,7 +13,6 @@ use App\Notifications\ExitPermitApprovalRequested;
 use App\Services\AttendanceMatchingService;
 use App\Services\ExitPermitLunchConversionService;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -429,7 +428,6 @@ class ExitPermitController extends Controller
                 'permit_date' => $this->toDateOnly($exitPermit->permit_date),
                 'start_time' => $this->toHourMinute($exitPermit->start_time),
                 'end_time' => $this->toHourMinute($exitPermit->end_time),
-                'plan_check_in' => $exitPermit->plan_check_in,
                 'destination' => $exitPermit->destination,
                 'exit_type' => $exitPermit->exit_type,
                 'order_car' => (bool) $exitPermit->order_car,
@@ -588,7 +586,6 @@ class ExitPermitController extends Controller
         ]);
     }
 
-    /*
     public function previewAttendance(Request $request, ExitPermit $exitPermit): RedirectResponse
     {
         $this->authorizeUser($exitPermit);
@@ -622,7 +619,6 @@ class ExitPermitController extends Controller
         return redirect()->route('exit-permits.edit', $exitPermit)
             ->with('success', 'Attendance matching preview has been created. Please review before saving verification.');
     }
-    */
 
     public function update(Request $request, ExitPermit $exitPermit): RedirectResponse
     {
@@ -781,98 +777,6 @@ class ExitPermitController extends Controller
                     }
                 }
             }
-
-            if ($roleCode === 'admin') {
-                if ($exitPermit->status !== 'pending') {
-                    throw ValidationException::withMessages([
-                        'status' => 'Approval can only be processed while status is pending.',
-                    ]);
-                }
-
-                if (!$exitPermit->manager_approved_at) {
-                    if (in_array($newStatus, ['approved', 'rejected'], true)) {
-                        $this->fillApprovalData($exitPermit, 'manager');
-
-                        if ($newStatus === 'approved') {
-                            $hrApproverId = $this->resolveHrApproverId();
-
-                            if (!$hrApproverId) {
-                                throw ValidationException::withMessages([
-                                    'status' => 'Tiered HR PIC not found. Please contact the Administrator.',
-                                ]);
-                            }
-
-                            $exitPermit->hr_approver_id = $hrApproverId;
-                            $exitPermit->status = 'pending';
-                            $hrUser = User::query()->find($hrApproverId);
-                            if ($hrUser) {
-                                $hrUser->notify(new ExitPermitApprovalRequested($exitPermit, 'hr_manager'));
-                            }
-
-                            $mds = User::query()
-                                ->whereHas('role', fn($q) => $q->where('code', 'md'))
-                                ->where('is_available_for_approval', true)
-                                ->get();
-
-                            foreach ($mds as $md) {
-                                $md->notify(new ExitPermitApprovalRequested($exitPermit, 'md'));
-                            }
-                        } else {
-                            $exitPermit->status = 'rejected';
-                        }
-                    }
-                } elseif (!$exitPermit->md_approved_at) {
-                    if (in_array($newStatus, ['approved', 'rejected'], true)) {
-                        $this->fillApprovalData($exitPermit, 'md');
-
-                        if ($newStatus === 'approved') {
-                            $hrApproverId = $exitPermit->hr_approver_id ?: $this->resolveHrApproverId();
-
-                            if (!$hrApproverId) {
-                                throw ValidationException::withMessages([
-                                    'status' => 'HR Manager approver not found. Please contact the Administrator.',
-                                ]);
-                            }
-
-                            $exitPermit->hr_approver_id = $hrApproverId;
-                            $exitPermit->status = 'pending';
-                            $exitPermit->hr_verified_by = null;
-                            $exitPermit->hr_verified_at = null;
-                            $exitPermit->attendance_checked_by = null;
-                            $exitPermit->attendance_checked_at = null;
-                            $exitPermit->has_valid_checkin = null;
-                            $exitPermit->post_md_path = null;
-                        } else {
-                            $exitPermit->status = 'rejected';
-                        }
-                    }
-                } elseif (!$exitPermit->hr_verified_at) {
-                    if (in_array($newStatus, ['approved', 'rejected'], true)) {
-                        $exitPermit->hr_verified_by = $user?->id;
-                        $exitPermit->hr_verified_at = now();
-                        $exitPermit->status = $newStatus;
-
-                        if ($newStatus === 'approved') {
-                            $exitPermit->attendance_checked_by = null;
-                            $exitPermit->attendance_checked_at = null;
-                            $exitPermit->has_valid_checkin = null;
-                            $exitPermit->post_md_path = null;
-
-                            $sisca = User::query()
-                                ->where('email', self::ATTENDANCE_VERIFIER_EMAIL)
-                                ->first();
-
-                            if ($sisca) {
-                                $sisca->notify(new ExitPermitApprovalRequested($exitPermit, 'attendance_verifier'));
-                            }
-                        }
-                    }
-                } else {
-                    throw ValidationException::withMessages([
-                        'status' => 'Approval has already been processed for this document.',
-                    ]);
-                }
-            }
         }
 
         if (!$canApprove && !$canArrangeCar && $canVerifyAttendance) {
@@ -1004,7 +908,7 @@ class ExitPermitController extends Controller
 
     private function canApprove($user): bool
     {
-        return in_array($user?->role?->code, ['manager', 'md', 'hr_manager', 'admin'], true);
+        return in_array($user?->role?->code, ['manager', 'md', 'hr_manager'], true);
     }
 
     private function canViewAllData($user): bool
@@ -1014,7 +918,7 @@ class ExitPermitController extends Controller
 
     private function canAccessApprovalMenu($user): bool
     {
-        if (in_array($user?->role?->code, ['manager', 'md', 'hr_manager', 'admin'], true)) {
+        if (in_array($user?->role?->code, ['manager', 'md', 'hr_manager'], true)) {
             return true;
         }
 
@@ -1056,15 +960,6 @@ class ExitPermitController extends Controller
                 && (bool) $exitPermit->md_approved_at
                 && !$exitPermit->hr_verified_at
                 && (!$exitPermit->hr_approver_id || $exitPermit->hr_approver_id === $user?->id);
-        }
-
-        if ($user?->role?->code === 'admin') {
-            return $exitPermit->status === 'pending'
-                && (
-                    !$exitPermit->manager_approved_at
-                    || !$exitPermit->md_approved_at
-                    || !$exitPermit->hr_verified_at
-                );
         }
 
         return false;
@@ -1161,7 +1056,6 @@ class ExitPermitController extends Controller
             'permit_date' => ['required', 'date'],
             'start_time' => ['required', 'date_format:H:i'],
             'end_time' => ['required', 'date_format:H:i', 'after_or_equal:start_time'],
-            'plan_check_in' => ['nullable', 'boolean'],
             'destination' => ['nullable', 'string', 'max:255', 'required_if:exit_type,business_trip,assignment,company'],
             'exit_type' => ['required', Rule::in(ExitPermit::EXIT_TYPES)],
             'requestor_items' => ['required', 'array', 'min:1'],
@@ -1188,8 +1082,6 @@ class ExitPermitController extends Controller
 
         $validated['order_car'] = $request->boolean('order_car');
         $validated['returned_to_office'] = $request->boolean('returned_to_office');
-        $planCheckInInput = $request->input('plan_check_in');
-        $validated['plan_check_in'] = $planCheckInInput === null ? null : $request->boolean('plan_check_in');
 
         if (in_array($validated['exit_type'], [ExitPermit::EXIT_TYPE_SICK, ExitPermit::EXIT_TYPE_PERSONAL], true)) {
             $validated['destination'] = null;
@@ -1220,9 +1112,6 @@ class ExitPermitController extends Controller
 
         $validated['reimbursement_amount'] = 0;
 
-        $startTime = Carbon::createFromFormat('H:i', (string) $validated['start_time']);
-        $eligibleForLunch = $startTime->lte(Carbon::createFromTimeString('13:00'));
-
         $validated['requestor_items'] = collect($validated['requestor_items'] ?? [])
             ->map(fn(array $item, int $index) => [
                 'row_number' => $index + 1,
@@ -1230,7 +1119,9 @@ class ExitPermitController extends Controller
                 'employee_id' => filled($item['employee_id'] ?? null) ? (string) $item['employee_id'] : null,
                 'position' => filled($item['position'] ?? null) ? (string) $item['position'] : null,
                 'department' => filled($item['department'] ?? null) ? (string) $item['department'] : null,
-                'reimburs_lunch_box' => $eligibleForLunch ? 'Y' : 'N',
+                'reimburs_lunch_box' => filled($item['reimburs_lunch_box'] ?? null)
+                    ? strtoupper(trim((string) $item['reimburs_lunch_box']))
+                    : null,
             ])
             ->values()
             ->all();
@@ -1297,12 +1188,10 @@ class ExitPermitController extends Controller
     {
         return CostCenter::query()
             ->orderBy('name')
-            ->get(['id', 'name', 'cost_center_sap', 'desc_cost_c'])
+            ->get(['id', 'name'])
             ->map(fn(CostCenter $costCenter) => [
                 'id' => $costCenter->id,
                 'name' => $costCenter->name,
-                'cost_center_sap' => $costCenter->cost_center_sap,
-                'desc_cost_c' => $costCenter->desc_cost_c,
             ])
             ->values()
             ->all();
@@ -1910,12 +1799,6 @@ class ExitPermitController extends Controller
 
     private function canArrangeCar(ExitPermit $exitPermit, $user): bool
     {
-        if ($user?->role?->code === 'admin') {
-            return $exitPermit->exit_type === ExitPermit::EXIT_TYPE_BUSINESS_TRIP
-                && (bool) $exitPermit->order_car
-                && $exitPermit->status === 'pending';
-        }
-
         return $user?->role?->code === 'hr'
             && strtolower((string) $user?->email) === self::CAR_DRIVER_COORDINATOR_EMAIL
             && $exitPermit->exit_type === ExitPermit::EXIT_TYPE_BUSINESS_TRIP
@@ -1925,13 +1808,6 @@ class ExitPermitController extends Controller
 
     private function canVerifyAttendance(ExitPermit $exitPermit, $user): bool
     {
-        if ($user?->role?->code === 'admin') {
-            return $exitPermit->exit_type === ExitPermit::EXIT_TYPE_BUSINESS_TRIP
-                && $exitPermit->status === 'approved'
-                && (bool) $exitPermit->md_approved_at
-                && (bool) $exitPermit->hr_verified_at;
-        }
-
         return $user?->role?->code === 'hr'
             && strtolower((string) $user?->email) === self::ATTENDANCE_VERIFIER_EMAIL
             && $exitPermit->exit_type === ExitPermit::EXIT_TYPE_BUSINESS_TRIP

@@ -28,14 +28,14 @@ class ExitPermitController extends Controller
 {
     private const CAR_DRIVER_COORDINATOR_EMAIL = 'ratna@example.com';
 
-    private const ATTENDANCE_VERIFIER_EMAIL = 'sisca.dewiyani@example.com';
+    private const ATTENDANCE_VERIFIER_EMAIL = 'payroll.hr@thaisummit.co.id';
 
     private const HR_APPROVER_PRIORITY_EMAILS = [
         'hr.manager@example.com',
         'wida.mustika.sari@example.com',
         'theresia.saing@example.com',
         'ratna@example.com',
-        'sisca.dewiyani@example.com',
+        'payroll.hr@thaisummit.co.id',
     ];
 
     public function __construct(
@@ -739,14 +739,14 @@ class ExitPermitController extends Controller
 
             if ($exitPermit->post_md_path === ExitPermit::POST_MD_PATH_REIMBURSEMENT) {
                 if ($exitPermit->attendance_checked_at && !$exitPermit->has_valid_checkin) {
-                    return 'Approved by HR Manager | Matching Attendance Tidak Match | Jalur Reimbursement';
+                    return 'Approved by HR Manager | Matching Attendance Dont Match | Jalur Reimbursement';
                 }
 
                 return 'Approved by HR Manager | Jalur Reimbursement';
             }
 
             if ($exitPermit->attendance_checked_at && !$exitPermit->has_valid_checkin) {
-                return 'Approved by HR Manager | Matching Attendance Tidak Match';
+                return 'Approved by HR Manager | Matching Attendance Dont Match';
             }
 
             return 'Approved by HR Manager | Sepengetahuan HR Manager (' . $approverName . ')';
@@ -791,7 +791,7 @@ class ExitPermitController extends Controller
             && (bool) $exitPermit->attendance_checked_at
             && !(bool) $exitPermit->has_valid_checkin
         ) {
-            return 'Matching Attendance Tidak Match';
+            return 'Matching Attendance Dont Match';
         }
 
         if (

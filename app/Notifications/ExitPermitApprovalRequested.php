@@ -22,26 +22,26 @@ class ExitPermitApprovalRequested extends Notification
     public function toArray(object $notifiable): array
     {
         $title = 'Exit Permit Approval';
-        $message = 'Ada pengajuan Exit Permit yang membutuhkan tindakan.';
+        $message = 'There is an Exit Permit request that requires action.';
 
         if ($this->stage === 'manager') {
-            $title = 'Menunggu Approval Manager';
-            $message = sprintf('Exit Permit #%d dari %s menunggu approval Manager.', $this->exitPermit->id, $this->exitPermit->user?->name ?? 'Karyawan');
+            $title = 'Manager Approval Pending';
+            $message = sprintf('Exit Permit #%d from %s is awaiting manager approval.', $this->exitPermit->id, $this->exitPermit->user?->name ?? 'Employee');
         }
 
         if ($this->stage === 'md') {
-            $title = 'Menunggu Approval MD';
-            $message = sprintf('Exit Permit #%d telah disetujui Manager dan menunggu approval MD.', $this->exitPermit->id);
+            $title = 'MD Approval Pending';
+            $message = sprintf('Exit Permit #%d was approved by the manager and is awaiting MD approval.', $this->exitPermit->id);
         }
 
         if ($this->stage === 'hr_manager') {
-            $title = 'Menunggu Approval HR Manager';
-            $message = sprintf('Exit Permit #%d telah disetujui MD dan menunggu approval HR Manager (PIC HR).', $this->exitPermit->id);
+            $title = 'HR Manager Approval Pending';
+            $message = sprintf('Exit Permit #%d was approved by the MD and is awaiting HR Manager approval (HR PIC).', $this->exitPermit->id);
         }
 
         if ($this->stage === 'attendance_verifier') {
-            $title = 'Menunggu Verifikasi Absensi (Sisca)';
-            $message = sprintf('Exit Permit #%d perlu verifikasi absensi oleh Sisca.', $this->exitPermit->id);
+            $title = 'Attendance Verification Pending (Sisca)';
+            $message = sprintf('Exit Permit #%d needs attendance verification by Sisca.', $this->exitPermit->id);
         }
 
         return [

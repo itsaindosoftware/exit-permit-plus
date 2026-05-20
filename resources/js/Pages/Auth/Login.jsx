@@ -35,13 +35,13 @@ export default function Login({ status, canResetPassword }) {
                         {/* and Meal System */}
                     </h1>
                     <p className="mt-4 text-sm text-cyan-100/90">
-                        Platform internal perusahaan untuk pengajuan izin keluar, order meal,
-                        serta approval operasional lintas departemen.
+                        Internal corporate platform for exit permit requests, meal orders,
+                        and cross-department operational approvals.
                     </p>
 
                     <div className="mt-8 space-y-3 text-sm text-cyan-50/90">
-                        <p className="rounded-xl border border-white/15 bg-white/5 px-4 py-3">Approval berjenjang Manager, MD, dan HR.</p>
-                        <p className="rounded-xl border border-white/15 bg-white/5 px-4 py-3">Monitoring realtime untuk reimbursement dan lunch pack.</p>
+                        <p className="rounded-xl border border-white/15 bg-white/5 px-4 py-3">Multi-level approvals for Manager, MD, and HR.</p>
+                        <p className="rounded-xl border border-white/15 bg-white/5 px-4 py-3">Real-time monitoring for reimbursements and lunch packs.</p>
                     </div>
                 </div>
 
@@ -49,7 +49,7 @@ export default function Login({ status, canResetPassword }) {
                     <div className="mb-8">
                         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">Secure Access</p>
                         <h2 className="mt-2 text-3xl font-black text-slate-900">Welcome Back</h2>
-                        <p className="mt-2 text-sm text-slate-600">Masuk menggunakan akun perusahaan untuk melanjutkan pekerjaan Anda.</p>
+                        <p className="mt-2 text-sm text-slate-600">Sign in with your corporate account to continue your work.</p>
                     </div>
 
                     {status && (
@@ -60,7 +60,7 @@ export default function Login({ status, canResetPassword }) {
 
                     <form onSubmit={submit} className="space-y-4">
                         <div>
-                            <label htmlFor="nik" className="text-sm font-semibold text-slate-700">NIK</label>
+                            <label htmlFor="nik" className="text-sm font-semibold text-slate-700">Employee ID</label>
                             <TextInput
                                 id="nik"
                                 type="text"
@@ -70,7 +70,7 @@ export default function Login({ status, canResetPassword }) {
                                 autoComplete="username"
                                 isFocused={true}
                                 onChange={(e) => setData('nik', e.target.value)}
-                                placeholder="Masukkan NIK"
+                                placeholder="Enter employee ID"
                             />
                             <InputError message={errors.nik} className="mt-2" />
                         </div>
@@ -85,7 +85,7 @@ export default function Login({ status, canResetPassword }) {
                                 className="mt-1 block w-full rounded-xl border-slate-300 px-4 py-3 text-slate-900 shadow-sm focus:border-cyan-600 focus:ring-cyan-600"
                                 autoComplete="current-password"
                                 onChange={(e) => setData('password', e.target.value)}
-                                placeholder="Masukkan password"
+                                placeholder="Enter password"
                             />
                             <InputError message={errors.password} className="mt-2" />
                         </div>

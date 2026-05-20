@@ -12,7 +12,7 @@ class ImportAttendanceFromSharingCommand extends Command
 {
     protected $signature = 'attendance:import-sharing {--date=} {--dry-run}';
 
-    protected $description = 'Auto import attendance harian dari folder sharing untuk exit permit company yang sudah approved MD';
+    protected $description = 'Auto import daily attendance from the sharing folder for company exit permits approved by MD';
 
     public function handle(
         AttendanceMatchingService $attendanceMatchingService,
@@ -32,7 +32,7 @@ class ImportAttendanceFromSharingCommand extends Command
             ->get();
 
         if ($permits->isEmpty()) {
-            $this->info('Tidak ada exit permit eligible untuk tanggal ' . $targetDate . '.');
+            $this->info('No eligible exit permits for date ' . $targetDate . '.');
             return self::SUCCESS;
         }
 
@@ -100,7 +100,7 @@ class ImportAttendanceFromSharingCommand extends Command
             $applied++;
         }
 
-        $this->info(($dryRun ? 'Dry-run selesai. ' : 'Import selesai. ') . 'Total permit diproses: ' . $applied);
+        $this->info(($dryRun ? 'Dry run completed. ' : 'Import completed. ') . 'Total permits processed: ' . $applied);
 
         return self::SUCCESS;
     }

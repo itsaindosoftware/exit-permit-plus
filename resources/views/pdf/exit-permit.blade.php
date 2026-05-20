@@ -254,7 +254,7 @@
                             <th style="width: 17%;">EMPLOYEE ID NO.</th>
                             <th style="width: 16%;">POSITION</th>
                             <th style="width: 14%;">DEPARTMENT</th>
-                            <th style="width: 21%;">REIMBURS LUNCH BOX ( Y/N )</th>
+                            <th style="width: 21%;">LUNCH BOX REIMBURSEMENT (Y/N)</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -277,7 +277,7 @@
             <td class="code-col">1.2</td>
             <td>
                 <div class="line-row">
-                    Request permit date
+                    Permit date
                     <span class="dot-line w-80 center">{{ $permitDate }}</span>
                     &nbsp;&nbsp;Reason :
                     <span class="dot-line w-300">{{ $exitPermit->reason }}</span>
@@ -289,28 +289,28 @@
                 </div>
                 <div class="line-row" style="margin-top: 2px;">
                     <span class="checkbox"><span class="mini-box">{{ $isCompany ? 'x' : '' }}</span>Company :</span>
-                    <span class="checkbox"><span class="mini-box">{{ $isAssignment ? 'x' : '' }}</span>Assingement,</span>
+                    <span class="checkbox"><span class="mini-box">{{ $isAssignment ? 'x' : '' }}</span>Assignment,</span>
                     Destination : <span class="dot-line w-200">{{ $exitPermit->destination }}</span>
                     <span style="font-size: 10px;">* (Please attach related document) (Invitation,Email)</span>
                 </div>
                 <div class="line-row" style="margin-top: 2px;">
-                    Exit from factory on time <span class="line w-90 center">{{ $exitPermit->start_time ? substr((string) $exitPermit->start_time, 0, 5) : '' }}</span>
-                    &nbsp;&nbsp;Plan back time <span class="line w-90 center">{{ $exitPermit->end_time ? substr((string) $exitPermit->end_time, 0, 5) : '' }}</span>
+                    Exit from factory at <span class="line w-90 center">{{ $exitPermit->start_time ? substr((string) $exitPermit->start_time, 0, 5) : '' }}</span>
+                    &nbsp;&nbsp;Planned return time <span class="line w-90 center">{{ $exitPermit->end_time ? substr((string) $exitPermit->end_time, 0, 5) : '' }}</span>
                 </div>
             </td>
         </tr>
         <tr>
             <td class="code-col">1.3</td>
             <td>
-                Detail the reasons <span class="line w-360">{{ $exitPermit->reason }}</span>
+                Reason details <span class="line w-360">{{ $exitPermit->reason }}</span>
             </td>
         </tr>
         <tr>
             <td class="code-col">1.4</td>
             <td>
-                No. Police Car <span class="line w-100">{{ $exitPermit->vehicle_plate }}</span>
+                License Plate <span class="line w-100">{{ $exitPermit->vehicle_plate }}</span>
                 <span style="display: inline-block; width: 40px;"></span>
-                Requestor <span class="line w-130"></span>
+                Requester <span class="line w-130"></span>
                 Name <span class="line w-150">{{ $exitPermit->user?->name }}</span>
                 <span style="display: inline-block; width: 20px;"></span>
                 Date <span class="line w-90">{{ $requestDate }}</span>
@@ -336,12 +336,12 @@
         </tr>
         <tr>
             <td colspan="2" class="note-row">
-                PLEASE FILL IN PROPERLY, THIS DOCUMENT IS ATTACHMENT FOR GASOLINE, TOL, PARKING &amp; LUNCH REIMBURSMENT
+                PLEASE FILL IN PROPERLY, THIS DOCUMENT IS AN ATTACHMENT FOR GASOLINE, TOLL, PARKING &amp; LUNCH REIMBURSEMENT
             </td>
         </tr>
         <tr>
             <td class="code-col">2</td>
-            <td class="section-head">Special Fulfil by Security</td>
+            <td class="section-head">Special Fulfillment by Security</td>
         </tr>
         <tr>
             <td class="code-col">2.1</td>
@@ -354,7 +354,7 @@
         <tr>
             <td class="code-col">2.2</td>
             <td>
-                Comeback to factory time <span class="line w-90"></span>
+                Return to factory time <span class="line w-90"></span>
                 <span style="display: inline-block; width: 122px;"></span>
                 Name <span class="line w-90"></span> (Security)
             </td>

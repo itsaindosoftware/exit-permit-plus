@@ -54,18 +54,18 @@ export default function Edit({ scheduleItem, carOptions = [], driverOptions = []
                         Exit Permit #{scheduleItem.id} | {scheduleItem.permit_date} | {scheduleItem.start_time ?? '-'}-{scheduleItem.end_time ?? '-'} | {scheduleItem.destination}
                     </p>
                     <p className="mt-1 text-sm text-indigo-900">
-                        Cost Center (Departemen): {scheduleItem.cost_center_name || '-'}
+                        Cost Center (Department): {scheduleItem.cost_center_name || '-'}
                     </p>
                 </div>
 
                 <form onSubmit={submit} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
                     <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-4">
-                        <p className="text-xs font-semibold uppercase tracking-wider text-cyan-700">Format Arrange Car (Ratna)</p>
-                        <p className="mt-1 text-xs text-cyan-700">Data ini bisa diedit manual oleh Ratna jika terdapat kekeliruan.</p>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-cyan-700">Arrange Car Template (Ratna)</p>
+                        <p className="mt-1 text-xs text-cyan-700">This data can be edited manually by Ratna if there are mistakes.</p>
 
                         <div className="mt-3 grid gap-4 md:grid-cols-2">
                             <div>
-                                <label htmlFor="arrange_tanggal_dinas_luar" className="text-sm font-semibold text-slate-800">Tanggal Dinas Luar</label>
+                                <label htmlFor="arrange_tanggal_dinas_luar" className="text-sm font-semibold text-slate-800">Out-of-Office Date</label>
                                 <input
                                     id="arrange_tanggal_dinas_luar"
                                     type="text"
@@ -77,7 +77,7 @@ export default function Edit({ scheduleItem, carOptions = [], driverOptions = []
                             </div>
 
                             <div>
-                                <label htmlFor="arrange_estimasi_jam" className="text-sm font-semibold text-slate-800">Estimasi Jam berangkat &amp; Pulang</label>
+                                <label htmlFor="arrange_estimasi_jam" className="text-sm font-semibold text-slate-800">Estimated Departure &amp; Return Time</label>
                                 <input
                                     id="arrange_estimasi_jam"
                                     type="text"
@@ -89,7 +89,7 @@ export default function Edit({ scheduleItem, carOptions = [], driverOptions = []
                             </div>
 
                             <div>
-                                <label htmlFor="arrange_nama_pt_tujuan" className="text-sm font-semibold text-slate-800">Nama PT Tujuan</label>
+                                <label htmlFor="arrange_nama_pt_tujuan" className="text-sm font-semibold text-slate-800">Destination Company Name</label>
                                 <input
                                     id="arrange_nama_pt_tujuan"
                                     type="text"
@@ -101,7 +101,7 @@ export default function Edit({ scheduleItem, carOptions = [], driverOptions = []
                             </div>
 
                             <div>
-                                <label htmlFor="arrange_lokasi_pt_tujuan" className="text-sm font-semibold text-slate-800">Lokasi PT Tujuan</label>
+                                <label htmlFor="arrange_lokasi_pt_tujuan" className="text-sm font-semibold text-slate-800">Destination Location</label>
                                 <input
                                     id="arrange_lokasi_pt_tujuan"
                                     type="text"
@@ -115,7 +115,7 @@ export default function Edit({ scheduleItem, carOptions = [], driverOptions = []
 
                         <div className="mt-4 space-y-4">
                             <div>
-                                <label htmlFor="arrange_user_yang_pergi" className="text-sm font-semibold text-slate-800">User yang pergi</label>
+                                <label htmlFor="arrange_user_yang_pergi" className="text-sm font-semibold text-slate-800">Traveling User(s)</label>
                                 <input
                                     id="arrange_user_yang_pergi"
                                     type="text"
@@ -139,7 +139,7 @@ export default function Edit({ scheduleItem, carOptions = [], driverOptions = []
                             </div>
 
                             <div>
-                                <label htmlFor="arrange_alasan_pergi" className="text-sm font-semibold text-slate-800">Alasan Pergi (Meeting / Delivery) dengan detail reason</label>
+                                <label htmlFor="arrange_alasan_pergi" className="text-sm font-semibold text-slate-800">Reason for Trip (Meeting / Delivery) with details</label>
                                 <textarea
                                     id="arrange_alasan_pergi"
                                     rows="3"
@@ -151,7 +151,7 @@ export default function Edit({ scheduleItem, carOptions = [], driverOptions = []
                             </div>
 
                             <div>
-                                <label htmlFor="arrange_detail_barang_delivery" className="text-sm font-semibold text-slate-800">Detail Barang Yang Dibawa jika Delivery (Part / Tooling)</label>
+                                <label htmlFor="arrange_detail_barang_delivery" className="text-sm font-semibold text-slate-800">Delivery Item Details (Part / Tooling)</label>
                                 <textarea
                                     id="arrange_detail_barang_delivery"
                                     rows="3"
@@ -163,7 +163,7 @@ export default function Edit({ scheduleItem, carOptions = [], driverOptions = []
                             </div>
 
                             <div>
-                                <label htmlFor="arrange_permintaan_kurangi_catering" className="text-sm font-semibold text-slate-800">Permintaan untuk kurangin order catering</label>
+                                <label htmlFor="arrange_permintaan_kurangi_catering" className="text-sm font-semibold text-slate-800">Request to reduce catering order</label>
                                 <textarea
                                     id="arrange_permintaan_kurangi_catering"
                                     rows="3"
@@ -178,7 +178,7 @@ export default function Edit({ scheduleItem, carOptions = [], driverOptions = []
 
                     <div className="grid gap-4 md:grid-cols-2">
                         <div>
-                            <label htmlFor="car_id" className="text-sm font-semibold text-slate-800">No Police Car</label>
+                            <label htmlFor="car_id" className="text-sm font-semibold text-slate-800">License Plate</label>
                             <select
                                 id="car_id"
                                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -186,7 +186,7 @@ export default function Edit({ scheduleItem, carOptions = [], driverOptions = []
                                 onChange={(e) => setData('car_id', e.target.value ? Number(e.target.value) : '')}
                                 required
                             >
-                                <option value="">Pilih Mobil</option>
+                                <option value="">Select Car</option>
                                 {carOptions.map((car) => (
                                     <option key={car.id} value={car.id}>{car.police_no} - {car.spesification}</option>
                                 ))}
@@ -195,7 +195,7 @@ export default function Edit({ scheduleItem, carOptions = [], driverOptions = []
                         </div>
 
                         <div>
-                            <label htmlFor="driver_id" className="text-sm font-semibold text-slate-800">Supir</label>
+                            <label htmlFor="driver_id" className="text-sm font-semibold text-slate-800">Driver</label>
                             <select
                                 id="driver_id"
                                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -203,7 +203,7 @@ export default function Edit({ scheduleItem, carOptions = [], driverOptions = []
                                 onChange={(e) => setData('driver_id', e.target.value ? Number(e.target.value) : '')}
                                 required
                             >
-                                <option value="">Pilih Supir</option>
+                                <option value="">Select Driver</option>
                                 {driverOptions.map((driver) => (
                                     <option key={driver.id} value={driver.id}>{driver.name}</option>
                                 ))}
@@ -214,28 +214,28 @@ export default function Edit({ scheduleItem, carOptions = [], driverOptions = []
 
                     <div className="flex justify-end gap-2">
                         <Link href={route('schedule-cars.index')} className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">
-                            Kembali
+                            Back
                         </Link>
                         <button type="submit" disabled={processing} className="rounded-md bg-indigo-700 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-600 disabled:opacity-60">
-                            Update Arrange
+                            Update Arrangement
                         </button>
                     </div>
                 </form>
 
                 <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-700">Audit Trail Arrange</h3>
+                    <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-700">Arrangement Audit Trail</h3>
                     {history.length === 0 ? (
-                        <p className="mt-2 text-sm text-slate-500">Belum ada histori arrange.</p>
+                        <p className="mt-2 text-sm text-slate-500">No arrangement history yet.</p>
                     ) : (
                         <div className="mt-3 overflow-x-auto">
                             <table className="min-w-full border-collapse text-sm">
                                 <thead>
                                     <tr className="bg-slate-100 text-slate-700">
-                                        <th className="border border-slate-200 px-3 py-2 text-left">Waktu</th>
-                                        <th className="border border-slate-200 px-3 py-2 text-left">Oleh</th>
-                                        <th className="border border-slate-200 px-3 py-2 text-left">Aksi</th>
+                                        <th className="border border-slate-200 px-3 py-2 text-left">Time</th>
+                                        <th className="border border-slate-200 px-3 py-2 text-left">By</th>
+                                        <th className="border border-slate-200 px-3 py-2 text-left">Action</th>
                                         <th className="border border-slate-200 px-3 py-2 text-left">No Police</th>
-                                        <th className="border border-slate-200 px-3 py-2 text-left">Supir</th>
+                                        <th className="border border-slate-200 px-3 py-2 text-left">Driver</th>
                                     </tr>
                                 </thead>
                                 <tbody>

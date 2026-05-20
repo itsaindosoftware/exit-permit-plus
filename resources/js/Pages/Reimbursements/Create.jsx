@@ -3,7 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useEffect } from 'react';
 
-const currencyFormatter = new Intl.NumberFormat('id-ID');
+const currencyFormatter = new Intl.NumberFormat('en-US');
 
 const toTitleCaseWords = (text) => {
     return String(text)
@@ -14,60 +14,82 @@ const toTitleCaseWords = (text) => {
         .join(' ');
 };
 
-const numberToBahasaWords = (value) => {
+const numberToEnglishWords = (value) => {
     const angka = Math.floor(Math.abs(Number(value) || 0));
 
-    const terbilang = (n) => {
-        const words = ['', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan', 'sepuluh', 'sebelas'];
-
-        if (n < 12) {
-            return words[n];
-        }
+    const toWords = (n) => {
+        const ones = [
+            '',
+            'one',
+            'two',
+            'three',
+            'four',
+            'five',
+            'six',
+            'seven',
+            'eight',
+            'nine',
+            'ten',
+            'eleven',
+            'twelve',
+            'thirteen',
+            'fourteen',
+            'fifteen',
+            'sixteen',
+            'seventeen',
+            'eighteen',
+            'nineteen',
+        ];
+        const tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
 
         if (n < 20) {
-            return `${terbilang(n - 10)} belas`;
+            return ones[n];
         }
 
         if (n < 100) {
-            return `${terbilang(Math.floor(n / 10))} puluh ${terbilang(n % 10)}`.trim();
-        }
-
-        if (n < 200) {
-            return `seratus ${terbilang(n - 100)}`.trim();
+            const ten = Math.floor(n / 10);
+            const rest = n % 10;
+            return `${tens[ten]}${rest ? ` ${ones[rest]}` : ''}`.trim();
         }
 
         if (n < 1000) {
-            return `${terbilang(Math.floor(n / 100))} ratus ${terbilang(n % 100)}`.trim();
-        }
-
-        if (n < 2000) {
-            return `seribu ${terbilang(n - 1000)}`.trim();
+            const hundred = Math.floor(n / 100);
+            const rest = n % 100;
+            return `${ones[hundred]} hundred${rest ? ` ${toWords(rest)}` : ''}`.trim();
         }
 
         if (n < 1000000) {
-            return `${terbilang(Math.floor(n / 1000))} ribu ${terbilang(n % 1000)}`.trim();
+            const thousand = Math.floor(n / 1000);
+            const rest = n % 1000;
+            return `${toWords(thousand)} thousand${rest ? ` ${toWords(rest)}` : ''}`.trim();
         }
 
         if (n < 1000000000) {
-            return `${terbilang(Math.floor(n / 1000000))} juta ${terbilang(n % 1000000)}`.trim();
+            const million = Math.floor(n / 1000000);
+            const rest = n % 1000000;
+            return `${toWords(million)} million${rest ? ` ${toWords(rest)}` : ''}`.trim();
         }
 
         if (n < 1000000000000) {
-            return `${terbilang(Math.floor(n / 1000000000))} miliar ${terbilang(n % 1000000000)}`.trim();
+            const billion = Math.floor(n / 1000000000);
+            const rest = n % 1000000000;
+            return `${toWords(billion)} billion${rest ? ` ${toWords(rest)}` : ''}`.trim();
         }
 
         if (n < 1000000000000000) {
-            return `${terbilang(Math.floor(n / 1000000000000))} triliun ${terbilang(n % 1000000000000)}`.trim();
+            const trillion = Math.floor(n / 1000000000000);
+            const rest = n % 1000000000000;
+            return `${toWords(trillion)} trillion${rest ? ` ${toWords(rest)}` : ''}`.trim();
         }
 
-        return 'terlalu besar';
+        return 'too large';
     };
 
     if (angka === 0) {
-        return toTitleCaseWords('nol rupiah');
+        return toTitleCaseWords('zero rupiah');
     }
 
-    return toTitleCaseWords(`${terbilang(angka).replace(/\s+/g, ' ').trim()} rupiah`);
+    return toTitleCaseWords(`${toWords(angka).replace(/\s+/g, ' ').trim()} rupiah`);
 };
 
 const inputClass =
@@ -90,7 +112,7 @@ export default function Create({ eligibleExitPermits, formSource = 'internal' })
         amount_fuel: Number(selectedPermit?.amount_fuel_default ?? 0),
         amount_toll: Number(selectedPermit?.amount_toll_default ?? 0),
         amount_in_words: '',
-        expense_type: selectedPermit?.expense_type_default ?? (isFromExitPermit ? '' : 'Pengajuan Barang ITSA'),
+        expense_type: selectedPermit?.expense_type_default ?? (isFromExitPermit ? '' : 'ITSA Goods Request'),
         purpose: selectedPermit?.purpose_default ?? '',
         ref_document: selectedPermit?.ref_document_default ?? '',
         documents: [
@@ -141,7 +163,7 @@ export default function Create({ eligibleExitPermits, formSource = 'internal' })
             setData('amount', totalAmount);
         }
 
-        const words = numberToBahasaWords(totalAmount);
+        const words = numberToEnglishWords(totalAmount);
         if ((data.amount_in_words ?? '') !== words) {
             setData('amount_in_words', words);
         }
@@ -208,14 +230,14 @@ export default function Create({ eligibleExitPermits, formSource = 'internal' })
                     <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">Reimbursement Form</p>
                     <p className="mt-2 text-sm text-slate-700">
                         {isFromExitPermit
-                            ? 'Pilih Exit Permit berstatus Checked By HR: Sisca untuk memproses reimbursement dari alur Exit Permit.'
-                            : 'Gunakan form ini untuk pengajuan reimbursement internal barang/keperluan ITSA di luar alur Exit Permit.'}
+                            ? 'Select an Exit Permit with status Checked By HR: Sisca to process reimbursement from the Exit Permit flow.'
+                            : 'Use this form for internal reimbursement requests for ITSA items/needs outside the Exit Permit flow.'}
                     </p>
                 </div>
 
                 {isFromExitPermit && !eligibleExitPermits?.length && (
                     <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                        Tidak ada Exit Permit yang memenuhi syarat reimbursement saat ini.
+                        No Exit Permit currently qualifies for reimbursement.
                     </div>
                 )}
 
@@ -225,11 +247,11 @@ export default function Create({ eligibleExitPermits, formSource = 'internal' })
                 >
                     {isFromExitPermit && activePermit && (
                         <div className="rounded-xl border border-cyan-200 bg-cyan-50 p-4 text-sm text-cyan-900">
-                            <p className="font-semibold">Draft Konversi Lunch Box</p>
+                            <p className="font-semibold">Lunch Box Conversion Draft</p>
                             <p className="mt-1">
-                                Requestor Y: <span className="font-semibold">{activePermit.requestor_count ?? 0}</span> orang,
-                                Nominal satuan: <span className="font-semibold">Rp {currencyFormatter.format(activePermit.unit_amount ?? 0)}</span>,
-                                Total usulan: <span className="font-semibold">Rp {currencyFormatter.format(activePermit.suggested_amount ?? 0)}</span>.
+                                Requestor Y: <span className="font-semibold">{activePermit.requestor_count ?? 0}</span> people,
+                                Unit amount: <span className="font-semibold">Rp {currencyFormatter.format(activePermit.unit_amount ?? 0)}</span>,
+                                Suggested total: <span className="font-semibold">Rp {currencyFormatter.format(activePermit.suggested_amount ?? 0)}</span>.
                             </p>
                         </div>
                     )}
@@ -257,7 +279,7 @@ export default function Create({ eligibleExitPermits, formSource = 'internal' })
                         <>
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div>
-                                    <label htmlFor="request_date" className="text-sm font-semibold text-slate-800">Tgl Bayar / Payment Date</label>
+                                    <label htmlFor="request_date" className="text-sm font-semibold text-slate-800">Payment Date</label>
                                     <input
                                         id="request_date"
                                         type="date"
@@ -270,7 +292,7 @@ export default function Create({ eligibleExitPermits, formSource = 'internal' })
                                 </div>
 
                                 <div>
-                                    <label htmlFor="paid_to" className="text-sm font-semibold text-slate-800">Dibayar Kepada / Paid To</label>
+                                    <label htmlFor="paid_to" className="text-sm font-semibold text-slate-800">Paid To</label>
                                     <input
                                         id="paid_to"
                                         type="text"
@@ -283,7 +305,7 @@ export default function Create({ eligibleExitPermits, formSource = 'internal' })
                                 </div>
 
                                 <div>
-                                    <label htmlFor="amount_order_meal" className="text-sm font-semibold text-slate-800">Biaya Order Meal</label>
+                                    <label htmlFor="amount_order_meal" className="text-sm font-semibold text-slate-800">Meal Order Cost</label>
                                     <input
                                         id="amount_order_meal"
                                         type="number"
@@ -297,7 +319,7 @@ export default function Create({ eligibleExitPermits, formSource = 'internal' })
                                 </div>
 
                                 <div>
-                                    <label htmlFor="amount_fuel" className="text-sm font-semibold text-slate-800">Biaya Bensin</label>
+                                    <label htmlFor="amount_fuel" className="text-sm font-semibold text-slate-800">Fuel Cost</label>
                                     <input
                                         id="amount_fuel"
                                         type="number"
@@ -311,7 +333,7 @@ export default function Create({ eligibleExitPermits, formSource = 'internal' })
                                 </div>
 
                                 <div>
-                                    <label htmlFor="amount_toll" className="text-sm font-semibold text-slate-800">Biaya Tol</label>
+                                    <label htmlFor="amount_toll" className="text-sm font-semibold text-slate-800">Toll Cost</label>
                                     <input
                                         id="amount_toll"
                                         type="number"
@@ -325,7 +347,7 @@ export default function Create({ eligibleExitPermits, formSource = 'internal' })
                                 </div>
 
                                 <div>
-                                    <label htmlFor="amount" className="text-sm font-semibold text-slate-800">Jumlah / Amount (Total Otomatis)</label>
+                                    <label htmlFor="amount" className="text-sm font-semibold text-slate-800">Amount (Auto Total)</label>
                                     <input
                                         id="amount"
                                         type="number"
@@ -340,7 +362,7 @@ export default function Create({ eligibleExitPermits, formSource = 'internal' })
                                 </div>
 
                                 <div>
-                                    <label htmlFor="amount_in_words" className="text-sm font-semibold text-slate-800">Terbilang / Stated</label>
+                                    <label htmlFor="amount_in_words" className="text-sm font-semibold text-slate-800">Amount in Words</label>
                                     <input
                                         id="amount_in_words"
                                         type="text"
@@ -354,7 +376,7 @@ export default function Create({ eligibleExitPermits, formSource = 'internal' })
                                 </div>
 
                                 <div>
-                                    <label htmlFor="cost_center_name" className="text-sm font-semibold text-slate-800">Cost Center (Departemen)</label>
+                                    <label htmlFor="cost_center_name" className="text-sm font-semibold text-slate-800">Cost Center (Department)</label>
                                     <input
                                         id="cost_center_name"
                                         type="text"
@@ -367,7 +389,7 @@ export default function Create({ eligibleExitPermits, formSource = 'internal' })
                             </div>
 
                             <div>
-                                <label htmlFor="expense_type" className="text-sm font-semibold text-slate-800">Jenis Biaya / Expense Type</label>
+                                <label htmlFor="expense_type" className="text-sm font-semibold text-slate-800">Expense Type</label>
                                 <input
                                     id="expense_type"
                                     type="text"
@@ -380,7 +402,7 @@ export default function Create({ eligibleExitPermits, formSource = 'internal' })
                             </div>
 
                             <div>
-                                <label htmlFor="purpose" className="text-sm font-semibold text-slate-800">Tujuan / Purpose</label>
+                                <label htmlFor="purpose" className="text-sm font-semibold text-slate-800">Purpose</label>
                                 <textarea
                                     id="purpose"
                                     rows="3"
@@ -394,20 +416,20 @@ export default function Create({ eligibleExitPermits, formSource = 'internal' })
 
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between">
-                                    <p className="text-sm font-semibold text-slate-800">Dok Ref / Attachment</p>
+                                    <p className="text-sm font-semibold text-slate-800">Reference Docs / Attachments</p>
                                     <button
                                         type="button"
                                         onClick={addDocumentRow}
                                         className="rounded-md border border-cyan-300 bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-800 transition hover:bg-cyan-100"
                                     >
-                                        + Tambah Baris
+                                        + Add Row
                                     </button>
                                 </div>
 
                                 {(data.documents ?? []).map((doc, index) => (
                                     <div key={`doc-row-${index}`} className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 md:grid-cols-[1fr_1fr_auto]">
                                         <div>
-                                            <label htmlFor={`documents-${index}-ref`} className="text-xs font-semibold uppercase tracking-wider text-slate-600">Dok Ref</label>
+                                            <label htmlFor={`documents-${index}-ref`} className="text-xs font-semibold uppercase tracking-wider text-slate-600">Reference Doc</label>
                                             <input
                                                 id={`documents-${index}-ref`}
                                                 type="text"
@@ -437,7 +459,7 @@ export default function Create({ eligibleExitPermits, formSource = 'internal' })
                                                 disabled={(data.documents ?? []).length <= 1}
                                                 className="rounded-md bg-rose-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-50"
                                             >
-                                                Hapus
+                                                Remove
                                             </button>
                                         </div>
                                     </div>
@@ -447,7 +469,7 @@ export default function Create({ eligibleExitPermits, formSource = 'internal' })
                             </div>
 
                             <div>
-                                <label htmlFor="description" className="text-sm font-semibold text-slate-800">Catatan Tambahan</label>
+                                <label htmlFor="description" className="text-sm font-semibold text-slate-800">Additional Notes</label>
                                 <textarea
                                     id="description"
                                     rows="4"
@@ -462,7 +484,7 @@ export default function Create({ eligibleExitPermits, formSource = 'internal' })
                         <>
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div>
-                                    <label htmlFor="amount_order_meal" className="text-sm font-semibold text-slate-800">Biaya Pengajuan</label>
+                                    <label htmlFor="amount_order_meal" className="text-sm font-semibold text-slate-800">Request Amount</label>
                                     <input
                                         id="amount_order_meal"
                                         type="number"
@@ -481,7 +503,7 @@ export default function Create({ eligibleExitPermits, formSource = 'internal' })
                                 </div>
 
                                 <div>
-                                    <label htmlFor="purpose" className="text-sm font-semibold text-slate-800">Item yang Ingin Diajukan</label>
+                                    <label htmlFor="purpose" className="text-sm font-semibold text-slate-800">Requested Item</label>
                                     <input
                                         id="purpose"
                                         type="text"
@@ -494,7 +516,7 @@ export default function Create({ eligibleExitPermits, formSource = 'internal' })
                                 </div>
 
                                 <div className="md:col-span-2">
-                                    <label htmlFor="attachment_file" className="text-sm font-semibold text-slate-800">Attachment Struk Pembayaran</label>
+                                    <label htmlFor="attachment_file" className="text-sm font-semibold text-slate-800">Payment Receipt Attachment</label>
                                     <input
                                         id="attachment_file"
                                         type="file"
@@ -514,14 +536,14 @@ export default function Create({ eligibleExitPermits, formSource = 'internal' })
                             href={route('reimbursements.index')}
                             className="rounded-md border border-slate-300 px-4 py-2 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
                         >
-                            Kembali
+                            Back
                         </Link>
                         <button
                             type="submit"
                             disabled={processing || (isFromExitPermit && !eligibleExitPermits?.length)}
                             className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                            {isFromExitPermit ? 'Submit From Exit Permit' : 'Submit Create New'}
+                            {isFromExitPermit ? 'Submit from Exit Permit' : 'Submit New Request'}
                         </button>
                     </div>
                 </form>

@@ -15,7 +15,7 @@ class AttendanceController extends Controller
         $todayAttendance = $this->todayAttendance($user->id);
 
         return response()->json([
-            'message' => 'Data dashboard berhasil diambil.',
+            'message' => 'Dashboard data retrieved successfully.',
             'data' => [
                 'user' => [
                     'id' => $user->id,
@@ -64,7 +64,7 @@ class AttendanceController extends Controller
 
         if ($attendance?->check_in_at) {
             return response()->json([
-                'message' => 'Absen masuk hari ini sudah tercatat.',
+                'message' => 'Check-in for today has already been recorded.',
             ], 422);
         }
 
@@ -86,7 +86,7 @@ class AttendanceController extends Controller
         $attendance->save();
 
         return response()->json([
-            'message' => 'Absen masuk berhasil.',
+            'message' => 'Check-in successful.',
             'data' => [
                 'attendance_date' => (string) $attendance->attendance_date,
                 'check_in_at' => optional($attendance->check_in_at)->toDateTimeString(),
@@ -118,13 +118,13 @@ class AttendanceController extends Controller
 
         if (!$attendance?->check_in_at) {
             return response()->json([
-                'message' => 'Absen pulang tidak bisa dilakukan sebelum absen masuk.',
+                'message' => 'Check-out cannot be done before check-in.',
             ], 422);
         }
 
         if ($attendance->check_out_at) {
             return response()->json([
-                'message' => 'Absen pulang hari ini sudah tercatat.',
+                'message' => 'Check-out for today has already been recorded.',
             ], 422);
         }
 
@@ -139,7 +139,7 @@ class AttendanceController extends Controller
         $attendance->save();
 
         return response()->json([
-            'message' => 'Absen pulang berhasil.',
+            'message' => 'Check-out successful.',
             'data' => [
                 'attendance_date' => (string) $attendance->attendance_date,
                 'check_in_at' => optional($attendance->check_in_at)->toDateTimeString(),

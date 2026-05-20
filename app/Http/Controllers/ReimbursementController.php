@@ -106,11 +106,11 @@ class ReimbursementController extends Controller
             'filters' => $filters,
             'statusOptions' => Reimbursement::STATUSES,
             'stageOptions' => [
-                ['value' => 'manager', 'label' => 'Menunggu Approval Manager'],
-                ['value' => 'md', 'label' => 'Menunggu Approval MD'],
-                ['value' => 'ratna', 'label' => 'Menunggu Ratna Check & Submit Accounting'],
-                ['value' => 'accounting', 'label' => 'Menunggu Proses Accounting'],
-                ['value' => 'finished', 'label' => 'Sudah Dibayarkan oleh Accounting'],
+                ['value' => 'manager', 'label' => 'Waiting for Manager Approval'],
+                ['value' => 'md', 'label' => 'Waiting for MD Approval'],
+                ['value' => 'ratna', 'label' => 'Waiting for Ratna Check & Submit to Accounting'],
+                ['value' => 'accounting', 'label' => 'Waiting for Accounting Processing'],
+                ['value' => 'finished', 'label' => 'Paid by Accounting'],
                 ['value' => 'rejected', 'label' => 'Rejected'],
             ],
             'reimbursements' => $query
@@ -145,11 +145,11 @@ class ReimbursementController extends Controller
             'filters' => $filters,
             'statusOptions' => Reimbursement::STATUSES,
             'stageOptions' => [
-                ['value' => 'manager', 'label' => 'Menunggu Approval Manager'],
-                ['value' => 'md', 'label' => 'Menunggu Approval MD'],
-                ['value' => 'ratna', 'label' => 'Menunggu Ratna Check & Submit Accounting'],
-                ['value' => 'accounting', 'label' => 'Menunggu Proses Accounting'],
-                ['value' => 'finished', 'label' => 'Sudah Dibayarkan oleh Accounting'],
+                ['value' => 'manager', 'label' => 'Waiting for Manager Approval'],
+                ['value' => 'md', 'label' => 'Waiting for MD Approval'],
+                ['value' => 'ratna', 'label' => 'Waiting for Ratna Check & Submit to Accounting'],
+                ['value' => 'accounting', 'label' => 'Waiting for Accounting Processing'],
+                ['value' => 'finished', 'label' => 'Paid by Accounting'],
                 ['value' => 'rejected', 'label' => 'Rejected'],
             ],
             'reimbursements' => $query
@@ -250,7 +250,7 @@ class ReimbursementController extends Controller
 
         if ($source === self::FORM_SOURCE_EXIT_PERMIT && count($eligibleExitPermits) === 0) {
             return redirect()->route('reimbursements.index')
-                ->with('warning', 'Form From Exit Permit hanya tersedia setelah Exit Permit diverifikasi Sisca.');
+                ->with('warning', 'Form From Exit Permit is only available after Exit Permit has been verified by Sisca.');
         }
 
         return Inertia::render('Reimbursements/Create', [
@@ -297,7 +297,7 @@ class ReimbursementController extends Controller
         if ($source === self::FORM_SOURCE_EXIT_PERMIT) {
             if (empty($validated['exit_permit_id'])) {
                 throw ValidationException::withMessages([
-                    'exit_permit_id' => 'Exit Permit wajib dipilih untuk form From Exit Permit.',
+                    'exit_permit_id' => 'Exit Permit must be selected for the From Exit Permit form.',
                 ]);
             }
 
@@ -311,7 +311,7 @@ class ReimbursementController extends Controller
 
             if ($alreadyFinished) {
                 throw ValidationException::withMessages([
-                    'exit_permit_id' => 'Reimbursement untuk Exit Permit ini sudah berstatus Sudah Dibayarkan oleh Accounting.',
+                    'exit_permit_id' => 'Reimbursement for this Exit Permit already has Paid by Accounting status.',
                 ]);
             }
         }
@@ -342,7 +342,7 @@ class ReimbursementController extends Controller
 
         $this->syncLegacyDocumentSnapshot($reimbursement);
 
-        return redirect()->route('reimbursements.index')->with('success', 'Form reimbursement berhasil diajukan.');
+        return redirect()->route('reimbursements.index')->with('success', 'Reimbursement form has been successfully submitted.');
     }
 
     public function edit(Reimbursement $reimbursement): Response
@@ -409,7 +409,7 @@ class ReimbursementController extends Controller
         if ($isOwner && !$this->canTakeApprovalAction($reimbursement, $user)) {
             if (!$this->canOwnerUpdate($reimbursement, $user)) {
                 throw ValidationException::withMessages([
-                    'status' => 'Form reimbursement yang sudah diproses tidak dapat diubah oleh pemohon.',
+                    'status' => 'Reimbursement form that has been processed cannot be modified by the requester.',
                 ]);
             }
 
@@ -449,7 +449,7 @@ class ReimbursementController extends Controller
             $reimbursement->save();
             $this->syncLegacyDocumentSnapshot($reimbursement);
 
-            return redirect()->route('reimbursements.index')->with('success', 'Form reimbursement berhasil diperbarui.');
+            return redirect()->route('reimbursements.index')->with('success', 'Reimbursement form has been successfully updated.');
         }
 
         if ($this->canApproveManager($reimbursement, $user)) {
@@ -461,7 +461,7 @@ class ReimbursementController extends Controller
                 : Reimbursement::STATUS_REJECTED;
             $reimbursement->save();
 
-            return redirect()->route('reimbursement-approvals.index')->with('success', 'Approval manager berhasil diproses.');
+            return redirect()->route('reimbursement-approvals.index')->with('success', 'Manager approval has been successfully processed.');
         }
 
         if ($this->canApproveMd($reimbursement, $user)) {
@@ -473,7 +473,7 @@ class ReimbursementController extends Controller
                 : Reimbursement::STATUS_REJECTED;
             $reimbursement->save();
 
-            return redirect()->route('reimbursement-approvals.index')->with('success', 'Approval MD berhasil diproses.');
+            return redirect()->route('reimbursement-approvals.index')->with('success', 'MD approval has been successfully processed.');
         }
 
         if ($this->canSubmitRatna($reimbursement, $user)) {
@@ -483,7 +483,7 @@ class ReimbursementController extends Controller
             $reimbursement->status = $status;
             $reimbursement->save();
 
-            return redirect()->route('reimbursement-approvals.index')->with('success', 'Reimbursement berhasil disubmit ke accounting.');
+            return redirect()->route('reimbursement-approvals.index')->with('success', 'Reimbursement has been successfully submitted to accounting.');
         }
 
         if ($this->canFinishAccounting($reimbursement, $user)) {
@@ -493,11 +493,11 @@ class ReimbursementController extends Controller
             $reimbursement->status = $status;
             $reimbursement->save();
 
-            return redirect()->route('reimbursement-approvals.index')->with('success', 'Reimbursement telah diselesaikan oleh accounting.');
+            return redirect()->route('reimbursement-approvals.index')->with('success', 'Reimbursement has been completed by accounting.');
         }
 
         throw ValidationException::withMessages([
-            'status' => 'Anda tidak memiliki akses untuk memproses reimbursement ini.',
+            'status' => 'You do not have access to process this reimbursement.',
         ]);
     }
 
@@ -550,14 +550,14 @@ class ReimbursementController extends Controller
                     'paid_to_default' => $exitPermit->user?->name ?? '',
                     'expense_type_default' => 'Reimbursement Exit Permit',
                     'purpose_default' => sprintf(
-                        'Konversi lunch box untuk %d requestor (Exit Permit #%d). Requestor: %s',
+                        'Lunch box conversion for %d requestor(s) (Exit Permit #%d). Requestors: %s',
                         $requestorCount,
                         $exitPermit->id,
                         $namePreview !== '' ? $namePreview : '-'
                     ),
                     'ref_document_default' => 'AUTO-LUNCH-EP-' . $exitPermit->id,
                     'description_default' => sprintf(
-                        'Jatah lunch box dikonversi menjadi reimbursement untuk %d requestor x Rp %d.',
+                        'Lunch box allowance converted to reimbursement for %d requestor(s) x Rp %d.',
                         $requestorCount,
                         $unitAmount
                     ),
@@ -571,7 +571,7 @@ class ReimbursementController extends Controller
     {
         if ((int) $exitPermit->user_id !== $userId) {
             throw ValidationException::withMessages([
-                'exit_permit_id' => 'Exit Permit tidak dimiliki oleh user yang sedang login.',
+                'exit_permit_id' => 'Exit Permit is not owned by the currently logged in user.',
             ]);
         }
 
@@ -584,7 +584,7 @@ class ReimbursementController extends Controller
         }
 
         throw ValidationException::withMessages([
-            'exit_permit_id' => 'Exit Permit belum berstatus Checked By HR: Sisca.',
+            'exit_permit_id' => 'Exit Permit has not been Checked By HR: Sisca yet.',
         ]);
     }
 
@@ -629,7 +629,7 @@ class ReimbursementController extends Controller
             return true;
         }
 
-        if (in_array($roleCode, ['user', 'manager', 'md', 'hr_manager'], true)) {
+        if (in_array($roleCode, ['user', 'manager', 'md', 'hr_manager', 'admin'], true)) {
             return true;
         }
 
@@ -675,18 +675,22 @@ class ReimbursementController extends Controller
 
     private function canApproveManager(Reimbursement $reimbursement, $user): bool
     {
-        return in_array($user?->role?->code, ['manager', 'hr_manager'], true)
+        return in_array($user?->role?->code, ['manager', 'hr_manager', 'admin'], true)
             && $reimbursement->status === Reimbursement::STATUS_PENDING_MANAGER;
     }
 
     private function canApproveMd(Reimbursement $reimbursement, $user): bool
     {
-        return $user?->role?->code === 'md'
+        return in_array($user?->role?->code, ['md', 'admin'], true)
             && $reimbursement->status === Reimbursement::STATUS_PENDING_MD;
     }
 
     private function canSubmitRatna(Reimbursement $reimbursement, $user): bool
     {
+        if ($user?->role?->code === 'admin') {
+            return $reimbursement->status === Reimbursement::STATUS_PENDING_RATNA;
+        }
+
         return $user?->role?->code === 'hr'
             && strtolower((string) $user?->email) === self::RATNA_EMAIL
             && $reimbursement->status === Reimbursement::STATUS_PENDING_RATNA;
@@ -694,7 +698,7 @@ class ReimbursementController extends Controller
 
     private function canFinishAccounting(Reimbursement $reimbursement, $user): bool
     {
-        return $user?->role?->code === 'accounting'
+        return in_array($user?->role?->code, ['accounting', 'admin'], true)
             && $reimbursement->status === Reimbursement::STATUS_SUBMITTED_TO_ACCOUNTING;
     }
 
@@ -709,11 +713,11 @@ class ReimbursementController extends Controller
     private function approvalStageLabel(Reimbursement $reimbursement): string
     {
         return match ($reimbursement->status) {
-            Reimbursement::STATUS_PENDING_MANAGER => 'Menunggu Approval Manager',
-            Reimbursement::STATUS_PENDING_MD => 'Menunggu Approval MD',
-            Reimbursement::STATUS_PENDING_RATNA => 'Menunggu Ratna Check & Submit Accounting',
-            Reimbursement::STATUS_SUBMITTED_TO_ACCOUNTING => 'Menunggu Proses Accounting',
-            Reimbursement::STATUS_FINISHED => 'Sudah Dibayarkan oleh Accounting',
+            Reimbursement::STATUS_PENDING_MANAGER => 'Waiting for Manager Approval',
+            Reimbursement::STATUS_PENDING_MD => 'Waiting for MD Approval',
+            Reimbursement::STATUS_PENDING_RATNA => 'Waiting for Ratna Check & Submit to Accounting',
+            Reimbursement::STATUS_SUBMITTED_TO_ACCOUNTING => 'Waiting for Accounting Processing',
+            Reimbursement::STATUS_FINISHED => 'Paid by Accounting',
             Reimbursement::STATUS_REJECTED => 'Rejected',
             default => 'Pending',
         };

@@ -2,8 +2,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 
 const exitTypeLabel = {
-    business_trip: 'Perjalanan Dinas',
-    sick: 'Sakit',
+    business_trip: 'Business Trip',
+    sick: 'Sick',
 };
 
 const hourLabels = Array.from({ length: 24 }, (_, hour) => `${String(hour).padStart(2, '0')}:00`);
@@ -95,7 +95,7 @@ export default function Index({ events, filters, arrangeItems = [] }) {
                 <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-5 shadow-sm">
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-700">Arrange Order Car</p>
                     <p className="mt-2 text-sm text-indigo-900">
-                        Hanya Exit Permit tipe company dengan Order Car = Yes. Buat jadwal baru lewat halaman Create, lalu revisi lewat halaman Edit.
+                        Only company-type Exit Permit with Order Car = Yes. Create a new schedule on the Create page, then revise it on the Edit page.
                     </p>
 
                     <div className="mt-3 flex justify-end">
@@ -109,7 +109,7 @@ export default function Index({ events, filters, arrangeItems = [] }) {
 
                     {arrangeItems.length === 0 ? (
                         <p className="mt-3 rounded-md border border-indigo-200 bg-white px-3 py-2 text-sm text-indigo-800">
-                            Tidak ada Exit Permit yang perlu di-arrange saat ini.
+                            No Exit Permit to arrange right now.
                         </p>
                     ) : (
                         <div className="mt-4 space-y-2">
@@ -121,7 +121,7 @@ export default function Index({ events, filters, arrangeItems = [] }) {
                                             `inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ` +
                                             (item.is_arranged ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700')
                                         }>
-                                            {item.is_arranged ? 'Sudah Arrange' : 'Belum Arrange'}
+                                            {item.is_arranged ? 'Arranged' : 'Not Arranged'}
                                         </span>
                                     </div>
                                     <Link
@@ -139,12 +139,12 @@ export default function Index({ events, filters, arrangeItems = [] }) {
                 <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                     <div className="flex flex-wrap items-end gap-3">
                         <div>
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Mode</label>
+                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">View</label>
                             <div className="mt-2 flex gap-2">
                                 {[
-                                    { key: 'day', label: 'Harian' },
-                                    { key: 'week', label: 'Mingguan' },
-                                    { key: 'month', label: 'Bulanan' },
+                                    { key: 'day', label: 'Daily' },
+                                    { key: 'week', label: 'Weekly' },
+                                    { key: 'month', label: 'Monthly' },
                                 ].map((view) => (
                                     <button
                                         key={view.key}
@@ -164,7 +164,7 @@ export default function Index({ events, filters, arrangeItems = [] }) {
                         </div>
 
                         <div>
-                            <label htmlFor="focus-date" className="text-xs font-semibold uppercase tracking-wider text-slate-500">Tanggal Fokus</label>
+                            <label htmlFor="focus-date" className="text-xs font-semibold uppercase tracking-wider text-slate-500">Focus Date</label>
                             <input
                                 id="focus-date"
                                 type="date"
@@ -175,7 +175,7 @@ export default function Index({ events, filters, arrangeItems = [] }) {
                         </div>
 
                         <div>
-                            <label htmlFor="filter-date" className="text-xs font-semibold uppercase tracking-wider text-slate-500">Filter Tanggal</label>
+                            <label htmlFor="filter-date" className="text-xs font-semibold uppercase tracking-wider text-slate-500">Filter Date</label>
                             <input
                                 id="filter-date"
                                 type="date"
@@ -186,33 +186,33 @@ export default function Index({ events, filters, arrangeItems = [] }) {
                         </div>
 
                         <div>
-                            <label htmlFor="filter-day" className="text-xs font-semibold uppercase tracking-wider text-slate-500">Filter Hari</label>
+                            <label htmlFor="filter-day" className="text-xs font-semibold uppercase tracking-wider text-slate-500">Filter Day</label>
                             <select
                                 id="filter-day"
                                 className="mt-2 rounded-md border border-slate-300 px-3 py-1.5 text-sm"
                                 value={selectedFilterDay}
                                 onChange={(e) => updateFilter('filter_day', e.target.value)}
                             >
-                                <option value="">Semua Hari</option>
-                                <option value="1">Senin</option>
-                                <option value="2">Selasa</option>
-                                <option value="3">Rabu</option>
-                                <option value="4">Kamis</option>
-                                <option value="5">Jumat</option>
-                                <option value="6">Sabtu</option>
-                                <option value="7">Minggu</option>
+                                <option value="">All Days</option>
+                                <option value="1">Monday</option>
+                                <option value="2">Tuesday</option>
+                                <option value="3">Wednesday</option>
+                                <option value="4">Thursday</option>
+                                <option value="5">Friday</option>
+                                <option value="6">Saturday</option>
+                                <option value="7">Sunday</option>
                             </select>
                         </div>
 
                         <div>
-                            <label htmlFor="filter-hour" className="text-xs font-semibold uppercase tracking-wider text-slate-500">Filter Jam</label>
+                            <label htmlFor="filter-hour" className="text-xs font-semibold uppercase tracking-wider text-slate-500">Filter Time</label>
                             <select
                                 id="filter-hour"
                                 className="mt-2 rounded-md border border-slate-300 px-3 py-1.5 text-sm"
                                 value={selectedFilterHour}
                                 onChange={(e) => updateFilter('filter_hour', e.target.value)}
                             >
-                                <option value="">Semua Jam</option>
+                                <option value="">All Hours</option>
                                 {hourLabels.map((hourLabel, hour) => (
                                     <option key={hourLabel} value={hour}>{hourLabel}</option>
                                 ))}
@@ -224,7 +224,7 @@ export default function Index({ events, filters, arrangeItems = [] }) {
                 {selectedView === 'month' ? (
                     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                         <div className="grid grid-cols-7 gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                            {['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'].map((day) => (
+                            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
                                 <div key={day} className="px-2 py-1">{day}</div>
                             ))}
                         </div>
@@ -260,12 +260,12 @@ export default function Index({ events, filters, arrangeItems = [] }) {
                                                         `ml-1 inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-semibold ` +
                                                         (event.is_arranged ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700')
                                                     }>
-                                                        {event.is_arranged ? 'Sudah' : 'Belum'}
+                                                        {event.is_arranged ? 'Arranged' : 'Not Arranged'}
                                                     </span>
                                                 </Link>
                                             ))}
                                             {dayEvents.length > 3 && (
-                                                <p className="text-[11px] font-semibold text-slate-500">+{dayEvents.length - 3} lainnya</p>
+                                                <p className="text-[11px] font-semibold text-slate-500">+{dayEvents.length - 3} more</p>
                                             )}
                                         </div>
                                     </div>
@@ -278,10 +278,10 @@ export default function Index({ events, filters, arrangeItems = [] }) {
                         <div className="overflow-auto">
                             <div className="min-w-[920px]">
                                 <div className="grid" style={{ gridTemplateColumns: `90px repeat(${dayColumns.length}, minmax(180px, 1fr))` }}>
-                                    <div className="border-b border-slate-200 px-2 py-2 text-xs font-semibold uppercase tracking-wider text-slate-500">Jam</div>
+                                    <div className="border-b border-slate-200 px-2 py-2 text-xs font-semibold uppercase tracking-wider text-slate-500">Time</div>
                                     {dayColumns.map((day) => {
                                         const key = formatDate(day);
-                                        const dayLabel = day.toLocaleDateString('id-ID', { weekday: 'short', day: '2-digit', month: 'short' });
+                                        const dayLabel = day.toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short' });
 
                                         return (
                                             <div key={key} className="border-b border-slate-200 px-2 py-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
@@ -330,7 +330,7 @@ export default function Index({ events, filters, arrangeItems = [] }) {
                                                                 `inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-semibold ` +
                                                                 (event.is_arranged ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700')
                                                             }>
-                                                                {event.is_arranged ? 'Sudah Arrange' : 'Belum Arrange'}
+                                                                {event.is_arranged ? 'Arranged' : 'Not Arranged'}
                                                             </p>
                                                             <p className="truncate">{exitTypeLabel[event.exit_type] ?? event.exit_type}</p>
                                                         </Link>

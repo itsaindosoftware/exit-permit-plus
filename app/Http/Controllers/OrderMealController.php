@@ -17,7 +17,7 @@ use Inertia\Response;
 
 class OrderMealController extends Controller
 {
-    private const ATTENDANCE_VERIFIER_EMAIL = 'sisca.dewiyani@example.com';
+    private const ATTENDANCE_VERIFIER_EMAIL = 'payroll.hr@thaisummit.co.id';
 
     public function __construct(private readonly ExitPermitLunchConversionService $exitPermitLunchConversionService)
     {
@@ -210,7 +210,31 @@ class OrderMealController extends Controller
             ->limit(120)
             ->get();
 
+        $today = now()->toDateString();
+        $connectionName = config('attendance.requestor_source_connection', config('database.default'));
+        $karyawanTable = config('attendance.requestor_source_table', 'karyawan');
+
+        $totalKaryawan = \Illuminate\Support\Facades\DB::connection($connectionName)->table($karyawanTable)->count();
+        $karyawanYangHadir = \Illuminate\Support\Facades\DB::connection($connectionName)->table('absensi_karyawan')
+            ->whereDate('waktu', $today)
+            ->distinct('nik')
+            ->count('nik');
+
+        $karyawanYangAbsen = max(0, $totalKaryawan - $karyawanYangHadir);
+        $exitPermitCount = \App\Models\ExitPermitRequestor::whereHas('exitPermit', function ($q) use ($today) {
+            $q->whereDate('permit_date', $today)
+                ->where('status', 'approved');
+        })->count();
+        $checkOrderMeal = max(0, $totalKaryawan - ($exitPermitCount + $karyawanYangAbsen));
+
         return Inertia::render('OrderMeals/Index', [
+            'checkMealFormula' => [
+                'total_karyawan' => $totalKaryawan,
+                'karyawan_hadir' => $karyawanYangHadir,
+                'karyawan_absen' => $karyawanYangAbsen,
+                'exit_permit' => $exitPermitCount,
+                'check_order_meal' => $checkOrderMeal,
+            ],
             'mode' => $scope,
             'indexRouteName' => $this->routeName($scope, 'index'),
             'printRouteName' => $this->routeName($scope, 'print'),
@@ -276,7 +300,7 @@ class OrderMealController extends Controller
             $eligibleExitPermits = $this->eligibleExitPermitsForMeal(request()->user());
 
             if (count($eligibleExitPermits) === 0) {
-                $eligibilityWarning = 'Order meal Exit Permit tersedia setelah Exit Permit berstatus Checked By HR Sisca, requestor hasil matching Y, dan kembali ke kantor.';
+                $eligibilityWarning = 'Exit Permit meal order is available after Exit Permit status is Checked By HR Sisca, requestor matching result is Y, and returned to office.';
             }
         }
 
@@ -431,7 +455,7 @@ class OrderMealController extends Controller
 
         if ($actualQuantity > $totalQuantity) {
             throw ValidationException::withMessages([
-                'actual_quantity' => 'Realisasi makan tidak boleh melebihi total paket (paket dasar + visitor).',
+                'actual_quantity' => 'Actual meal count cannot exceed total packages (base packages + visitors).',
             ]);
         }
 
@@ -473,8 +497,8 @@ class OrderMealController extends Controller
         }
 
         $successMessage = $repeatCount > 1
-            ? "Data order meal berhasil ditambahkan ({$repeatCount} jadwal)."
-            : 'Data order meal berhasil ditambahkan.';
+            ? "Meal order data has been successfully created ({$repeatCount} schedules)."
+            : 'Meal order data has been successfully created.';
 
         return redirect()->route($this->routeName($scope, 'index'))->with('success', $successMessage);
     }
@@ -579,7 +603,7 @@ class OrderMealController extends Controller
 
         if ((int) $validated['actual_quantity'] > $totalQuantity) {
             throw ValidationException::withMessages([
-                'actual_quantity' => 'Realisasi makan tidak boleh melebihi total paket (paket dasar + visitor).',
+                'actual_quantity' => 'Actual meal count cannot exceed total packages (base packages + visitors).',
             ]);
         }
 
@@ -610,7 +634,7 @@ class OrderMealController extends Controller
             $this->exitPermitLunchConversionService->applyPendingForDate((string) $orderMeal->meal_date);
         }
 
-        return redirect()->route($this->routeName($scope, 'index'))->with('success', 'Data order meal berhasil diperbarui.');
+        return redirect()->route($this->routeName($scope, 'index'))->with('success', 'Meal order data has been successfully updated.');
     }
 
     private function destroyByScope(OrderMeal $orderMeal, string $scope): RedirectResponse
@@ -623,7 +647,7 @@ class OrderMealController extends Controller
 
         $orderMeal->delete();
 
-        return redirect()->route($this->routeName($scope, 'index'))->with('success', 'Data order meal berhasil dihapus.');
+        return redirect()->route($this->routeName($scope, 'index'))->with('success', 'Meal order data has been successfully deleted.');
     }
 
     private function printByScope(Request $request, string $scope)
@@ -695,9 +719,9 @@ class OrderMealController extends Controller
             : 'General';
 
         $periodLabel = match ($period) {
-            'weekly' => 'Mingguan',
-            'monthly' => 'Bulanan',
-            default => 'Harian',
+            'weekly' => 'Weekly',
+            'monthly' => 'Monthly',
+            default => 'Daily',
         };
 
         $fileName = sprintf(
@@ -757,7 +781,7 @@ class OrderMealController extends Controller
                 $firstDate = Carbon::parse((string) $group->first()->meal_date);
 
                 $label = match ($period) {
-                    'weekly' => sprintf('Minggu Ke %d, %d', $firstDate->isoWeek, $firstDate->isoWeekYear),
+                    'weekly' => sprintf('Week %d, %d', $firstDate->isoWeek, $firstDate->isoWeekYear),
                     'monthly' => sprintf('%s %d', $monthNames[(int) $firstDate->format('n')] ?? $firstDate->format('m'), (int) $firstDate->format('Y')),
                     default => $firstDate->format('d/m/Y'),
                 };
@@ -817,7 +841,7 @@ class OrderMealController extends Controller
 
     private function canApprove($user): bool
     {
-        return in_array($user?->role?->code, ['manager', 'md'], true);
+        return in_array($user?->role?->code, ['manager', 'md', 'admin'], true);
     }
 
     private function validatedData(Request $request, bool $allowStatus = false, bool $isStore = false, ?string $scope = null): array
@@ -928,7 +952,10 @@ class OrderMealController extends Controller
                 $query->where('post_md_path', ExitPermit::POST_MD_PATH_MEAL)
                     ->orWhereNull('post_md_path');
             })
-            ->where('has_valid_checkin', true)
+            ->where(function ($query) {
+                $query->where('has_valid_checkin', true)
+                    ->orWhereNull('plan_check_in');
+            })
             ->where('returned_to_office', true)
             ->whereDate('permit_date', $mealDate)
             ->whereHas('requestors', fn($query) => $query->whereRaw("UPPER(TRIM(COALESCE(reimburs_lunch_box, 'N'))) = ?", ['Y']))
@@ -936,13 +963,13 @@ class OrderMealController extends Controller
 
         if (!$exitPermit) {
             throw ValidationException::withMessages([
-                'exit_permit_id' => 'Order meal hanya bisa diajukan untuk Exit Permit jalur meal yang sudah diverifikasi Sisca dan memiliki requestor dengan hasil matching Y.',
+                'exit_permit_id' => 'Meal order can only be submitted for Exit Permit with meal path that has been verified by Sisca and has requestors with matching result Y.',
             ]);
         }
 
         if ($user?->role?->code === 'user' && (int) $exitPermit->user_id !== (int) $user?->id) {
             throw ValidationException::withMessages([
-                'exit_permit_id' => 'Exit Permit yang dipilih bukan milik akun Anda.',
+                'exit_permit_id' => 'The selected Exit Permit does not belong to your account.',
             ]);
         }
 
@@ -969,7 +996,10 @@ class OrderMealController extends Controller
                 $query->where('post_md_path', ExitPermit::POST_MD_PATH_MEAL)
                     ->orWhereNull('post_md_path');
             })
-            ->where('has_valid_checkin', true)
+            ->where(function ($query) {
+                $query->where('has_valid_checkin', true)
+                    ->orWhereNull('plan_check_in');
+            })
             ->where('returned_to_office', true)
             ->whereHas('requestors', fn($q) => $q->whereRaw("UPPER(TRIM(COALESCE(reimburs_lunch_box, 'N'))) = ?", ['Y']))
             ->latest('permit_date');
@@ -1018,6 +1048,10 @@ class OrderMealController extends Controller
 
     private function isSisca($user): bool
     {
+        if ($user?->role?->code === 'admin') {
+            return true;
+        }
+
         return $user?->role?->code === 'hr'
             && strtolower((string) $user?->email) === self::ATTENDANCE_VERIFIER_EMAIL;
     }

@@ -12,6 +12,8 @@ class CostCenter extends Model
 
     protected $fillable = [
         'name',
+        'cost_center_sap',
+        'desc_cost_c',
     ];
 
     public function exitPermits(): HasMany

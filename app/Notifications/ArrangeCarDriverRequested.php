@@ -37,11 +37,11 @@ class ArrangeCarDriverRequested extends Notification
 
         return [
             'type' => 'arrange_car_driver',
-            'title' => 'Permintaan arrange mobil dan supir',
+            'title' => 'Car and Driver Arrangement Requested',
             'message' => sprintf(
-                'Pengajuan Exit Permit dari %s perlu diatur mobil/supir. Field 1.4 No. Police Car: %s.',
-                (string) ($this->exitPermit->user?->name ?? 'Karyawan'),
-                $vehiclePlate ?? 'BELUM DIISI'
+                'Exit Permit request from %s needs a car/driver arranged. Field 1.4 License Plate: %s.',
+                (string) ($this->exitPermit->user?->name ?? 'Employee'),
+                $vehiclePlate ?? 'NOT SET'
             ),
             'exit_permit_id' => $this->exitPermit->id,
             'destination' => $this->exitPermit->destination,

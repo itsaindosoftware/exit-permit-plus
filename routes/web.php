@@ -25,6 +25,7 @@ Route::middleware('auth')->group(function () {
     Route::post('notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::get('exit-permit-list', ExitPermitListController::class)->name('exit-permit-list.index');
     Route::get('exit-permit-approvals', [ExitPermitController::class, 'approvalIndex'])->name('exit-permit-approvals.index');
+    Route::get('exit-permit-history', [ExitPermitController::class, 'historyIndex'])->name('exit-permit-history.index');
     Route::get('exit-permits/requestor-options', [ExitPermitController::class, 'requestorLookup'])
         ->name('exit-permits.requestor-options');
     Route::get('schedule-cars', [ScheduleCarController::class, 'index'])->name('schedule-cars.index');
@@ -36,8 +37,10 @@ Route::middleware('auth')->group(function () {
         ->name('exit-permits.attachment');
     Route::get('exit-permits/{exitPermit}/print', [ExitPermitController::class, 'print'])
         ->name('exit-permits.print');
+    /*
     Route::post('exit-permits/{exitPermit}/attendance-preview', [ExitPermitController::class, 'previewAttendance'])
         ->name('exit-permits.attendance-preview');
+    */
     Route::get('reimbursements/{reimbursement}/attachment', [ReimbursementController::class, 'attachment'])
         ->name('reimbursements.attachment');
     Route::get('reimbursements/{reimbursement}/print', [ReimbursementController::class, 'print'])
