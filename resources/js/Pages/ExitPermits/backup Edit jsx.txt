@@ -740,7 +740,7 @@ export default function Edit({
                                 <InputError message={errors.start_time} className="mt-2" />
                             </div>
                             <div>
-                                <p className="text-sm font-semibold text-slate-800">Plan check in</p>
+                                <p className="text-sm font-semibold text-slate-800">Plan Clock In</p>
                                 <div className="mt-2 flex flex-wrap gap-4">
                                     <label className="flex items-center gap-2 text-sm text-slate-700">
                                         <input

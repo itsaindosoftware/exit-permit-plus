@@ -3,6 +3,8 @@ import { Head, Link, router } from '@inertiajs/react';
 
 const exitTypeLabel = {
     business_trip: 'Business Trip',
+    assignment: 'Assignment',
+    company: 'Company',
     sick: 'Sick',
 };
 

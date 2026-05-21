@@ -78,7 +78,7 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'name' => 'Ratna',
-                'email' => 'ratna@example.com',
+                'email' => 'hrga-01@thaisummit.co.id',
                 'role_code' => 'hr',
             ],
             [

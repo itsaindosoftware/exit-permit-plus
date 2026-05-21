@@ -66,9 +66,13 @@ class HandleInertiaRequests extends Middleware
                 'unread_count' => fn() => $request->user()
                     ? $request->user()->unreadNotifications()->count()
                     : 0,
-                'schedule_car_count' => fn() => $request->user() && strtolower((string) $request->user()->email) === 'ratna@example.com'
+                'schedule_car_count' => fn() => $request->user() && strtolower((string) $request->user()->email) === 'hrga-01@thaisummit.co.id'
                     ? \App\Models\ExitPermit::query()
-                        ->where('exit_type', \App\Models\ExitPermit::EXIT_TYPE_BUSINESS_TRIP)
+                        ->whereIn('exit_type', [
+                            \App\Models\ExitPermit::EXIT_TYPE_BUSINESS_TRIP,
+                            \App\Models\ExitPermit::EXIT_TYPE_ASSIGNMENT,
+                            \App\Models\ExitPermit::EXIT_TYPE_COMPANY,
+                        ])
                         ->where('order_car', true)
                         ->where('status', 'pending')
                         ->where(function ($q) {
@@ -110,7 +114,7 @@ class HandleInertiaRequests extends Middleware
                         return \App\Models\Reimbursement::query()->where('status', \App\Models\Reimbursement::STATUS_PENDING_MANAGER)->count();
                     } elseif ($roleCode === 'md') {
                         return \App\Models\Reimbursement::query()->where('status', \App\Models\Reimbursement::STATUS_PENDING_MD)->count();
-                    } elseif ($roleCode === 'hr' && $email === 'ratna@example.com') {
+                    } elseif ($roleCode === 'hr' && $email === 'hrga-01@thaisummit.co.id') {
                         return \App\Models\Reimbursement::query()->where('status', \App\Models\Reimbursement::STATUS_PENDING_RATNA)->count();
                     } elseif ($roleCode === 'accounting') {
                         return \App\Models\Reimbursement::query()->where('status', \App\Models\Reimbursement::STATUS_SUBMITTED_TO_ACCOUNTING)->count();

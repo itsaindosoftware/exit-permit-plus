@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Models\ExitPermit;
 use Illuminate\Bus\Queueable;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class ArrangeCarDriverRequested extends Notification
@@ -21,7 +22,27 @@ class ArrangeCarDriverRequested extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'mail'];
+    }
+
+    public function toMail(object $notifiable): MailMessage
+    {
+        $recipient = trim((string) ($notifiable->name ?? ''));
+        $greeting = $recipient !== '' ? 'Hello ' . $recipient . ',' : 'Hello,';
+        $vehiclePlate = $this->exitPermit->vehicle_plate
+            ? strtoupper((string) $this->exitPermit->vehicle_plate)
+            : null;
+
+        return (new MailMessage())
+            ->subject('Action Needed: Arrange Car for Exit Permit')
+            ->greeting($greeting)
+            ->line(sprintf(
+                'Exit Permit #%d for %s is ready for car and driver arrangement.',
+                $this->exitPermit->id,
+                (string) ($this->exitPermit->user?->name ?? 'Employee')
+            ))
+            ->line('License Plate: ' . ($vehiclePlate ?? 'NOT SET'))
+            ->action('Open Schedule Car', route('schedule-cars.edit', $this->exitPermit));
     }
 
     /**

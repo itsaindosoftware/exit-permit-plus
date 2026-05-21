@@ -628,27 +628,54 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                 <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overflow-x-hidden bg-slate-900/50 p-4 backdrop-blur-sm">
                     <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
                         <h3 className="mb-4 text-xl font-bold text-slate-900">Check Order Meal Calculation</h3>
+                        {checkMealFormula.attendance_warning && (
+                            <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                                {checkMealFormula.attendance_warning}
+                            </div>
+                        )}
                         <div className="space-y-3 text-sm text-slate-700">
-                            <div className="flex justify-between border-b pb-2">
-                                <span>Man Power (Total Karyawan)</span>
-                                <span className="font-semibold">{checkMealFormula.total_karyawan}</span>
-                            </div>
-                            <div className="flex justify-between border-b pb-2">
-                                <span>Karyawan yang Hadir</span>
-                                <span className="font-semibold">{checkMealFormula.karyawan_hadir}</span>
-                            </div>
-                            <div className="flex justify-between border-b pb-2">
-                                <span>Karyawan yang Absen</span>
-                                <span className="font-semibold text-rose-600">{checkMealFormula.karyawan_absen}</span>
-                            </div>
-                            <div className="flex justify-between border-b pb-2">
-                                <span>Exit Permit (Approved Today)</span>
-                                <span className="font-semibold text-amber-600">{checkMealFormula.exit_permit}</span>
+                            <div className="overflow-hidden rounded-lg border border-slate-200">
+                                <table className="min-w-full text-sm">
+                                    <tbody className="divide-y divide-slate-200">
+                                        <tr>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Man Power (Total Karyawan)</td>
+                                            <td className="px-3 py-2 text-right font-semibold text-slate-900">{checkMealFormula.total_karyawan}</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Karyawan yang Hadir (Absensi)</td>
+                                            <td className="px-3 py-2 text-right font-semibold text-slate-900">{checkMealFormula.karyawan_hadir_absensi}</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Not Clock In (Exit Permit)</td>
+                                            <td className="px-3 py-2 text-right font-semibold text-emerald-600">{checkMealFormula.karyawan_hadir_plan_check_in}</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Karyawan yang Hadir (Adjusted)</td>
+                                            <td className="px-3 py-2 text-right font-semibold text-slate-900">{checkMealFormula.karyawan_hadir}</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Overtime Day Shift</td>
+                                            <td className="px-3 py-2 text-right font-semibold text-slate-500">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Night Shift</td>
+                                            <td className="px-3 py-2 text-right font-semibold text-slate-500">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Overtime Night Shift</td>
+                                            <td className="px-3 py-2 text-right font-semibold text-slate-500">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Karyawan yang Absen</td>
+                                            <td className="px-3 py-2 text-right font-semibold text-rose-600">{checkMealFormula.karyawan_absen}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                             <div className="mt-4 rounded-xl bg-slate-50 p-4">
                                 <p className="mb-2 text-xs font-semibold uppercase text-slate-500">Formula</p>
                                 <p className="rounded border border-slate-200 bg-white p-2 font-mono text-sm text-slate-700">
-                                    {checkMealFormula.total_karyawan} - ({checkMealFormula.exit_permit} + {checkMealFormula.karyawan_absen})
+                                    {checkMealFormula.total_karyawan} - (({checkMealFormula.exit_permit} - {checkMealFormula.karyawan_hadir_plan_check_in}) + {checkMealFormula.karyawan_absen})
                                 </p>
                                 <div className="mt-3 flex items-center justify-between border-t border-slate-200 pt-3">
                                     <span className="font-bold text-slate-900">Total Makan di Kantin</span>

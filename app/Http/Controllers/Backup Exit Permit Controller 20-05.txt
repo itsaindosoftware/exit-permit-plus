@@ -29,7 +29,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExitPermitController extends Controller
 {
-    private const CAR_DRIVER_COORDINATOR_EMAIL = 'ratna@example.com';
+    private const CAR_DRIVER_COORDINATOR_EMAIL = 'hrga-01@thaisummit.co.id';
 
     private const ATTENDANCE_VERIFIER_EMAIL = 'payroll.hr@thaisummit.co.id';
 
@@ -37,7 +37,7 @@ class ExitPermitController extends Controller
         'hr.manager@example.com',
         'wida.mustika.sari@example.com',
         'theresia.saing@example.com',
-        'ratna@example.com',
+        'hrga-01@thaisummit.co.id',
         'payroll.hr@thaisummit.co.id',
     ];
 

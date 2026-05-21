@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\ExitPermit;
 use App\Models\Reimbursement;
 use App\Models\ReimbursementDocument;
+use App\Models\User;
+use App\Notifications\ReimbursementApprovalRequested;
+use App\Notifications\ReimbursementStatusUpdated;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,7 +21,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReimbursementController extends Controller
 {
-    private const RATNA_EMAIL = 'ratna@example.com';
+    private const RATNA_EMAIL = 'hrga-01@thaisummit.co.id';
 
     private const FORM_SOURCE_INTERNAL = 'internal';
 
@@ -342,6 +345,15 @@ class ReimbursementController extends Controller
 
         $this->syncLegacyDocumentSnapshot($reimbursement);
 
+        $managers = User::query()
+            ->whereHas('role', fn($q) => $q->where('code', 'manager'))
+            ->where('is_available_for_approval', true)
+            ->get();
+
+        foreach ($managers as $manager) {
+            $this->notifyReimbursementApproverOnce($manager, $reimbursement, 'manager');
+        }
+
         return redirect()->route('reimbursements.index')->with('success', 'Reimbursement form has been successfully submitted.');
     }
 
@@ -461,6 +473,19 @@ class ReimbursementController extends Controller
                 : Reimbursement::STATUS_REJECTED;
             $reimbursement->save();
 
+            if ($status === 'approved') {
+                $this->notifyReimbursementOwner($reimbursement, 'manager_approved');
+
+                $mds = User::query()
+                    ->whereHas('role', fn($q) => $q->where('code', 'md'))
+                    ->where('is_available_for_approval', true)
+                    ->get();
+
+                foreach ($mds as $md) {
+                    $this->notifyReimbursementApproverOnce($md, $reimbursement, 'md');
+                }
+            }
+
             return redirect()->route('reimbursement-approvals.index')->with('success', 'Manager approval has been successfully processed.');
         }
 
@@ -473,6 +498,10 @@ class ReimbursementController extends Controller
                 : Reimbursement::STATUS_REJECTED;
             $reimbursement->save();
 
+            if ($status === 'approved') {
+                $this->notifyReimbursementOwner($reimbursement, 'md_approved');
+            }
+
             return redirect()->route('reimbursement-approvals.index')->with('success', 'MD approval has been successfully processed.');
         }
 
@@ -482,6 +511,8 @@ class ReimbursementController extends Controller
             $reimbursement->ratna_submitted_at = now();
             $reimbursement->status = $status;
             $reimbursement->save();
+
+            $this->notifyReimbursementOwner($reimbursement, 'submitted_to_accounting');
 
             return redirect()->route('reimbursement-approvals.index')->with('success', 'Reimbursement has been successfully submitted to accounting.');
         }
@@ -499,6 +530,33 @@ class ReimbursementController extends Controller
         throw ValidationException::withMessages([
             'status' => 'You do not have access to process this reimbursement.',
         ]);
+    }
+
+    private function notifyReimbursementOwner(Reimbursement $reimbursement, string $stage): void
+    {
+        $reimbursement->loadMissing('user:id,name,email');
+        $owner = $reimbursement->user;
+
+        if (!$owner || !filled($owner->email)) {
+            return;
+        }
+
+        $owner->notify(new ReimbursementStatusUpdated($reimbursement, $stage));
+    }
+
+    private function notifyReimbursementApproverOnce(User $approver, Reimbursement $reimbursement, string $stage): void
+    {
+        $alreadyNotified = $approver->notifications()
+            ->where('type', ReimbursementApprovalRequested::class)
+            ->where('data->reimbursement_id', $reimbursement->id)
+            ->where('data->stage', $stage)
+            ->exists();
+
+        if ($alreadyNotified) {
+            return;
+        }
+
+        $approver->notify(new ReimbursementApprovalRequested($reimbursement, $stage));
     }
 
     private function eligibleExitPermitsForUser(int $userId): array

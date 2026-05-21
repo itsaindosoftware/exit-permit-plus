@@ -9,7 +9,9 @@ use App\Models\Driver;
 use App\Models\ExitPermit;
 use App\Models\User;
 use App\Notifications\ArrangeCarDriverRequested;
+use App\Notifications\ExitPermitStatusUpdated;
 use App\Notifications\ExitPermitApprovalRequested;
+use App\Notifications\ReimbursementSubmissionRequested;
 use App\Services\AttendanceMatchingService;
 use App\Services\ExitPermitLunchConversionService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -30,7 +32,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExitPermitController extends Controller
 {
-    private const CAR_DRIVER_COORDINATOR_EMAIL = 'ratna@example.com';
+    private const CAR_DRIVER_COORDINATOR_EMAIL = 'hrga-01@thaisummit.co.id';
 
     private const ATTENDANCE_VERIFIER_EMAIL = 'payroll.hr@thaisummit.co.id';
 
@@ -38,7 +40,7 @@ class ExitPermitController extends Controller
         'hr.manager@example.com',
         'wida.mustika.sari@example.com',
         'theresia.saing@example.com',
-        'ratna@example.com',
+        'hrga-01@thaisummit.co.id',
         'payroll.hr@thaisummit.co.id',
     ];
 
@@ -496,7 +498,13 @@ class ExitPermitController extends Controller
 
         $exitPermit->load('user:id,name');
 
-        if ($exitPermit->exit_type === ExitPermit::EXIT_TYPE_BUSINESS_TRIP && $orderCar) {
+        if (
+            $orderCar && in_array($exitPermit->exit_type, [
+                ExitPermit::EXIT_TYPE_BUSINESS_TRIP,
+                ExitPermit::EXIT_TYPE_ASSIGNMENT,
+                ExitPermit::EXIT_TYPE_COMPANY,
+            ], true)
+        ) {
             $ratna = User::query()
                 ->where('email', self::CAR_DRIVER_COORDINATOR_EMAIL)
                 ->first();
@@ -513,7 +521,7 @@ class ExitPermitController extends Controller
             ->get();
 
         foreach ($managers as $manager) {
-            $manager->notify(new ExitPermitApprovalRequested($exitPermit, 'manager'));
+            $this->notifyExitPermitApproverOnce($manager, $exitPermit, 'manager');
         }
 
         return redirect()->route('exit-permits.index')
@@ -636,8 +644,13 @@ class ExitPermitController extends Controller
         $canVerifyAttendance = $this->canVerifyAttendance($exitPermit, $user);
         $attachmentPhoto = $request->file('attachment_photo');
         $validated = [];
+        $shouldNotifyOrderCar = false;
+        $shouldNotifyReimbursement = false;
+        $shouldNotifyMealCompleted = false;
+        $postMdPathBefore = $exitPermit->post_md_path;
 
         if ($isOwner && !$canApprove && !$canArrangeCar && !$canVerifyAttendance) {
+            $wasOrderCar = (bool) $exitPermit->order_car;
             $validated = $this->validatedData($request);
             unset($validated['attachment_photo']);
 
@@ -650,6 +663,8 @@ class ExitPermitController extends Controller
             $exitPermit->fill($validated);
             $exitPermit->syncBusinessRules();
             $this->syncRequestorItems($exitPermit, $validated['requestor_items'] ?? []);
+
+            $shouldNotifyOrderCar = !$wasOrderCar && (bool) $exitPermit->order_car;
 
             if ($attachmentPhoto) {
                 $this->replaceAttachment($exitPermit, $attachmentPhoto);
@@ -684,7 +699,7 @@ class ExitPermitController extends Controller
                         // Notify the assigned HR Manager
                         $hrUser = User::query()->find($hrApproverId);
                         if ($hrUser) {
-                            $hrUser->notify(new ExitPermitApprovalRequested($exitPermit, 'hr_manager'));
+                            $this->notifyExitPermitApproverOnce($hrUser, $exitPermit, 'hr_manager');
                         }
 
                         // Notify MDs that manager has approved and MD action is required
@@ -694,8 +709,10 @@ class ExitPermitController extends Controller
                             ->get();
 
                         foreach ($mds as $md) {
-                            $md->notify(new ExitPermitApprovalRequested($exitPermit, 'md'));
+                            $this->notifyExitPermitApproverOnce($md, $exitPermit, 'md');
                         }
+
+                        $this->notifyExitPermitOwner($exitPermit, 'manager_approved');
                     } else {
                         $exitPermit->status = 'rejected';
                     }
@@ -735,6 +752,8 @@ class ExitPermitController extends Controller
                         $exitPermit->attendance_checked_at = null;
                         $exitPermit->has_valid_checkin = null;
                         $exitPermit->post_md_path = null;
+
+                        $this->notifyExitPermitOwner($exitPermit, 'md_approved');
                     } else {
                         $exitPermit->status = 'rejected';
                     }
@@ -778,6 +797,8 @@ class ExitPermitController extends Controller
                         if ($sisca) {
                             $sisca->notify(new ExitPermitApprovalRequested($exitPermit, 'attendance_verifier'));
                         }
+
+                        $this->notifyExitPermitOwner($exitPermit, 'hr_manager_approved');
                     }
                 }
             }
@@ -806,7 +827,7 @@ class ExitPermitController extends Controller
                             $exitPermit->status = 'pending';
                             $hrUser = User::query()->find($hrApproverId);
                             if ($hrUser) {
-                                $hrUser->notify(new ExitPermitApprovalRequested($exitPermit, 'hr_manager'));
+                                $this->notifyExitPermitApproverOnce($hrUser, $exitPermit, 'hr_manager');
                             }
 
                             $mds = User::query()
@@ -815,8 +836,10 @@ class ExitPermitController extends Controller
                                 ->get();
 
                             foreach ($mds as $md) {
-                                $md->notify(new ExitPermitApprovalRequested($exitPermit, 'md'));
+                                $this->notifyExitPermitApproverOnce($md, $exitPermit, 'md');
                             }
+
+                            $this->notifyExitPermitOwner($exitPermit, 'manager_approved');
                         } else {
                             $exitPermit->status = 'rejected';
                         }
@@ -842,6 +865,8 @@ class ExitPermitController extends Controller
                             $exitPermit->attendance_checked_at = null;
                             $exitPermit->has_valid_checkin = null;
                             $exitPermit->post_md_path = null;
+
+                            $this->notifyExitPermitOwner($exitPermit, 'md_approved');
                         } else {
                             $exitPermit->status = 'rejected';
                         }
@@ -865,6 +890,8 @@ class ExitPermitController extends Controller
                             if ($sisca) {
                                 $sisca->notify(new ExitPermitApprovalRequested($exitPermit, 'attendance_verifier'));
                             }
+
+                            $this->notifyExitPermitOwner($exitPermit, 'hr_manager_approved');
                         }
                     }
                 } else {
@@ -921,6 +948,20 @@ class ExitPermitController extends Controller
             $exitPermit->post_md_path = $hasValidCheckin && (bool) $exitPermit->returned_to_office
                 ? ExitPermit::POST_MD_PATH_MEAL
                 : ExitPermit::POST_MD_PATH_REIMBURSEMENT;
+
+            if (
+                $postMdPathBefore !== ExitPermit::POST_MD_PATH_REIMBURSEMENT
+                && $exitPermit->post_md_path === ExitPermit::POST_MD_PATH_REIMBURSEMENT
+            ) {
+                $shouldNotifyReimbursement = true;
+            }
+
+            if (
+                $postMdPathBefore !== ExitPermit::POST_MD_PATH_MEAL
+                && $exitPermit->post_md_path === ExitPermit::POST_MD_PATH_MEAL
+            ) {
+                $shouldNotifyMealCompleted = true;
+            }
         }
 
         if (!$canApprove && $canArrangeCar) {
@@ -945,11 +986,74 @@ class ExitPermitController extends Controller
             $this->exitPermitLunchConversionService->applyIfEligible($exitPermit->fresh(['requestors', 'user']));
         }
 
+        if (
+            $shouldNotifyOrderCar && in_array($exitPermit->exit_type, [
+                ExitPermit::EXIT_TYPE_BUSINESS_TRIP,
+                ExitPermit::EXIT_TYPE_ASSIGNMENT,
+                ExitPermit::EXIT_TYPE_COMPANY,
+            ], true)
+        ) {
+            $ratna = User::query()
+                ->where('email', self::CAR_DRIVER_COORDINATOR_EMAIL)
+                ->first();
+
+            if ($ratna) {
+                $ratna->notify(new ArrangeCarDriverRequested($exitPermit));
+            }
+        }
+
+        if ($shouldNotifyReimbursement) {
+            $this->notifyReimbursementRequired($exitPermit);
+        }
+
+        if ($shouldNotifyMealCompleted) {
+            $this->notifyExitPermitOwner($exitPermit, 'completed_meal');
+        }
+
         $redirectRoute = ($canApprove || $canArrangeCar || $canVerifyAttendance)
             ? 'exit-permit-approvals.index'
             : 'exit-permits.index';
 
         return redirect()->route($redirectRoute)->with('success', 'Exit permit data has been successfully updated.');
+    }
+
+    private function notifyExitPermitOwner(ExitPermit $exitPermit, string $stage): void
+    {
+        $exitPermit->loadMissing('user:id,name,email');
+        $owner = $exitPermit->user;
+
+        if (!$owner || !filled($owner->email)) {
+            return;
+        }
+
+        $owner->notify(new ExitPermitStatusUpdated($exitPermit, $stage));
+    }
+
+    private function notifyExitPermitApproverOnce(User $approver, ExitPermit $exitPermit, string $stage): void
+    {
+        $alreadyNotified = $approver->notifications()
+            ->where('type', ExitPermitApprovalRequested::class)
+            ->where('data->exit_permit_id', $exitPermit->id)
+            ->where('data->stage', $stage)
+            ->exists();
+
+        if ($alreadyNotified) {
+            return;
+        }
+
+        $approver->notify(new ExitPermitApprovalRequested($exitPermit, $stage));
+    }
+
+    private function notifyReimbursementRequired(ExitPermit $exitPermit): void
+    {
+        $exitPermit->loadMissing('user:id,name,email');
+        $owner = $exitPermit->user;
+
+        if (!$owner || !filled($owner->email)) {
+            return;
+        }
+
+        $owner->notify(new ReimbursementSubmissionRequested($exitPermit));
     }
 
     public function destroy(ExitPermit $exitPermit): RedirectResponse
@@ -1195,7 +1299,13 @@ class ExitPermitController extends Controller
             $validated['destination'] = null;
         }
 
-        if ($validated['exit_type'] !== ExitPermit::EXIT_TYPE_BUSINESS_TRIP) {
+        if (
+            !in_array($validated['exit_type'], [
+                ExitPermit::EXIT_TYPE_BUSINESS_TRIP,
+                ExitPermit::EXIT_TYPE_ASSIGNMENT,
+                ExitPermit::EXIT_TYPE_COMPANY,
+            ], true)
+        ) {
             $validated['cost_center_id'] = null;
         }
 
