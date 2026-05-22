@@ -4,28 +4,29 @@ import { useEffect, useRef, useState } from 'react';
 
 // s
 const exitTypeLabel = {
-    business_trip: 'Perjalanan Dinas',
-    sick: 'Sakit',
+    business_trip: 'Business Trip',
+    sick: 'Sick',
 };
 
 const monthOptions = [
-    { value: '', label: 'Semua Bulan' },
-    { value: '1', label: 'Januari' },
-    { value: '2', label: 'Februari' },
-    { value: '3', label: 'Maret' },
+    { value: '', label: 'All Months' },
+    { value: '1', label: 'January' },
+    { value: '2', label: 'February' },
+    { value: '3', label: 'March' },
     { value: '4', label: 'April' },
-    { value: '5', label: 'Mei' },
-    { value: '6', label: 'Juni' },
-    { value: '7', label: 'Juli' },
-    { value: '8', label: 'Agustus' },
+    { value: '5', label: 'May' },
+    { value: '6', label: 'June' },
+    { value: '7', label: 'July' },
+    { value: '8', label: 'August' },
     { value: '9', label: 'September' },
-    { value: '10', label: 'Oktober' },
+    { value: '10', label: 'October' },
     { value: '11', label: 'November' },
-    { value: '12', label: 'Desember' },
+    { value: '12', label: 'December' },
 ];
 
 export default function Index({ exitPermits, canCreate, pageMode = 'personal', filters, exitTypes = [] }) {
     const isApprovalMode = pageMode === 'approval';
+    const isHistoryMode = pageMode === 'history';
     const [submitter, setSubmitter] = useState(filters?.submitter ?? '');
     const [requestor, setRequestor] = useState(filters?.requestor ?? '');
     const [permitDate, setPermitDate] = useState(filters?.date ?? '');
@@ -38,10 +39,26 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
     const totalItems = exitPermits?.total ?? exitPermits?.data?.length ?? 0;
     const approvedItems = exitPermits?.data?.filter((item) => item.status === 'approved').length ?? 0;
     const eligibleItems = exitPermits?.data?.filter((item) => item.eligible_for_meal).length ?? 0;
-    const indexRouteName = isApprovalMode ? 'exit-permit-approvals.index' : 'exit-permits.index';
+    const indexRouteName = isApprovalMode
+        ? 'exit-permit-approvals.index'
+        : (isHistoryMode ? 'exit-permit-history.index' : 'exit-permits.index');
+    const pageTitle = isApprovalMode
+        ? 'Exit Permit Approval'
+        : (isHistoryMode ? 'Exit Permit History' : 'Exit Permit');
+    const heroLabel = isApprovalMode
+        ? 'Approval Workflow'
+        : (isHistoryMode ? 'Approved Archive' : 'Personal Request');
+    const heroTitle = isApprovalMode
+        ? 'Exit Permit Approval Monitoring'
+        : (isHistoryMode ? 'Exit Permit History' : 'Exit Permit');
+    const heroDescription = isApprovalMode
+        ? 'Approver-only menu for review, approval, and attendance verification of Exit Permit requests.'
+        : (isHistoryMode
+            ? 'Approved exit permit archive for managerial oversight and reporting.'
+            : 'User menu to create and monitor Exit Permit requests.');
 
     const handleDelete = (id) => {
-        if (confirm('Hapus data exit permit ini?')) {
+        if (confirm('Delete this exit permit?')) {
             router.delete(route('exit-permits.destroy', id));
         }
     };
@@ -90,26 +107,24 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-bold leading-tight text-slate-800">
-                    {isApprovalMode ? 'Exit Permit Approval' : 'Exit Permit'}
+                    {pageTitle}
                 </h2>
             }
         >
-            <Head title={isApprovalMode ? 'Exit Permit Approval' : 'Exit Permit'} />
+            <Head title={pageTitle} />
 
             <div className="space-y-6">
                 <div className="rounded-2xl border border-cyan-200 bg-gradient-to-r from-cyan-50 via-slate-50 to-white p-6 shadow-sm">
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <div>
                             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">
-                                {isApprovalMode ? 'Approval Workflow' : 'Personal Request'}
+                                {heroLabel}
                             </p>
                             <h3 className="mt-2 text-2xl font-black uppercase tracking-wide text-slate-900">
-                                {isApprovalMode ? 'Exit Permit Approval Monitoring' : 'Exit Permit'}
+                                {heroTitle}
                             </h3>
                             <p className="mt-2 text-sm text-slate-600">
-                                {isApprovalMode
-                                    ? 'Menu khusus approver untuk proses review, approval, dan verifikasi absensi pengajuan Exit Permit.'
-                                    : 'Menu khusus user untuk membuat dan memantau pengajuan Exit Permit.'}
+                                {heroDescription}
                             </p>
                         </div>
                         {canCreate && (
@@ -117,7 +132,7 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
                                 href={route('exit-permits.create')}
                                 className="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
                             >
-                                + Tambah Exit Permit
+                                + Add Exit Permit
                             </Link>
                         )}
                     </div>
@@ -142,12 +157,12 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
                     <div className="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-cyan-50/40 px-4 py-4">
                         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                             <div>
-                                <p className="text-sm font-semibold text-slate-900">Pencarian Exit Permit</p>
-                                <p className="text-xs text-slate-500">Data terfilter otomatis saat input berubah.</p>
+                                <p className="text-sm font-semibold text-slate-900">Exit Permit Search</p>
+                                <p className="text-xs text-slate-500">Data is filtered automatically as you type.</p>
                             </div>
                             <div className="flex items-center gap-2">
                                 <div className="inline-flex items-center rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700">
-                                    Auto Filter Aktif
+                                    Auto Filter On
                                 </div>
                                 <button
                                     type="button"
@@ -162,27 +177,27 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
 
                         <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                             <div className="space-y-1">
-                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Pengaju</label>
+                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Submitter</label>
                                 <input
                                     type="text"
                                     value={submitter}
                                     onChange={(e) => setSubmitter(e.target.value)}
-                                    placeholder="Nama pengaju"
+                                    placeholder="Submitter name"
                                     className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700"
                                 />
                             </div>
                             <div className="space-y-1">
-                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Requestor</label>
+                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Requester</label>
                                 <input
                                     type="text"
                                     value={requestor}
                                     onChange={(e) => setRequestor(e.target.value)}
-                                    placeholder="Nama requestor"
+                                    placeholder="Requester name"
                                     className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700"
                                 />
                             </div>
                             <div className="space-y-1">
-                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Tanggal</label>
+                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Date</label>
                                 <input
                                     type="date"
                                     value={permitDate}
@@ -192,7 +207,7 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
-                                    <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Bulan</label>
+                                    <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Month</label>
                                     <select
                                         value={month}
                                         onChange={(e) => setMonth(e.target.value)}
@@ -204,7 +219,7 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
                                     </select>
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Tahun</label>
+                                    <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Year</label>
                                     <input
                                         type="number"
                                         min="1900"
@@ -217,25 +232,25 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
                                 </div>
                             </div>
                             <div className="space-y-1">
-                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Jenis</label>
+                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Type</label>
                                 <select
                                     value={exitType}
                                     onChange={(e) => setExitType(e.target.value)}
                                     className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700"
                                 >
-                                    <option value="">Semua Jenis</option>
+                                    <option value="">All Types</option>
                                     {exitTypes.map((type) => (
                                         <option key={type} value={type}>{exitTypeLabel[type] ?? type}</option>
                                     ))}
                                 </select>
                             </div>
                             <div className="space-y-1 xl:col-span-3">
-                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Tujuan</label>
+                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Destination</label>
                                 <input
                                     type="text"
                                     value={destination}
                                     onChange={(e) => setDestination(e.target.value)}
-                                    placeholder="Ketik tujuan perjalanan"
+                                    placeholder="Type destination"
                                     className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700"
                                 />
                             </div>
@@ -246,15 +261,15 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
                         <table className="min-w-full divide-y divide-slate-200 text-sm">
                             <thead className="bg-slate-100">
                                 <tr>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">User Pengaju</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Submitter</th>
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Requestor</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Tanggal</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Jenis</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Tujuan</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Date</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Type</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Destination</th>
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Meal</th>
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Status</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Tahap Approval</th>
-                                    <th className="w-52 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Aksi</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Approval Stage</th>
+                                    <th className="w-52 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Action</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
@@ -271,10 +286,10 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
                                         <td className="px-4 py-3">
                                             <div className="font-medium text-slate-800">{item.destination}</div>
                                             {item.vehicle_plate && (
-                                                <div className="text-xs text-slate-500">No. Polisi: {item.vehicle_plate}</div>
+                                                <div className="text-xs text-slate-500">License Plate: {item.vehicle_plate}</div>
                                             )}
                                             {item.driver_name && (
-                                                <div className="text-xs text-slate-500">Supir: {item.driver_name}</div>
+                                                <div className="text-xs text-slate-500">Driver: {item.driver_name}</div>
                                             )}
                                         </td>
                                         <td className="px-4 py-3">
@@ -325,7 +340,7 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
                                                         : item.can_arrange_car
                                                             ? 'Arrange Car'
                                                             : item.can_verify_attendance
-                                                                ? 'Verifikasi Absensi'
+                                                                ? 'Verify Attendance'
                                                             : (item.can_update_request ? 'Edit' : 'Detail')}
                                                 </Link>
                                                 {item.can_delete && (
@@ -334,7 +349,7 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
                                                         onClick={() => handleDelete(item.id)}
                                                         className="inline-flex h-8 w-28 items-center justify-center rounded bg-rose-600 px-3 text-xs font-semibold text-white transition hover:bg-rose-500"
                                                     >
-                                                        Hapus
+                                                        Delete
                                                     </button>
                                                 )}
                                                 {/* dicomment dulu */}
@@ -356,7 +371,7 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
 
                     {!exitPermits.data.length && (
                         <div className="px-6 py-10 text-center text-sm text-slate-500">
-                            Belum ada data exit permit.
+                            No exit permit data yet.
                         </div>
                     )}
 

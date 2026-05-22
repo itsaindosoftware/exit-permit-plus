@@ -2,8 +2,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 
 const exitTypeLabel = {
-    business_trip: 'Perjalanan Dinas',
-    sick: 'Sakit',
+    business_trip: 'Business Trip',
+    sick: 'Sick',
 };
 
 const postMdPathLabel = {
@@ -36,24 +36,24 @@ function DetailTable({ rows }) {
 
 export default function Show({ exitPermit, approvalStage }) {
     const mainRows = [
-        { label: 'Karyawan', value: exitPermit.employee_name },
+        { label: 'Employee', value: exitPermit.employee_name },
         { label: 'Email', value: exitPermit.employee_email },
         { label: 'Status', value: exitPermit.status_label ?? exitPermit.status?.toUpperCase() },
-        { label: 'Tanggal Permit', value: exitPermit.permit_date },
-        { label: 'Jam Keluar', value: exitPermit.start_time },
-        { label: 'Jam Kembali', value: exitPermit.end_time },
-        { label: 'Jenis Exit', value: exitTypeLabel[exitPermit.exit_type] ?? exitPermit.exit_type },
-        { label: 'Tujuan', value: exitPermit.destination },
+        { label: 'Permit Date', value: exitPermit.permit_date },
+        { label: 'Exit Time', value: exitPermit.start_time },
+        { label: 'Return Time', value: exitPermit.end_time },
+        { label: 'Exit Type', value: exitTypeLabel[exitPermit.exit_type] ?? exitPermit.exit_type },
+        { label: 'Destination', value: exitPermit.destination },
         { label: 'Cost Center', value: exitPermit.cost_center_name ?? '-' },
-        { label: 'No. Police Car (1.4)', value: exitPermit.vehicle_plate ?? 'Belum diisi' },
-        { label: 'Nama Supir', value: exitPermit.driver_name ?? 'Belum diisi' },
-        { label: 'Returned To Office', value: exitPermit.returned_to_office ? 'Ya' : 'Tidak' },
-        { label: 'Eligible Meal', value: exitPermit.eligible_for_meal ? 'Ya' : 'Tidak' },
+        { label: 'License Plate (1.4)', value: exitPermit.vehicle_plate ?? 'Not set' },
+        { label: 'Driver Name', value: exitPermit.driver_name ?? 'Not set' },
+        { label: 'Returned To Office', value: exitPermit.returned_to_office ? 'Yes' : 'No' },
+        { label: 'Eligible Meal', value: exitPermit.eligible_for_meal ? 'Yes' : 'No' },
     ];
 
     const noteRows = [
-        { label: 'Alasan', value: exitPermit.reason },
-        { label: 'Catatan', value: exitPermit.notes ?? '-' },
+        { label: 'Reason', value: exitPermit.reason },
+        { label: 'Notes', value: exitPermit.notes ?? '-' },
     ];
 
     const approvalRows = [
@@ -68,7 +68,7 @@ export default function Show({ exitPermit, approvalStage }) {
         { label: 'Attendance Checked At', value: exitPermit.attendance_checked_at ?? '-' },
         {
             label: 'Has Valid Check-in',
-            value: exitPermit.has_valid_checkin === null ? '-' : (exitPermit.has_valid_checkin ? 'Ya' : 'Tidak'),
+            value: exitPermit.has_valid_checkin === null ? '-' : (exitPermit.has_valid_checkin ? 'Yes' : 'No'),
         },
         { label: 'Post MD Path', value: postMdPathLabel[exitPermit.post_md_path] ?? '-' },
     ];
@@ -77,33 +77,33 @@ export default function Show({ exitPermit, approvalStage }) {
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-bold leading-tight text-slate-800">
-                    Detail Exit Permit
+                    Exit Permit Details
                 </h2>
             }
         >
-            <Head title="Detail Exit Permit" />
+            <Head title="Exit Permit Details" />
 
             <div className="space-y-6">
                 <div className="rounded-2xl border border-cyan-200 bg-gradient-to-r from-cyan-50 via-white to-slate-50 p-5">
-                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">Exit Permit Detail</p>
-                    <p className="mt-2 text-sm text-slate-700">Ringkasan data pengajuan, approval, dan informasi kendaraan.</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">Exit Permit Details</p>
+                    <p className="mt-2 text-sm text-slate-700">Summary of request data, approvals, and vehicle information.</p>
                     <p className="mt-3 inline-flex rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white">
                         {approvalStage}
                     </p>
                 </div>
 
                 <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Informasi Utama</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Main Information</p>
                     <DetailTable rows={mainRows} />
                 </div>
 
                 <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Alasan dan Catatan</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Reasons and Notes</p>
                     <DetailTable rows={noteRows} />
                 </div>
 
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Requestor Detail</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Requestor Details</p>
                     <div className="mt-3 overflow-x-auto rounded-lg border border-slate-300">
                         <table className="min-w-full border-collapse text-xs md:text-sm">
                             <thead className="bg-slate-100 text-slate-700">
@@ -133,12 +133,12 @@ export default function Show({ exitPermit, approvalStage }) {
                 </div>
 
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Attachment Foto</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Photo Attachment</p>
                     {exitPermit.attachment_url ? (
                         <div className="mt-3 space-y-3">
                             <img
                                 src={exitPermit.attachment_url}
-                                alt={exitPermit.attachment_original_name ?? 'Attachment Exit Permit'}
+                                alt={exitPermit.attachment_original_name ?? 'Exit Permit Attachment'}
                                 className="max-h-96 w-full rounded-lg border border-slate-200 object-contain"
                             />
                             <a
@@ -147,11 +147,11 @@ export default function Show({ exitPermit, approvalStage }) {
                                 rel="noreferrer"
                                 className="inline-flex rounded-md bg-cyan-700 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-cyan-600"
                             >
-                                Buka Ukuran Penuh ({exitPermit.attachment_original_name ?? 'Foto'})
+                                Open Full Size ({exitPermit.attachment_original_name ?? 'Photo'})
                             </a>
                         </div>
                     ) : (
-                        <p className="mt-2 text-sm text-slate-600">Tidak ada attachment.</p>
+                        <p className="mt-2 text-sm text-slate-600">No attachment.</p>
                     )}
                 </div>
 
@@ -173,7 +173,7 @@ export default function Show({ exitPermit, approvalStage }) {
                         href={route('exit-permits.index')}
                         className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
                     >
-                        Kembali
+                        Back
                     </Link>
                 </div>
             </div>

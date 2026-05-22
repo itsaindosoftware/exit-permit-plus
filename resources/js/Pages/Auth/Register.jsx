@@ -45,7 +45,7 @@ export default function Register() {
                 </div>
 
                 <div className="mt-4">
-                    <InputLabel htmlFor="nik" value="NIK" />
+                    <InputLabel htmlFor="nik" value="Employee ID" />
 
                     <TextInput
                         id="nik"

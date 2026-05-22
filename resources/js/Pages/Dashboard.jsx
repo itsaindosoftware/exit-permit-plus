@@ -2,8 +2,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
 
-const currencyFormatter = new Intl.NumberFormat('id-ID');
-const shortDateFormatter = new Intl.DateTimeFormat('id-ID', {
+const currencyFormatter = new Intl.NumberFormat('en-US');
+const shortDateFormatter = new Intl.DateTimeFormat('en-US', {
     weekday: 'short',
     day: '2-digit',
     month: 'short',
@@ -70,14 +70,14 @@ export default function Dashboard({
                     <div className="absolute -bottom-16 right-24 h-36 w-36 rounded-full bg-sky-200/40 blur-2xl" />
                     <div className="relative flex flex-wrap items-center justify-between gap-4">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.26em] text-cyan-700">Dashboard Personal</p>
-                            <h3 className="mt-2 text-2xl font-black text-slate-900">Ringkasan Aktivitas Anda</h3>
+                            <p className="text-xs font-semibold uppercase tracking-[0.26em] text-cyan-700">Personal Dashboard</p>
+                            <h3 className="mt-2 text-2xl font-black text-slate-900">Your Activity Summary</h3>
                             <p className="mt-2 text-sm text-slate-600">
-                                Pantau pengajuan exit permit, progres approval, dan reimbursement dalam satu tampilan.
+                                Track exit permit requests, approval progress, and reimbursements in one view.
                             </p>
                         </div>
                         <div className="rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-right shadow-sm">
-                            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Periode</p>
+                            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Period</p>
                             <p className="mt-1 text-sm font-bold text-slate-800">{stats.monthLabel || '-'}</p>
                         </div>
                     </div>
@@ -98,7 +98,7 @@ export default function Dashboard({
                     href={route('exit-permits.index', { month: new Date().getMonth() + 1, year: new Date().getFullYear() })}
                     className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md hover:ring-cyan-300"
                 >
-                    <p className="text-sm font-medium text-slate-500">Pengajuan Bulan Ini</p>
+                    <p className="text-sm font-medium text-slate-500">Requests This Month</p>
                     <p className="mt-3 text-4xl font-bold text-slate-900">
                         {stats.exitPermitThisMonthCount}
                     </p>
@@ -108,7 +108,7 @@ export default function Dashboard({
                     href={route('exit-permits.index', { status: 'pending' })}
                     className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md hover:ring-amber-300"
                 >
-                    <p className="text-sm font-medium text-slate-500">Pending Approval Saya</p>
+                    <p className="text-sm font-medium text-slate-500">My Pending Approvals</p>
                     <p className="mt-3 text-4xl font-bold text-amber-600">
                         {stats.pendingApprovalMyCount}
                     </p>
@@ -130,7 +130,7 @@ export default function Dashboard({
                         Rp {currencyFormatter.format(stats.reimbursementTotal)}
                     </p>
                     <p className="mt-2 text-xs text-slate-500">
-                        Approved bulan ini: Rp {currencyFormatter.format(stats.reimbursementThisMonthApprovedTotal || 0)}
+                        Approved this month: Rp {currencyFormatter.format(stats.reimbursementThisMonthApprovedTotal || 0)}
                     </p>
                 </Link>
 
@@ -150,7 +150,7 @@ export default function Dashboard({
                 <section className="grid gap-6 xl:grid-cols-3">
                     <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 xl:col-span-2">
                         <div className="flex items-center justify-between gap-3">
-                            <p className="text-sm font-semibold text-slate-700">Progress Approval Saya</p>
+                            <p className="text-sm font-semibold text-slate-700">My Approval Progress</p>
                             <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
                                 Total: {stats.pendingApprovalMyCount}
                             </span>
@@ -178,19 +178,19 @@ export default function Dashboard({
                                 href={route('exit-permits.create')}
                                 className="block rounded-md bg-cyan-700 px-3 py-2 text-sm font-semibold text-white transition hover:bg-cyan-600"
                             >
-                                + Buat Exit Permit
+                                + Create Exit Permit
                             </Link>
                             <Link
                                 href={route('reimbursements.create')}
                                 className="block rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                             >
-                                + Buat Reimbursement
+                                + Create Reimbursement
                             </Link>
                             <Link
                                 href={route('exit-permits.index')}
                                 className="block rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                             >
-                                Lihat Semua Pengajuan
+                                View All Requests
                             </Link>
                         </div>
                     </div>
@@ -199,32 +199,32 @@ export default function Dashboard({
                 <section className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
-                            <p className="text-sm font-semibold text-slate-700">Aktivitas Exit Permit Terbaru</p>
-                            <p className="mt-1 text-xs text-slate-500">Menampilkan 6 pengajuan terakhir milik Anda.</p>
+                            <p className="text-sm font-semibold text-slate-700">Latest Exit Permit Activity</p>
+                            <p className="mt-1 text-xs text-slate-500">Showing your latest 6 requests.</p>
                         </div>
                         <Link
                             href={route('exit-permits.index')}
                             className="text-sm font-semibold text-cyan-700 hover:text-cyan-600"
                         >
-                            Lihat semua
+                            View all
                         </Link>
                     </div>
 
                     {recentExitPermits.length === 0 ? (
                         <div className="mt-4 rounded-lg border border-dashed border-slate-300 px-4 py-10 text-center text-sm text-slate-500">
-                            Belum ada aktivitas exit permit.
+                            No exit permit activity yet.
                         </div>
                     ) : (
                         <div className="mt-4 overflow-x-auto">
                             <table className="min-w-full text-sm">
                                 <thead className="text-left text-xs uppercase tracking-wide text-slate-500">
                                     <tr>
-                                        <th className="px-2 py-2">Tanggal</th>
+                                        <th className="px-2 py-2">Date</th>
                                         <th className="px-2 py-2">Requestor</th>
-                                        <th className="px-2 py-2">Tujuan</th>
+                                        <th className="px-2 py-2">Destination</th>
                                         <th className="px-2 py-2">Stage</th>
                                         <th className="px-2 py-2">Status</th>
-                                        <th className="px-2 py-2">Aksi</th>
+                                        <th className="px-2 py-2">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -265,7 +265,7 @@ export default function Dashboard({
 
                 {canViewMealAnalytics && (
                     <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-                        <p className="text-sm font-medium text-slate-500">Sisa Paket Makan Siang</p>
+                        <p className="text-sm font-medium text-slate-500">Remaining Lunch Packs</p>
                         <p className="mt-3 text-4xl font-bold text-emerald-600">
                             {stats.remainingMealCount}
                         </p>
@@ -274,18 +274,18 @@ export default function Dashboard({
 
                 {canViewMealAnalytics && (
                     <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 xl:col-span-2">
-                        <p className="text-sm font-medium text-slate-500">Ringkasan Lunch Pack</p>
+                        <p className="text-sm font-medium text-slate-500">Lunch Pack Summary</p>
                         <div className="mt-4 grid gap-4 sm:grid-cols-3">
                             <div className="rounded-lg bg-slate-50 p-4">
-                                <p className="text-sm text-slate-500">Disediakan</p>
+                                <p className="text-sm text-slate-500">Provided</p>
                                 <p className="mt-2 text-3xl font-bold text-slate-900">{stats.providedMealCount}</p>
                             </div>
                             <div className="rounded-lg bg-slate-50 p-4">
-                                <p className="text-sm text-slate-500">Realisasi</p>
+                                <p className="text-sm text-slate-500">Actual</p>
                                 <p className="mt-2 text-3xl font-bold text-slate-900">{stats.actualMealCount}</p>
                             </div>
                             <div className="rounded-lg bg-emerald-50 p-4">
-                                <p className="text-sm text-emerald-700">Sisa</p>
+                                <p className="text-sm text-emerald-700">Remaining</p>
                                 <p className="mt-2 text-3xl font-bold text-emerald-700">{stats.remainingMealCount}</p>
                             </div>
                         </div>
@@ -296,22 +296,22 @@ export default function Dashboard({
                     <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 xl:col-span-2">
                         <div className="flex flex-wrap items-center justify-between gap-4">
                             <div>
-                                <p className="text-sm font-medium text-slate-500">Trend Order Meal</p>
+                                <p className="text-sm font-medium text-slate-500">Meal Order Trend</p>
                                 <p className="mt-1 text-sm text-slate-700">
-                                    Perbandingan paket disediakan, realita makan, dan sisa paket per hari.
+                                    Comparison of provided packs, actual meals, and remaining packs per day.
                                 </p>
                             </div>
                             <div className="flex flex-wrap gap-4 text-xs text-slate-600">
-                                <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-slate-900" />Disediakan</span>
-                                <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-sky-500" />Realisasi</span>
-                                <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />Sisa</span>
+                                <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-slate-900" />Provided</span>
+                                <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-sky-500" />Actual</span>
+                                <span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />Remaining</span>
                             </div>
                         </div>
 
 
                     {mealTrend.length === 0 ? (
                         <div className="mt-6 rounded-lg border border-dashed border-slate-300 px-4 py-10 text-center text-sm text-slate-500">
-                            Belum ada data order meal untuk ditampilkan di grafik.
+                            No meal order data to display in the chart.
                         </div>
                     ) : (
                         <div className="mt-6 overflow-x-auto">
@@ -366,7 +366,7 @@ export default function Dashboard({
                                                 onMouseEnter={() =>
                                                     setHoveredBar({
                                                         index,
-                                                        label: 'Disediakan',
+                                                        label: 'Provided',
                                                         value: item.provided,
                                                         x: barsStart + barWidth / 2,
                                                         y: barTopY(providedHeight),
@@ -385,7 +385,7 @@ export default function Dashboard({
                                                 onMouseEnter={() =>
                                                     setHoveredBar({
                                                         index,
-                                                        label: 'Realisasi',
+                                                        label: 'Actual',
                                                         value: item.actual,
                                                         x: barsStart + barWidth + barGap + barWidth / 2,
                                                         y: barTopY(actualHeight),
@@ -404,7 +404,7 @@ export default function Dashboard({
                                                 onMouseEnter={() =>
                                                     setHoveredBar({
                                                         index,
-                                                        label: 'Sisa',
+                                                        label: 'Remaining',
                                                         value: item.remaining,
                                                         x: barsStart + (barWidth + barGap) * 2 + barWidth / 2,
                                                         y: barTopY(remainingHeight),

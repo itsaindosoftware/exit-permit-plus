@@ -133,7 +133,7 @@
         ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath))
         : null;
 
-    $periodValue = strtoupper((string) ($periodLabel ?? 'Harian'));
+    $periodValue = strtoupper((string) ($periodLabel ?? 'Daily'));
     $scopeValue = strtoupper((string) ($scopeLabel ?? 'General'));
     $printedAtText = $printedAt ? $printedAt->format('d/m/Y H:i') : now()->format('d/m/Y H:i');
 
@@ -167,7 +167,7 @@
         <div class="company">
             <div class="name">PT INDONESIA THAI SUMMIT AUTO</div>
             <div>Jl. Permata Raya Lot FF.5, Kawasan Industri KIIC, Karawang 41361</div>
-            <div>Tlp : 0267-8457184 Fax : 0264-8457187</div>
+            <div>Tel : 0267-8457184 Fax : 0264-8457187</div>
         </div>
     </div>
 
@@ -186,16 +186,16 @@
         </tr>
     </table>
 
-    <div class="section-title">Ringkasan {{ $periodValue }}</div>
+    <div class="section-title">Summary {{ $periodValue }}</div>
     <table class="report">
         <thead>
             <tr>
-                <th style="width: 24%;">Periode</th>
-                <th style="width: 12%;" class="text-right">Disediakan</th>
-                <th style="width: 12%;" class="text-right">Realisasi</th>
-                <th style="width: 12%;" class="text-right">Sisa</th>
+                <th style="width: 24%;">Period</th>
+                <th style="width: 12%;" class="text-right">Provided</th>
+                <th style="width: 12%;" class="text-right">Actual</th>
+                <th style="width: 12%;" class="text-right">Remaining</th>
                 <th style="width: 20%;" class="text-right">Amount</th>
-                <th style="width: 20%;" class="text-right">Jumlah Data</th>
+                <th style="width: 20%;" class="text-right">Total Records</th>
             </tr>
         </thead>
         <tbody>
@@ -210,24 +210,24 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6" class="text-center">Tidak ada data untuk periode/filter ini.</td>
+                    <td colspan="6" class="text-center">No data for this period/filter.</td>
                 </tr>
             @endforelse
         </tbody>
     </table>
 
-    <div class="section-title">Detail Data</div>
+    <div class="section-title">Detail List</div>
     <table class="report">
         <thead>
             <tr>
                 <th style="width: 6%;">No</th>
-                <th style="width: 12%;">Tanggal</th>
-                <th style="width: 20%;">Karyawan</th>
+                <th style="width: 12%;">Date</th>
+                <th style="width: 20%;">Employee</th>
                 <th style="width: 16%;">Menu</th>
                 <th style="width: 10%;" class="text-center">Schedule</th>
-                <th style="width: 9%;" class="text-right">Disediakan</th>
-                <th style="width: 9%;" class="text-right">Realisasi</th>
-                <th style="width: 9%;" class="text-right">Sisa</th>
+                <th style="width: 9%;" class="text-right">Provided</th>
+                <th style="width: 9%;" class="text-right">Actual</th>
+                <th style="width: 9%;" class="text-right">Remaining</th>
                 <th style="width: 9%;" class="text-right">Amount</th>
             </tr>
         </thead>
@@ -246,7 +246,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="9" class="text-center">Tidak ada detail data.</td>
+                    <td colspan="9" class="text-center">No detail records.</td>
                 </tr>
             @endforelse
         </tbody>

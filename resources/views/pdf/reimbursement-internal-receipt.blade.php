@@ -165,32 +165,32 @@
         <div class="company">
             <div class="name">PT INDONESIA THAI SUMMIT AUTO</div>
             <div>Jl. Permata Raya Lot FF.5, Kawasan Industri KIIC, Karawang 41361</div>
-            <div>Tlp : 0267-8457184 Fax : 0264-8457187</div>
+            <div>Tel : 0267-8457184 Fax : 0264-8457187</div>
         </div>
     </div>
 
     <div class="title">INTERNAL RECEIPT</div>
 
     <div class="field">
-        <span class="label">Tgl Bayar / Payment Date</span>: <span class="line w-430">{{ $requestDate }}</span>
+        <span class="label">Payment Date</span>: <span class="line w-430">{{ $requestDate }}</span>
     </div>
     <div class="field">
-        <span class="label">Dibayar Kepada / Paid To</span>: <span class="line w-430">{{ $reimbursement->paid_to }}</span>
+        <span class="label">Paid To</span>: <span class="line w-430">{{ $reimbursement->paid_to }}</span>
     </div>
     <div class="field">
-        <span class="label">Jumlah / Amount</span>: <span class="line w-430">{{ $amount }}</span>
+        <span class="label">Amount</span>: <span class="line w-430">{{ $amount }}</span>
     </div>
     <div class="field">
-        <span class="label">Terbilang / Stated</span>: <span class="line w-430">{{ $amountInWords }}</span>
+        <span class="label">Amount in Words</span>: <span class="line w-430">{{ $amountInWords }}</span>
     </div>
     <div class="field">
-        <span class="label">Jenis Biaya / Expense Type</span>: <span class="line w-400">{{ $reimbursement->expense_type }}</span>
+        <span class="label">Expense Type</span>: <span class="line w-400">{{ $reimbursement->expense_type }}</span>
     </div>
     <div class="field">
-        <span class="label">Tujuan / Purpose</span>: <span class="line w-470">{{ $reimbursement->purpose }}</span>
+        <span class="label">Purpose</span>: <span class="line w-470">{{ $reimbursement->purpose }}</span>
     </div>
     <div class="field">
-        <span class="label">Dok Reff / Reff.Document</span>: <span class="line w-370">{{ $reimbursement->ref_document }}</span>
+        <span class="label">Reference Document</span>: <span class="line w-370">{{ $reimbursement->ref_document }}</span>
     </div>
 
     <table class="sign-grid">

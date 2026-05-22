@@ -2,14 +2,14 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 
-const currencyFormatter = new Intl.NumberFormat('id-ID', {
+const currencyFormatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'IDR',
     maximumFractionDigits: 0,
 });
 
-const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
-const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const parseDateLabel = (value) => {
     if (!value) {
@@ -52,7 +52,7 @@ const formatWeeklyLabel = (value) => {
         return text || '-';
     }
 
-    return `Minggu Ke ${Number(match[2])}, ${match[1]}`;
+    return `Week ${Number(match[2])}, ${match[1]}`;
 };
 
 const formatMonthlyLabel = (value) => {
@@ -135,11 +135,11 @@ function NotEatenChart({ title, points, group }) {
     return (
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <p className="text-sm font-semibold text-slate-900">{title}</p>
-            <p className="mt-1 text-xs text-slate-500">Order meal yang enggak makan</p>
+            <p className="mt-1 text-xs text-slate-500">Meals ordered but not eaten</p>
 
             {!points?.length && (
                 <div className="mt-4 rounded-lg border border-dashed border-slate-300 px-3 py-8 text-center text-xs text-slate-500">
-                    Belum ada data.
+                    No data yet.
                 </div>
             )}
 
@@ -175,9 +175,10 @@ function NotEatenChart({ title, points, group }) {
     );
 }
 
-export default function Index({ orderMeals, summary, notEatenCharts, mode, createRouteName, showRouteName, editRouteName, destroyRouteName, indexRouteName, printRouteName, printItemRouteName, filters }) {
+export default function Index({ orderMeals, summary, notEatenCharts, mode, createRouteName, showRouteName, editRouteName, destroyRouteName, indexRouteName, printRouteName, printItemRouteName, filters, checkMealFormula }) {
     const isExitPermitMode = mode === 'exit_permit';
     const [search, setSearch] = useState(filters?.search ?? '');
+    const [showCheckMealModal, setShowCheckMealModal] = useState(false);
     const [menuFilter, setMenuFilter] = useState(filters?.menu ?? '');
     const [shiftFilter, setShiftFilter] = useState(filters?.shift ?? '');
     const [dateFrom, setDateFrom] = useState(filters?.date_from ?? '');
@@ -185,7 +186,7 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
     const firstRender = useRef(true);
     const skipAutoFilter = useRef(false);
 
-    const todayLabel = new Intl.DateTimeFormat('id-ID', {
+    const todayLabel = new Intl.DateTimeFormat('en-US', {
         weekday: 'long',
         day: '2-digit',
         month: 'long',
@@ -245,7 +246,7 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
     };
 
     const handleDelete = (id) => {
-        if (confirm('Hapus data order meal ini?')) {
+        if (confirm('Delete this meal order?')) {
             router.delete(route(destroyRouteName, id));
         }
     };
@@ -300,8 +301,8 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                             </h3>
                             <p className="mt-2 text-sm text-slate-600">
                                 {isExitPermitMode
-                                    ? 'Khusus karyawan yang sudah lolos alur Exit Permit dan verifikasi absensi Sisca.'
-                                    : 'Pantau distribusi paket umum, realisasi konsumsi, dan additional visitor dalam satu tampilan.'}
+                                    ? 'Only for employees who have passed the Exit Permit flow and Sisca attendance verification.'
+                                    : 'Track general pack distribution, actual consumption, and additional visitors in one view.'}
                             </p>
                         </div>
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -316,7 +317,7 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                     rel="noreferrer"
                                     className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
                                 >
-                                    Print Harian
+                                    Print Daily
                                 </a>
                                 <a
                                     href={buildPrintHref('weekly')}
@@ -324,7 +325,7 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                     rel="noreferrer"
                                     className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
                                 >
-                                    Print Mingguan
+                                    Print Weekly
                                 </a>
                                 <a
                                     href={buildPrintHref('monthly')}
@@ -332,14 +333,21 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                     rel="noreferrer"
                                     className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
                                 >
-                                    Print Bulanan
+                                    Print Monthly
                                 </a>
                             </div>
+                            <button
+                                type="button"
+                                onClick={() => setShowCheckMealModal(true)}
+                                className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-500"
+                            >
+                                Check Order Meal
+                            </button>
                             <Link
                                 href={route(createRouteName)}
                                 className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700"
                             >
-                                + Tambah Order Meal
+                                + Add Order Meal
                             </Link>
                         </div>
                     </div>
@@ -347,15 +355,15 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
 
                 <div className="grid gap-4 md:grid-cols-3">
                     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Paket Disediakan</p>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Provided Packs</p>
                         <p className="mt-3 text-4xl font-black text-slate-900">{summary.provided_total}</p>
                     </div>
                     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Realisasi Makan</p>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Actual Meals</p>
                         <p className="mt-3 text-4xl font-black text-cyan-700">{summary.actual_total}</p>
                     </div>
                     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Sisa Paket</p>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Remaining Packs</p>
                         <p className="mt-3 text-4xl font-black text-emerald-700">{summary.remaining_total}</p>
                     </div>
                 </div>
@@ -363,8 +371,8 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Efisiensi Distribusi</p>
-                            <p className="mt-1 text-sm text-slate-600">Paket terpakai dibanding paket disediakan.</p>
+                            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Distribution Efficiency</p>
+                            <p className="mt-1 text-sm text-slate-600">Used packs compared to provided packs.</p>
                         </div>
                         <div className="text-right">
                             <p className="text-3xl font-black text-cyan-700">{utilizationPct}%</p>
@@ -378,24 +386,24 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                         />
                     </div>
                     <p className="mt-2 text-xs text-slate-500">
-                        {actualTotal} dari {providedTotal} paket sudah dikonsumsi.
+                        {actualTotal} of {providedTotal} packs have been consumed.
                     </p>
                 </div>
 
                 <div className="grid gap-4 xl:grid-cols-3">
-                    <NotEatenChart title="Grafik Harian" points={notEatenCharts?.daily ?? []} group="daily" />
-                    <NotEatenChart title="Grafik Mingguan" points={notEatenCharts?.weekly ?? []} group="weekly" />
-                    <NotEatenChart title="Grafik Bulanan" points={notEatenCharts?.monthly ?? []} group="monthly" />
+                    <NotEatenChart title="Daily Chart" points={notEatenCharts?.daily ?? []} group="daily" />
+                    <NotEatenChart title="Weekly Chart" points={notEatenCharts?.weekly ?? []} group="weekly" />
+                    <NotEatenChart title="Monthly Chart" points={notEatenCharts?.monthly ?? []} group="monthly" />
                 </div>
 
                 <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
                     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-5 py-4">
                         <div>
-                            <p className="text-sm font-semibold text-slate-900">Daftar Order Meal</p>
-                            <p className="text-xs text-slate-500">Total data: {totalRows}</p>
+                            <p className="text-sm font-semibold text-slate-900">Order Meal List</p>
+                            <p className="text-xs text-slate-500">Total records: {totalRows}</p>
                             {!isExitPermitMode && (
                                 <p className="mt-1 text-xs text-slate-500">
-                                    Amount dihitung dari paket disediakan (quantity) x unit price + pajak, bukan dari realisasi makan.
+                                    Amount is calculated from provided packs (quantity) x unit price + tax, not from actual meals.
                                 </p>
                             )}
                         </div>
@@ -404,7 +412,7 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Cari karyawan/menu"
+                                placeholder="Search employee/menu"
                                 className="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700"
                             />
                             <input
@@ -424,7 +432,7 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                 onChange={(e) => setMenuFilter(e.target.value)}
                                 className="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700"
                             >
-                                <option value="">Semua Menu</option>
+                                <option value="">All Menus</option>
                                 {(orderMeals?.data ?? [])
                                     .map((item) => String(item.menu_name ?? '').trim())
                                     .filter(Boolean)
@@ -438,7 +446,7 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                 onChange={(e) => setShiftFilter(e.target.value)}
                                 className="rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700"
                             >
-                                <option value="">Semua Shift</option>
+                                <option value="">All Shifts</option>
                                 {isExitPermitMode ? (
                                     <>
                                         <option value="single">Single</option>
@@ -455,7 +463,7 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                 )}
                             </select>
                             <div className="flex items-center rounded-md border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs font-semibold text-cyan-700">
-                                Auto Filter Aktif
+                                Auto Filter On
                             </div>
                             <button
                                 type="button"
@@ -471,8 +479,8 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                         <table className="min-w-full divide-y divide-slate-200 text-sm">
                             <thead className="bg-slate-100">
                                 <tr>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Karyawan</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Tanggal</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Employee</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Date</th>
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Menu</th>
                                     {isExitPermitMode ? (
                                         <>
@@ -487,11 +495,11 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                             <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">OT Night</th>
                                         </>
                                     )}
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Disediakan</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Realisasi</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Sisa</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Provided</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Actual</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Remaining</th>
                                     {!isExitPermitMode && <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Amount</th>}
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Aksi</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Action</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
@@ -532,7 +540,7 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                             <td className="px-4 py-3 text-slate-700">
                                                 <p>{currencyFormatter.format(item.total_amount ?? 0)}</p>
                                                 {Number(item.actual_quantity ?? 0) === 0 && (
-                                                    <p className="text-[11px] text-slate-500">Realisasi 0, biaya tetap dari paket disediakan.</p>
+                                                    <p className="text-[11px] text-slate-500">Actual 0, cost is still based on provided packs.</p>
                                                 )}
                                             </td>
                                         )}
@@ -563,7 +571,7 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                                     onClick={() => handleDelete(item.id)}
                                                     className="inline-flex h-9 min-w-[78px] items-center justify-center whitespace-nowrap rounded bg-rose-600 px-3 text-center text-xs font-semibold leading-none text-white transition hover:bg-rose-500"
                                                 >
-                                                    Hapus
+                                                    Delete
                                                 </button>
                                             </div>
                                         </td>
@@ -575,12 +583,12 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                     </div>
 
                     {!(orderMeals?.data ?? []).length && (
-                        <div className="px-4 py-10 text-center text-sm text-slate-500">Belum ada data order meal.</div>
+                        <div className="px-4 py-10 text-center text-sm text-slate-500">No order meal data yet.</div>
                     )}
 
                     {hasActiveFilter && (
                         <div className="border-t border-slate-200 px-4 py-3 text-xs text-slate-500">
-                            Filter aktif diterapkan lintas seluruh data dan pagination.
+                            Active filters apply across all data and pagination.
                         </div>
                     )}
 
@@ -615,6 +623,78 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                     )}
                 </div>
             </div>
+
+            {showCheckMealModal && checkMealFormula && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overflow-x-hidden bg-slate-900/50 p-4 backdrop-blur-sm">
+                    <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+                        <h3 className="mb-4 text-xl font-bold text-slate-900">Check Order Meal Calculation</h3>
+                        {checkMealFormula.attendance_warning && (
+                            <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                                {checkMealFormula.attendance_warning}
+                            </div>
+                        )}
+                        <div className="space-y-3 text-sm text-slate-700">
+                            <div className="overflow-hidden rounded-lg border border-slate-200">
+                                <table className="min-w-full text-sm">
+                                    <tbody className="divide-y divide-slate-200">
+                                        <tr>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Man Power (Total Karyawan)</td>
+                                            <td className="px-3 py-2 text-right font-semibold text-slate-900">{checkMealFormula.total_karyawan}</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Karyawan yang Hadir (Absensi)</td>
+                                            <td className="px-3 py-2 text-right font-semibold text-slate-900">{checkMealFormula.karyawan_hadir_absensi}</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Not Clock In (Exit Permit)</td>
+                                            <td className="px-3 py-2 text-right font-semibold text-emerald-600">{checkMealFormula.karyawan_hadir_plan_check_in}</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Karyawan yang Hadir (Adjusted)</td>
+                                            <td className="px-3 py-2 text-right font-semibold text-slate-900">{checkMealFormula.karyawan_hadir}</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Overtime Day Shift</td>
+                                            <td className="px-3 py-2 text-right font-semibold text-slate-500">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Night Shift</td>
+                                            <td className="px-3 py-2 text-right font-semibold text-slate-500">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Overtime Night Shift</td>
+                                            <td className="px-3 py-2 text-right font-semibold text-slate-500">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Karyawan yang Absen</td>
+                                            <td className="px-3 py-2 text-right font-semibold text-rose-600">{checkMealFormula.karyawan_absen}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div className="mt-4 rounded-xl bg-slate-50 p-4">
+                                <p className="mb-2 text-xs font-semibold uppercase text-slate-500">Formula</p>
+                                <p className="rounded border border-slate-200 bg-white p-2 font-mono text-sm text-slate-700">
+                                    {checkMealFormula.total_karyawan} - (({checkMealFormula.exit_permit} - {checkMealFormula.karyawan_hadir_plan_check_in}) + {checkMealFormula.karyawan_absen})
+                                </p>
+                                <div className="mt-3 flex items-center justify-between border-t border-slate-200 pt-3">
+                                    <span className="font-bold text-slate-900">Total Makan di Kantin</span>
+                                    <span className="text-2xl font-black text-cyan-700">{checkMealFormula.check_order_meal}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="mt-6 flex justify-end">
+                            <button
+                                type="button"
+                                onClick={() => setShowCheckMealModal(false)}
+                                className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </AuthenticatedLayout>
     );
 }

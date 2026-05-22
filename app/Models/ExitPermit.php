@@ -21,9 +21,18 @@ class ExitPermit extends Model
 
     public const EXIT_TYPE_SICK = 'sick';
 
+    public const EXIT_TYPE_PERSONAL = 'personal';
+
+    public const EXIT_TYPE_COMPANY = 'company';
+
+    public const EXIT_TYPE_ASSIGNMENT = 'assignment';
+
     public const EXIT_TYPES = [
         self::EXIT_TYPE_BUSINESS_TRIP,
         self::EXIT_TYPE_SICK,
+        self::EXIT_TYPE_PERSONAL,
+        self::EXIT_TYPE_COMPANY,
+        self::EXIT_TYPE_ASSIGNMENT,
     ];
 
     public const REIMBURSEMENT_AMOUNTS = [12000, 13000];
@@ -34,6 +43,7 @@ class ExitPermit extends Model
         'permit_date',
         'start_time',
         'end_time',
+        'plan_check_in',
         'destination',
         'exit_type',
         'order_car',
@@ -69,6 +79,7 @@ class ExitPermit extends Model
             'arrange_template_override' => 'array',
             'returned_to_office' => 'boolean',
             'eligible_for_meal' => 'boolean',
+            'plan_check_in' => 'boolean',
             'manager_approved_at' => 'datetime',
             'md_approved_at' => 'datetime',
             'hr_verified_at' => 'datetime',
@@ -86,19 +97,14 @@ class ExitPermit extends Model
 
     public function qualifiesForMeal(): bool
     {
-        if (!$this->returned_to_office || !$this->start_time || !$this->end_time) {
+        if (!$this->returned_to_office || !$this->start_time) {
             return false;
         }
 
         $startTime = Carbon::createFromFormat('H:i', substr($this->start_time, 0, 5));
-        $endTime = Carbon::createFromFormat('H:i', substr($this->end_time, 0, 5));
+        $cutoffTime = Carbon::createFromTimeString('13:00');
 
-        $leftBeforeNoonAndReturnedBeforeLunch = $startTime->lt(Carbon::createFromTimeString('12:00'))
-            && $endTime->lte(Carbon::createFromTimeString('12:00'));
-
-        $leftAfterOnePmAndReturned = $startTime->gte(Carbon::createFromTimeString('13:00'));
-
-        return $leftBeforeNoonAndReturnedBeforeLunch || $leftAfterOnePmAndReturned;
+        return $startTime->lte($cutoffTime);
     }
 
     public function user(): BelongsTo

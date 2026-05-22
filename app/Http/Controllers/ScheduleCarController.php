@@ -6,6 +6,7 @@ use App\Models\Car;
 use App\Models\Driver;
 use App\Models\ExitPermit;
 use App\Models\ScheduleCarArrangementLog;
+use App\Notifications\ExitPermitCarArranged;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,7 +15,13 @@ use Inertia\Response;
 
 class ScheduleCarController extends Controller
 {
-    private const RATNA_EMAIL = 'ratna@example.com';
+    private const RATNA_EMAIL = 'hrga-01@thaisummit.co.id';
+
+    private const ARRANGE_EXIT_TYPES = [
+        ExitPermit::EXIT_TYPE_BUSINESS_TRIP,
+        ExitPermit::EXIT_TYPE_ASSIGNMENT,
+        ExitPermit::EXIT_TYPE_COMPANY,
+    ];
 
     private const ARRANGE_TEMPLATE_FIELDS = [
         'tanggal_dinas_luar',
@@ -47,7 +54,7 @@ class ScheduleCarController extends Controller
         $events = ExitPermit::query()
             ->whereDate('permit_date', '>=', $periodStart->toDateString())
             ->whereDate('permit_date', '<=', $periodEnd->toDateString())
-            ->where('exit_type', ExitPermit::EXIT_TYPE_BUSINESS_TRIP)
+            ->whereIn('exit_type', self::ARRANGE_EXIT_TYPES)
             ->where('order_car', true)
             ->where('status', '!=', 'rejected')
             ->orderBy('permit_date')
@@ -69,7 +76,7 @@ class ScheduleCarController extends Controller
                 return [
                     'id' => $permit->id,
                     'permit_date' => $date->toDateString(),
-                    'day_name' => $date->locale('id')->translatedFormat('l'),
+                    'day_name' => $date->locale('en')->translatedFormat('l'),
                     'start_time' => $this->toHourMinute($permit->start_time),
                     'end_time' => $this->toHourMinute($permit->end_time),
                     'destination' => $permit->destination,
@@ -104,7 +111,7 @@ class ScheduleCarController extends Controller
             ->all();
 
         $arrangeItems = ExitPermit::query()
-            ->where('exit_type', ExitPermit::EXIT_TYPE_BUSINESS_TRIP)
+            ->whereIn('exit_type', self::ARRANGE_EXIT_TYPES)
             ->where('order_car', true)
             ->where('status', 'pending')
             ->orderBy('permit_date')
@@ -175,9 +182,11 @@ class ScheduleCarController extends Controller
         $exitPermit->arrange_template_override = $templateOverride;
         $exitPermit->save();
 
+        $this->notifyCarArrangementCompleted($exitPermit);
+
         $this->logArrangement($exitPermit, $car, $driver, 'create');
 
-        return redirect()->route('schedule-cars.edit', $exitPermit)->with('success', 'Arrange order car berhasil dibuat.');
+        return redirect()->route('schedule-cars.edit', $exitPermit)->with('success', 'Car arrangement created successfully.');
     }
 
     public function edit(ExitPermit $exitPermit): Response
@@ -187,7 +196,7 @@ class ScheduleCarController extends Controller
         $exitPermit->loadMissing([
             'user:id,name',
             'requestors:id,exit_permit_id,name,department,reimburs_lunch_box',
-            'costCenter:id,name',
+            'costCenter:id,name,cost_center_sap,desc_cost_c',
         ]);
 
         $history = $exitPermit->scheduleCarArrangementLogs()
@@ -227,6 +236,8 @@ class ScheduleCarController extends Controller
         $this->authorizeRatnaOnly();
         $this->ensureCanArrange($exitPermit);
 
+        $wasArranged = filled($exitPermit->vehicle_plate) && filled($exitPermit->driver_name);
+
         $validated = $request->validate([
             'car_id' => ['required', 'integer', 'exists:cars,id'],
             'driver_id' => ['required', 'integer', 'exists:drivers,id'],
@@ -241,9 +252,14 @@ class ScheduleCarController extends Controller
         $exitPermit->arrange_template_override = $templateOverride;
         $exitPermit->save();
 
+        $isArranged = filled($exitPermit->vehicle_plate) && filled($exitPermit->driver_name);
+        if (!$wasArranged && $isArranged) {
+            $this->notifyCarArrangementCompleted($exitPermit);
+        }
+
         $this->logArrangement($exitPermit, $car, $driver, 'update');
 
-        return redirect()->route('schedule-cars.edit', $exitPermit)->with('success', 'Arrange order car berhasil diperbarui.');
+        return redirect()->route('schedule-cars.edit', $exitPermit)->with('success', 'Car arrangement updated successfully.');
     }
 
     private function arrangeTargets(bool $onlyUnarranged = false): array
@@ -252,9 +268,9 @@ class ScheduleCarController extends Controller
             ->with([
                 'user:id,name',
                 'requestors:id,exit_permit_id,name,department,reimburs_lunch_box',
-                'costCenter:id,name',
+                'costCenter:id,name,cost_center_sap,desc_cost_c',
             ])
-            ->where('exit_type', ExitPermit::EXIT_TYPE_BUSINESS_TRIP)
+            ->whereIn('exit_type', self::ARRANGE_EXIT_TYPES)
             ->where('order_car', true)
             ->where('status', 'pending')
             ->when($onlyUnarranged, fn($query) => $query->where(function ($nestedQuery) {
@@ -292,7 +308,16 @@ class ScheduleCarController extends Controller
 
     private function buildArrangeTemplate(ExitPermit $permit): array
     {
-        $costCenterName = trim((string) ($permit->costCenter?->name ?? ''));
+        $costCenter = $permit->costCenter;
+        $costCenterSap = trim((string) ($costCenter?->cost_center_sap ?? ''));
+        $costCenterName = trim((string) ($costCenter?->name ?? ''));
+        $costCenterDesc = trim((string) ($costCenter?->desc_cost_c ?? ''));
+        $costCenterLabel = sprintf(
+            '%s | %s | %s',
+            $costCenterSap !== '' ? $costCenterSap : '-',
+            $costCenterName !== '' ? $costCenterName : '-',
+            $costCenterDesc !== '' ? $costCenterDesc : '-',
+        );
         $requestorNames = $permit->requestors
             ->pluck('name')
             ->filter()
@@ -310,7 +335,7 @@ class ScheduleCarController extends Controller
             'user_yang_pergi' => $requestorNames->isNotEmpty()
                 ? $requestorNames->join(', ')
                 : ($permit->user?->name ?: '-'),
-            'budget_dept_cost_center' => $costCenterName !== '' ? $costCenterName : '-',
+            'budget_dept_cost_center' => $costCenterLabel,
             'alasan_pergi' => $permit->reason ?: '-',
             'detail_barang_delivery' => $permit->notes ?: '-',
             'permintaan_kurangi_catering' => $this->cateringReductionSummary($permit),
@@ -319,6 +344,10 @@ class ScheduleCarController extends Controller
         $override = $this->normalizedArrangeTemplateOverride($permit->arrange_template_override);
 
         foreach (self::ARRANGE_TEMPLATE_FIELDS as $field) {
+            if ($field === 'budget_dept_cost_center') {
+                continue;
+            }
+
             if (filled($override[$field] ?? null)) {
                 $autoTemplate[$field] = $override[$field];
             }
@@ -372,11 +401,11 @@ class ScheduleCarController extends Controller
             ->values();
 
         if ($requestorsAskReduction->isEmpty()) {
-            return 'Tidak ada permintaan pengurangan catering.';
+            return 'No request to reduce catering.';
         }
 
         return sprintf(
-            'Kurangi %d pax untuk: %s',
+            'Reduce %d pax for: %s',
             $requestorsAskReduction->count(),
             $requestorsAskReduction->join(', '),
         );
@@ -413,7 +442,7 @@ class ScheduleCarController extends Controller
     private function ensureCanArrange(ExitPermit $exitPermit): void
     {
         if (
-            $exitPermit->exit_type !== ExitPermit::EXIT_TYPE_BUSINESS_TRIP
+            !in_array($exitPermit->exit_type, self::ARRANGE_EXIT_TYPES, true)
             || !(bool) $exitPermit->order_car
             || $exitPermit->status !== 'pending'
         ) {
@@ -437,11 +466,28 @@ class ScheduleCarController extends Controller
 
     private function authorizeRatnaOnly(): void
     {
-        $email = strtolower((string) request()->user()?->email);
+        $user = request()->user();
+        $email = strtolower((string) $user?->email);
+
+        if ($user?->role?->code === 'admin') {
+            return;
+        }
 
         if ($email !== self::RATNA_EMAIL) {
             abort(403);
         }
+    }
+
+    private function notifyCarArrangementCompleted(ExitPermit $exitPermit): void
+    {
+        $exitPermit->loadMissing('user:id,name,email');
+        $owner = $exitPermit->user;
+
+        if (!$owner || !filled($owner->email)) {
+            return;
+        }
+
+        $owner->notify(new ExitPermitCarArranged($exitPermit));
     }
 
     private function resolveDate(string $value): Carbon

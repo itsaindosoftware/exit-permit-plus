@@ -11,7 +11,7 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    private const ATTENDANCE_VERIFIER_EMAIL = 'sisca.dewiyani@example.com';
+    private const ATTENDANCE_VERIFIER_EMAIL = 'payroll.hr@thaisummit.co.id';
 
     public function __invoke(): Response
     {
@@ -21,9 +21,10 @@ class DashboardController extends Controller
         $monthStart = $now->copy()->startOfMonth()->toDateString();
         $monthEnd = $now->copy()->endOfMonth()->toDateString();
         $roleCode = $user?->role?->code;
-        $canViewMealAnalytics = in_array($user?->role?->code, ['hr', 'manager', 'md', 'hr_manager'], true);
-        $canAccessExitPermitApproval = in_array($roleCode, ['manager', 'md', 'hr_manager'], true)
+        $canViewMealAnalytics = in_array($user?->role?->code, ['hr', 'manager', 'md', 'hr_manager', 'admin'], true);
+        $canAccessExitPermitApproval = in_array($roleCode, ['manager', 'md', 'hr_manager', 'admin'], true)
             || ($roleCode === 'hr' && strtolower((string) $user?->email) === self::ATTENDANCE_VERIFIER_EMAIL);
+        $isDualApprovalUser = (bool) ($user?->isWidaMustikaSari() ?? false);
 
         $myExitPermits = ExitPermit::query()->where('user_id', $userId);
         $myExitPermitsThisMonth = (clone $myExitPermits)->whereBetween('permit_date', [$monthStart, $monthEnd]);
@@ -77,7 +78,18 @@ class DashboardController extends Controller
                 ->count(),
         ];
 
-        if ($roleCode === 'manager') {
+        if ($isDualApprovalUser) {
+            $approvalQuery->where(function ($subQuery) {
+                $subQuery->where(function ($managerQuery) {
+                    $managerQuery->whereNull('manager_approved_at')->where('status', 'pending');
+                })->orWhere(function ($hrManagerQuery) {
+                    $hrManagerQuery->whereNotNull('manager_approved_at')
+                        ->whereNotNull('md_approved_at')
+                        ->whereNull('hr_verified_at')
+                        ->where('status', 'pending');
+                });
+            });
+        } elseif ($roleCode === 'manager') {
             $approvalQuery->whereNull('manager_approved_at')->where('status', 'pending');
         } elseif ($roleCode === 'md') {
             $approvalQuery->whereNotNull('manager_approved_at')

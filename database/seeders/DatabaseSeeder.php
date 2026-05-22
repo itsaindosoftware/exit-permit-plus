@@ -39,6 +39,9 @@ class DatabaseSeeder extends Seeder
         $rolesByCode = Role::query()
             ->whereIn('code', ['user', 'hr', 'hr_manager', 'manager', 'md', 'accounting', 'admin', 'production'])
             ->pluck('id', 'code');
+        $secondaryRolesByCode = Role::query()
+            ->whereIn('code', ['hr_manager'])
+            ->pluck('id', 'code');
 
         $defaultUsers = [
             [
@@ -75,10 +78,11 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Wida Mustika Sari',
                 'email' => 'wida.mustika.sari@example.com',
                 'role_code' => 'manager',
+                'secondary_role_code' => 'hr_manager',
             ],
             [
                 'name' => 'Ratna',
-                'email' => 'ratna@example.com',
+                'email' => 'hrga-01@thaisummit.co.id',
                 'role_code' => 'hr',
             ],
             [
@@ -88,7 +92,7 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'name' => 'Sisca Dewiyani',
-                'email' => 'sisca.dewiyani@example.com',
+                'email' => 'payroll.hr@thaisummit.co.id',
                 'role_code' => 'hr',
             ],
             // buat 1 akun admin setiap departemen untuk sebagi usernya
@@ -117,6 +121,7 @@ class DatabaseSeeder extends Seeder
                     'name' => $defaultUser['name'],
                     'password' => Hash::make('password'),
                     'role_id' => $rolesByCode[$defaultUser['role_code']] ?? null,
+                    'secondary_role_id' => $secondaryRolesByCode[$defaultUser['secondary_role_code'] ?? ''] ?? null,
                     'is_available_for_approval' => true,
                     'email_verified_at' => now(),
                 ],

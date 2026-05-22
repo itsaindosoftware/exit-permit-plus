@@ -100,7 +100,7 @@ class ExitPermitListController extends Controller
 
     private function authorizeHrOnly(): void
     {
-        abort_unless(request()->user()?->role?->code === 'hr', 403);
+        abort_unless(in_array(request()->user()?->role?->code, ['hr', 'admin'], true), 403);
     }
 
     private function approvalStageLabel(ExitPermit $exitPermit): string
@@ -109,22 +109,22 @@ class ExitPermitListController extends Controller
 
         if ($exitPermit->status === 'approved') {
             if ($exitPermit->exit_type !== ExitPermit::EXIT_TYPE_BUSINESS_TRIP) {
-                return 'Approved by HR Manager | Selesai (Diketahui Sisca)';
+                return 'Approved by HR Manager | Completed (Acknowledged by Sisca)';
             }
 
             if (!$exitPermit->attendance_checked_at) {
-                return 'Approved by HR Manager | Menunggu verifikasi absensi Sisca';
+                return 'Approved by HR Manager | Waiting for Sisca attendance verification';
             }
 
             if ($exitPermit->post_md_path === ExitPermit::POST_MD_PATH_MEAL) {
-                return 'Approved by HR Manager | Jalur Meal';
+                return 'Approved by HR Manager | Acknowledged by Sisca (HRD)';
             }
 
             if ($exitPermit->post_md_path === ExitPermit::POST_MD_PATH_REIMBURSEMENT) {
-                return 'Approved by HR Manager | Jalur Reimbursement';
+                return 'Approved by HR Manager | Reimbursement Path';
             }
 
-            return 'Approved by HR Manager | Sepengetahuan HR Manager (' . $approverName . ')';
+            return 'Approved by HR Manager | Acknowledged by HR Manager (' . $approverName . ')';
         }
 
         if ($exitPermit->status === 'rejected') {
@@ -157,7 +157,7 @@ class ExitPermitListController extends Controller
             && $exitPermit->exit_type !== ExitPermit::EXIT_TYPE_BUSINESS_TRIP
             && (bool) $exitPermit->hr_verified_at
         ) {
-            return 'Diketahui Sisca (HRD)';
+            return 'Acknowledged by Sisca (HRD)';
         }
 
         if (
@@ -165,7 +165,7 @@ class ExitPermitListController extends Controller
             && (bool) $exitPermit->attendance_checked_at
             && (bool) $exitPermit->has_valid_checkin
         ) {
-            return 'Checked By HR: Sisca';
+            return 'Acknowledged by Sisca (HRD)';
         }
 
         return strtoupper((string) $exitPermit->status);

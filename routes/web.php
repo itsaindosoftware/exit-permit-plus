@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExitPermitListController;
 use App\Http\Controllers\ExitPermitController;
 use App\Http\Controllers\OrderMealController;
+use App\Http\Controllers\PriceSupplierController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ReimbursementController;
@@ -25,6 +26,7 @@ Route::middleware('auth')->group(function () {
     Route::post('notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::get('exit-permit-list', ExitPermitListController::class)->name('exit-permit-list.index');
     Route::get('exit-permit-approvals', [ExitPermitController::class, 'approvalIndex'])->name('exit-permit-approvals.index');
+    Route::get('exit-permit-history', [ExitPermitController::class, 'historyIndex'])->name('exit-permit-history.index');
     Route::get('exit-permits/requestor-options', [ExitPermitController::class, 'requestorLookup'])
         ->name('exit-permits.requestor-options');
     Route::get('schedule-cars', [ScheduleCarController::class, 'index'])->name('schedule-cars.index');
@@ -36,8 +38,10 @@ Route::middleware('auth')->group(function () {
         ->name('exit-permits.attachment');
     Route::get('exit-permits/{exitPermit}/print', [ExitPermitController::class, 'print'])
         ->name('exit-permits.print');
+    /*
     Route::post('exit-permits/{exitPermit}/attendance-preview', [ExitPermitController::class, 'previewAttendance'])
         ->name('exit-permits.attendance-preview');
+    */
     Route::get('reimbursements/{reimbursement}/attachment', [ReimbursementController::class, 'attachment'])
         ->name('reimbursements.attachment');
     Route::get('reimbursements/{reimbursement}/print', [ReimbursementController::class, 'print'])
@@ -47,6 +51,7 @@ Route::middleware('auth')->group(function () {
     Route::get('reimbursement-approvals', [ReimbursementController::class, 'approvalIndex'])
         ->name('reimbursement-approvals.index');
     Route::resource('exit-permits', ExitPermitController::class);
+    Route::resource('price-suppliers', PriceSupplierController::class);
     Route::get('order-meals/print', [OrderMealController::class, 'print'])->name('order-meals.print');
     Route::get('order-meals/{orderMeal}/print', [OrderMealController::class, 'printItem'])->name('order-meals.print-item');
     Route::resource('order-meals', OrderMealController::class)->except([]);

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\ExitPermit;
 use App\Models\OrderMeal;
+use App\Models\PriceSupplier;
+use App\Services\AttendanceMatchingService;
 use App\Services\ExitPermitLunchConversionService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -17,10 +19,12 @@ use Inertia\Response;
 
 class OrderMealController extends Controller
 {
-    private const ATTENDANCE_VERIFIER_EMAIL = 'sisca.dewiyani@example.com';
+    private const ATTENDANCE_VERIFIER_EMAIL = 'payroll.hr@thaisummit.co.id';
 
-    public function __construct(private readonly ExitPermitLunchConversionService $exitPermitLunchConversionService)
-    {
+    public function __construct(
+        private readonly ExitPermitLunchConversionService $exitPermitLunchConversionService,
+        private readonly AttendanceMatchingService $attendanceMatchingService,
+    ) {
     }
 
     public function index(): Response
@@ -210,7 +214,10 @@ class OrderMealController extends Controller
             ->limit(120)
             ->get();
 
+        $checkMealFormula = $this->buildCheckMealFormula();
+
         return Inertia::render('OrderMeals/Index', [
+            'checkMealFormula' => $checkMealFormula,
             'mode' => $scope,
             'indexRouteName' => $this->routeName($scope, 'index'),
             'printRouteName' => $this->routeName($scope, 'print'),
@@ -270,13 +277,16 @@ class OrderMealController extends Controller
     {
         $eligibleExitPermits = [];
         $eligibilityWarning = null;
+        $checkMealFormula = $this->buildCheckMealFormula();
+        $defaultCapacity = (int) ($checkMealFormula['check_order_meal'] ?? 0);
+        $mealPricing = $this->resolveMealPricing();
 
         if ($scope === OrderMeal::SCOPE_EXIT_PERMIT) {
             $this->ensureSisca(request()->user());
             $eligibleExitPermits = $this->eligibleExitPermitsForMeal(request()->user());
 
             if (count($eligibleExitPermits) === 0) {
-                $eligibilityWarning = 'Order meal Exit Permit tersedia setelah Exit Permit berstatus Checked By HR Sisca, requestor hasil matching Y, dan kembali ke kantor.';
+                $eligibilityWarning = 'Exit Permit meal order is available after Exit Permit status is Checked By HR Sisca, requestor matching result is Y, and returned to office.';
             }
         }
 
@@ -286,6 +296,8 @@ class OrderMealController extends Controller
             'storeRouteName' => $this->routeName($scope, 'store'),
             'eligibleExitPermits' => $eligibleExitPermits,
             'eligibilityWarning' => $eligibilityWarning,
+            'defaultCapacity' => $defaultCapacity,
+            'mealPricing' => $mealPricing,
         ]);
     }
 
@@ -365,11 +377,12 @@ class OrderMealController extends Controller
     private function storeByScope(Request $request, string $scope): RedirectResponse
     {
         $validated = $this->validatedData($request, false, true, $scope);
-        $scheduleType = $validated['schedule_type'];
-        $repeatCount = (int) ($validated['repeat_count'] ?? 1);
+        $scheduleType = 'single';
+        $repeatCount = 1;
         $baseMealDate = Carbon::parse((string) $validated['meal_date']);
         $exitPermitId = null;
         $matchedRequestorCount = null;
+        $mealPricing = $this->resolveMealPricing();
 
         if ($scope === OrderMeal::SCOPE_EXIT_PERMIT) {
             $this->ensureSisca($request->user());
@@ -389,9 +402,9 @@ class OrderMealController extends Controller
             'overtime_night_shift_qty' => 0,
         ];
         $generalCostData = [
-            'meal_unit_price' => 12000,
-            'local_tax_rate' => 10,
-            'service_tax_rate' => 2,
+            'meal_unit_price' => (int) $mealPricing['meal_unit_price'],
+            'local_tax_rate' => (float) $mealPricing['local_tax_rate'],
+            'service_tax_rate' => (float) $mealPricing['service_tax_rate'],
             'subtotal_amount' => 0,
             'local_tax_amount' => 0,
             'service_tax_amount' => 0,
@@ -413,9 +426,9 @@ class OrderMealController extends Controller
 
             $generalCostData = $this->calculateGeneralMealCost(
                 $baseQuantity,
-                (int) ($validated['meal_unit_price'] ?? 12000),
-                (float) ($validated['local_tax_rate'] ?? 10),
-                (float) ($validated['service_tax_rate'] ?? 2),
+                (int) $mealPricing['meal_unit_price'],
+                (float) $mealPricing['local_tax_rate'],
+                (float) $mealPricing['service_tax_rate'],
             );
         }
 
@@ -431,7 +444,7 @@ class OrderMealController extends Controller
 
         if ($actualQuantity > $totalQuantity) {
             throw ValidationException::withMessages([
-                'actual_quantity' => 'Realisasi makan tidak boleh melebihi total paket (paket dasar + visitor).',
+                'actual_quantity' => 'Actual meal count cannot exceed total packages (base packages + visitors).',
             ]);
         }
 
@@ -473,8 +486,8 @@ class OrderMealController extends Controller
         }
 
         $successMessage = $repeatCount > 1
-            ? "Data order meal berhasil ditambahkan ({$repeatCount} jadwal)."
-            : 'Data order meal berhasil ditambahkan.';
+            ? "Meal order data has been successfully created ({$repeatCount} schedules)."
+            : 'Meal order data has been successfully created.';
 
         return redirect()->route($this->routeName($scope, 'index'))->with('success', $successMessage);
     }
@@ -486,11 +499,13 @@ class OrderMealController extends Controller
         }
 
         $this->authorizeUser($orderMeal);
+        $mealPricing = $this->resolveMealPricing();
 
         return Inertia::render('OrderMeals/Edit', [
             'mode' => $scope,
             'indexRouteName' => $this->routeName($scope, 'index'),
             'updateRouteName' => $this->routeName($scope, 'update'),
+            'mealPricing' => $mealPricing,
             'orderMeal' => [
                 'id' => $orderMeal->id,
                 'meal_date' => $orderMeal->meal_date
@@ -569,9 +584,9 @@ class OrderMealController extends Controller
 
             $generalCostData = $this->calculateGeneralMealCost(
                 $baseQuantity,
-                (int) ($validated['meal_unit_price'] ?? 12000),
-                (float) ($validated['local_tax_rate'] ?? 10),
-                (float) ($validated['service_tax_rate'] ?? 2),
+                (int) $orderMeal->meal_unit_price,
+                (float) $orderMeal->local_tax_rate,
+                (float) $orderMeal->service_tax_rate,
             );
         }
 
@@ -579,7 +594,7 @@ class OrderMealController extends Controller
 
         if ((int) $validated['actual_quantity'] > $totalQuantity) {
             throw ValidationException::withMessages([
-                'actual_quantity' => 'Realisasi makan tidak boleh melebihi total paket (paket dasar + visitor).',
+                'actual_quantity' => 'Actual meal count cannot exceed total packages (base packages + visitors).',
             ]);
         }
 
@@ -610,7 +625,7 @@ class OrderMealController extends Controller
             $this->exitPermitLunchConversionService->applyPendingForDate((string) $orderMeal->meal_date);
         }
 
-        return redirect()->route($this->routeName($scope, 'index'))->with('success', 'Data order meal berhasil diperbarui.');
+        return redirect()->route($this->routeName($scope, 'index'))->with('success', 'Meal order data has been successfully updated.');
     }
 
     private function destroyByScope(OrderMeal $orderMeal, string $scope): RedirectResponse
@@ -623,7 +638,7 @@ class OrderMealController extends Controller
 
         $orderMeal->delete();
 
-        return redirect()->route($this->routeName($scope, 'index'))->with('success', 'Data order meal berhasil dihapus.');
+        return redirect()->route($this->routeName($scope, 'index'))->with('success', 'Meal order data has been successfully deleted.');
     }
 
     private function printByScope(Request $request, string $scope)
@@ -695,9 +710,9 @@ class OrderMealController extends Controller
             : 'General';
 
         $periodLabel = match ($period) {
-            'weekly' => 'Mingguan',
-            'monthly' => 'Bulanan',
-            default => 'Harian',
+            'weekly' => 'Weekly',
+            'monthly' => 'Monthly',
+            default => 'Daily',
         };
 
         $fileName = sprintf(
@@ -757,7 +772,7 @@ class OrderMealController extends Controller
                 $firstDate = Carbon::parse((string) $group->first()->meal_date);
 
                 $label = match ($period) {
-                    'weekly' => sprintf('Minggu Ke %d, %d', $firstDate->isoWeek, $firstDate->isoWeekYear),
+                    'weekly' => sprintf('Week %d, %d', $firstDate->isoWeek, $firstDate->isoWeekYear),
                     'monthly' => sprintf('%s %d', $monthNames[(int) $firstDate->format('n')] ?? $firstDate->format('m'), (int) $firstDate->format('Y')),
                     default => $firstDate->format('d/m/Y'),
                 };
@@ -817,7 +832,7 @@ class OrderMealController extends Controller
 
     private function canApprove($user): bool
     {
-        return in_array($user?->role?->code, ['manager', 'md'], true);
+        return in_array($user?->role?->code, ['manager', 'md', 'admin'], true);
     }
 
     private function validatedData(Request $request, bool $allowStatus = false, bool $isStore = false, ?string $scope = null): array
@@ -838,22 +853,11 @@ class OrderMealController extends Controller
             'overtime_day_shift_qty' => [Rule::requiredIf(fn() => $scope === OrderMeal::SCOPE_GENERAL), 'nullable', 'integer', 'min:0'],
             'night_shift_qty' => [Rule::requiredIf(fn() => $scope === OrderMeal::SCOPE_GENERAL), 'nullable', 'integer', 'min:0'],
             'overtime_night_shift_qty' => [Rule::requiredIf(fn() => $scope === OrderMeal::SCOPE_GENERAL), 'nullable', 'integer', 'min:0'],
-            'meal_unit_price' => [Rule::requiredIf(fn() => $scope === OrderMeal::SCOPE_GENERAL), 'nullable', 'integer', 'min:1'],
-            'local_tax_rate' => [Rule::requiredIf(fn() => $scope === OrderMeal::SCOPE_GENERAL), 'nullable', 'numeric', 'min:0'],
-            'service_tax_rate' => [Rule::requiredIf(fn() => $scope === OrderMeal::SCOPE_GENERAL), 'nullable', 'numeric', 'min:0'],
-            'schedule_type' => $isStore
-                ? ['required', Rule::in(['single', 'daily', 'weekly'])]
-                : ['nullable', Rule::in(['single', 'daily', 'weekly'])],
-            'repeat_count' => $isStore
-                ? ['required', 'integer', 'min:1', 'max:60']
-                : ['nullable', 'integer', 'min:1', 'max:60'],
+            'schedule_type' => ['nullable', Rule::in(['single', 'daily', 'weekly'])],
+            'repeat_count' => ['nullable', 'integer', 'min:1', 'max:60'],
             'notes' => ['nullable', 'string'],
             'status' => $allowStatus ? ['nullable', Rule::in(['pending', 'approved', 'rejected'])] : ['nullable'],
         ]);
-
-        if ($isStore && $validated['schedule_type'] === 'single') {
-            $validated['repeat_count'] = 1;
-        }
 
         if (!$allowStatus) {
             unset($validated['status']);
@@ -884,13 +888,102 @@ class OrderMealController extends Controller
                 $validated['overtime_day_shift_qty'],
                 $validated['night_shift_qty'],
                 $validated['overtime_night_shift_qty'],
-                $validated['meal_unit_price'],
-                $validated['local_tax_rate'],
-                $validated['service_tax_rate'],
             );
         }
 
         return $validated;
+    }
+
+    private function resolveMealPricing(): array
+    {
+        $supplier = PriceSupplier::query()
+            ->active()
+            ->orderByDesc('effective_date')
+            ->orderByDesc('id')
+            ->first()
+            ?? PriceSupplier::query()->orderByDesc('effective_date')->orderByDesc('id')->first();
+
+        if ($supplier) {
+            return [
+                'id' => $supplier->id,
+                'supplier_name' => $supplier->supplier_name,
+                'meal_unit_price' => (int) $supplier->meal_unit_price,
+                'local_tax_rate' => (float) $supplier->local_tax_rate,
+                'service_tax_rate' => (float) $supplier->service_tax_rate,
+                'effective_date' => $supplier->effective_date ? (string) $supplier->effective_date : null,
+                'is_active' => (bool) $supplier->is_active,
+                'source' => 'supplier',
+            ];
+        }
+
+        return [
+            'id' => null,
+            'supplier_name' => 'System Default',
+            'meal_unit_price' => 12000,
+            'local_tax_rate' => 10,
+            'service_tax_rate' => 2,
+            'effective_date' => null,
+            'is_active' => false,
+            'source' => 'fallback',
+        ];
+    }
+
+    private function buildCheckMealFormula(): array
+    {
+        $today = now()->toDateString();
+        $connectionName = config('attendance.requestor_source_connection', config('database.default'));
+        $karyawanTable = config('attendance.requestor_source_table', 'karyawan');
+
+        $totalKaryawan = \Illuminate\Support\Facades\DB::connection($connectionName)->table($karyawanTable)->count();
+        $karyawanYangHadir = 0;
+        $attendanceWarning = null;
+
+        try {
+            $attendanceRows = $this->attendanceMatchingService->loadRowsWithSource()['rows'] ?? collect();
+            $attendanceForDate = $attendanceRows->where('attendance_date', $today);
+
+            if ($attendanceRows->isEmpty()) {
+                $attendanceWarning = 'Attendance file loaded but no rows were found.';
+            } elseif ($attendanceForDate->isEmpty()) {
+                $attendanceWarning = 'Attendance data for today was not found in the file.';
+            }
+
+            $karyawanYangHadir = $attendanceForDate
+                ->map(function (array $row) {
+                    $employeeId = trim((string) ($row['employee_id'] ?? ''));
+                    $employeeName = trim((string) ($row['name'] ?? ''));
+
+                    return $employeeId !== '' ? $employeeId : $employeeName;
+                })
+                ->filter()
+                ->unique()
+                ->count();
+        } catch (\Throwable $exception) {
+            $karyawanYangHadir = 0;
+            $attendanceWarning = 'Attendance file could not be read. Check the network path and file format.';
+        }
+
+        $exitPermitCount = \App\Models\ExitPermitRequestor::whereHas('exitPermit', function ($q) use ($today) {
+            $q->whereDate('permit_date', $today)
+                ->where('status', 'approved');
+        })->count();
+
+        $planCheckInPresentCount = $exitPermitCount;
+        $karyawanYangHadirAdjusted = $karyawanYangHadir + $planCheckInPresentCount;
+        $karyawanYangAbsen = max(0, $totalKaryawan - $karyawanYangHadirAdjusted);
+        $remainingExitPermit = max(0, $exitPermitCount - $planCheckInPresentCount);
+        $checkOrderMeal = max(0, $totalKaryawan - ($remainingExitPermit + $karyawanYangAbsen));
+
+        return [
+            'total_karyawan' => $totalKaryawan,
+            'karyawan_hadir_absensi' => $karyawanYangHadir,
+            'karyawan_hadir_plan_check_in' => $planCheckInPresentCount,
+            'karyawan_hadir' => $karyawanYangHadirAdjusted,
+            'karyawan_absen' => $karyawanYangAbsen,
+            'exit_permit' => $exitPermitCount,
+            'check_order_meal' => $checkOrderMeal,
+            'attendance_warning' => $attendanceWarning,
+        ];
     }
 
     private function calculateGeneralMealCost(int $totalQuantity, int $unitPrice, float $localTaxRate, float $serviceTaxRate): array
@@ -920,15 +1013,22 @@ class OrderMealController extends Controller
             ->where('status', 'approved')
             ->whereNotNull('md_approved_at')
             ->whereNotNull('hr_verified_at')
-            ->whereNotNull('attendance_checked_at')
-            ->whereHas('attendanceChecker', function ($query) {
-                $query->whereRaw('LOWER(email) = ?', [self::ATTENDANCE_VERIFIER_EMAIL]);
+            ->where(function ($query) {
+                $query->where(function ($subQuery) {
+                    $subQuery->whereNotNull('attendance_checked_at')
+                        ->whereHas('attendanceChecker', function ($checkerQuery) {
+                            $checkerQuery->whereRaw('LOWER(email) = ?', [self::ATTENDANCE_VERIFIER_EMAIL]);
+                        });
+                })->orWhereNull('plan_check_in');
             })
             ->where(function ($query) {
                 $query->where('post_md_path', ExitPermit::POST_MD_PATH_MEAL)
                     ->orWhereNull('post_md_path');
             })
-            ->where('has_valid_checkin', true)
+            ->where(function ($query) {
+                $query->where('has_valid_checkin', true)
+                    ->orWhereNull('plan_check_in');
+            })
             ->where('returned_to_office', true)
             ->whereDate('permit_date', $mealDate)
             ->whereHas('requestors', fn($query) => $query->whereRaw("UPPER(TRIM(COALESCE(reimburs_lunch_box, 'N'))) = ?", ['Y']))
@@ -936,13 +1036,13 @@ class OrderMealController extends Controller
 
         if (!$exitPermit) {
             throw ValidationException::withMessages([
-                'exit_permit_id' => 'Order meal hanya bisa diajukan untuk Exit Permit jalur meal yang sudah diverifikasi Sisca dan memiliki requestor dengan hasil matching Y.',
+                'exit_permit_id' => 'Meal order can only be submitted for Exit Permit with meal path that has been verified by Sisca and has requestors with matching result Y.',
             ]);
         }
 
         if ($user?->role?->code === 'user' && (int) $exitPermit->user_id !== (int) $user?->id) {
             throw ValidationException::withMessages([
-                'exit_permit_id' => 'Exit Permit yang dipilih bukan milik akun Anda.',
+                'exit_permit_id' => 'The selected Exit Permit does not belong to your account.',
             ]);
         }
 
@@ -961,15 +1061,22 @@ class OrderMealController extends Controller
             ->where('status', 'approved')
             ->whereNotNull('md_approved_at')
             ->whereNotNull('hr_verified_at')
-            ->whereNotNull('attendance_checked_at')
-            ->whereHas('attendanceChecker', function ($query) {
-                $query->whereRaw('LOWER(email) = ?', [self::ATTENDANCE_VERIFIER_EMAIL]);
+            ->where(function ($query) {
+                $query->where(function ($subQuery) {
+                    $subQuery->whereNotNull('attendance_checked_at')
+                        ->whereHas('attendanceChecker', function ($checkerQuery) {
+                            $checkerQuery->whereRaw('LOWER(email) = ?', [self::ATTENDANCE_VERIFIER_EMAIL]);
+                        });
+                })->orWhereNull('plan_check_in');
             })
             ->where(function ($query) {
                 $query->where('post_md_path', ExitPermit::POST_MD_PATH_MEAL)
                     ->orWhereNull('post_md_path');
             })
-            ->where('has_valid_checkin', true)
+            ->where(function ($query) {
+                $query->where('has_valid_checkin', true)
+                    ->orWhereNull('plan_check_in');
+            })
             ->where('returned_to_office', true)
             ->whereHas('requestors', fn($q) => $q->whereRaw("UPPER(TRIM(COALESCE(reimburs_lunch_box, 'N'))) = ?", ['Y']))
             ->latest('permit_date');
@@ -1018,6 +1125,10 @@ class OrderMealController extends Controller
 
     private function isSisca($user): bool
     {
+        if ($user?->role?->code === 'admin') {
+            return true;
+        }
+
         return $user?->role?->code === 'hr'
             && strtolower((string) $user?->email) === self::ATTENDANCE_VERIFIER_EMAIL;
     }

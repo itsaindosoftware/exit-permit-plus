@@ -32,7 +32,7 @@ class AuthController extends Controller
 
         if (!$user || !Hash::check($validated['password'], $user->password)) {
             return response()->json([
-                'message' => 'NIK atau password tidak valid.',
+                'message' => 'Invalid NIK or password.',
             ], 422);
         }
 
@@ -46,7 +46,7 @@ class AuthController extends Controller
 
         if (!hash_equals((string) $user->login_device_hash, $deviceHash)) {
             return response()->json([
-                'message' => 'Akun ini hanya bisa login dari perangkat yang terdaftar.',
+                'message' => 'This account can only log in from the registered device.',
             ], 403);
         }
 
@@ -56,7 +56,7 @@ class AuthController extends Controller
         $token = $user->createToken($validated['device_name'] ?? 'mobile-app')->plainTextToken;
 
         return response()->json([
-            'message' => 'Login berhasil.',
+            'message' => 'Login successful.',
             'token' => $token,
             'token_type' => 'Bearer',
             'user' => [
@@ -75,7 +75,7 @@ class AuthController extends Controller
         $request->user()?->tokens()->delete();
 
         return response()->json([
-            'message' => 'Logout berhasil.',
+            'message' => 'Logout successful.',
         ]);
     }
 }

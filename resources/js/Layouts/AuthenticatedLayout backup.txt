@@ -8,8 +8,8 @@ export default function AuthenticatedLayout({ header, children }) {
     const [showSidebar, setShowSidebar] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
     const userMenuRef = useRef(null);
-    const isRatna = String(user?.email ?? '').toLowerCase() === 'ratna@example.com';
-    const isSisca = String(user?.email ?? '').toLowerCase() === 'sisca.dewiyani@example.com';
+    const isRatna = String(user?.email ?? '').toLowerCase() === 'hrga-01@thaisummit.co.id';
+    const isSisca = String(user?.email ?? '').toLowerCase() === 'payroll.hr@thaisummit.co.id';
     const isHr = user?.role?.code === 'hr';
     const isExitPermitApprovalUser = ['manager', 'md', 'hr_manager'].includes(user?.role?.code)
         || (isHr && isSisca);

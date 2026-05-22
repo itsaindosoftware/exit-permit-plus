@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 
-const currencyFormatter = new Intl.NumberFormat('id-ID');
+const currencyFormatter = new Intl.NumberFormat('en-US');
 
 const statusClass = {
     pending_manager: 'bg-amber-100 text-amber-700',
@@ -106,8 +106,8 @@ export default function Index({
                             {/* Proses approval dipantau melalui menu Reimbursement Approval. */}
                             <p className="mt-2 text-sm text-slate-600">
                                 {isApprovalMode
-                                    ? 'Alur persetujuan reimbursement: User, Manager, MD, Ratna (submit accounting), lalu finish oleh Accounting.'
-                                    : 'Kelola data reimbursement milik Anda sendiri.'}
+                                    ? 'Reimbursement approval flow: User, Manager, MD, Ratna (submit accounting), then finish by Accounting.'
+                                    : 'Manage your own reimbursements.'}
                             </p>
                         </div>
                         {!isApprovalMode && isRequester && (
@@ -141,12 +141,12 @@ export default function Index({
 
                 {!isApprovalMode && isRequester && (eligibleExitPermits?.length ?? 0) === 0 && (
                     <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                        Belum ada Exit Permit berstatus Checked By HR: Sisca yang tersedia untuk reimbursement.
+                        No Exit Permit with status Checked By HR: Sisca is available for reimbursement.
                     </div>
                 )}
 
                 <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Data</p>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Records</p>
                     <p className="mt-2 text-3xl font-bold text-slate-900">{totalItems}</p>
                 </div>
 
@@ -154,12 +154,12 @@ export default function Index({
                     <div className="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-cyan-50/40 px-4 py-4">
                         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                             <div>
-                                <p className="text-sm font-semibold text-slate-900">Pencarian Reimbursement</p>
-                                <p className="text-xs text-slate-500">Data terfilter otomatis saat input berubah.</p>
+                                <p className="text-sm font-semibold text-slate-900">Reimbursement Search</p>
+                                <p className="text-xs text-slate-500">Data is filtered automatically as you type.</p>
                             </div>
                             <div className="flex items-center gap-2">
                                 <div className="inline-flex items-center rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700">
-                                    Auto Filter Aktif
+                                    Auto Filter On
                                 </div>
                                 <button
                                     type="button"
@@ -174,12 +174,12 @@ export default function Index({
 
                         <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                             <div className="space-y-1">
-                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Karyawan</label>
+                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Employee</label>
                                 <input
                                     type="text"
                                     value={employee}
                                     onChange={(e) => setEmployee(e.target.value)}
-                                    placeholder="Nama karyawan"
+                                    placeholder="Employee name"
                                     className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700"
                                 />
                             </div>
@@ -189,12 +189,12 @@ export default function Index({
                                     type="text"
                                     value={exitPermit}
                                     onChange={(e) => setExitPermit(e.target.value)}
-                                    placeholder="ID, tanggal, atau tujuan"
+                                    placeholder="ID, date, or destination"
                                     className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700"
                                 />
                             </div>
                             <div className="space-y-1">
-                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Tanggal</label>
+                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Date</label>
                                 <input
                                     type="date"
                                     value={requestDate}
@@ -203,12 +203,12 @@ export default function Index({
                                 />
                             </div>
                             <div className="space-y-1">
-                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Nominal</label>
+                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Amount</label>
                                 <input
                                     type="text"
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
-                                    placeholder="Contoh: 24000"
+                                    placeholder="Example: 24000"
                                     className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700"
                                 />
                             </div>
@@ -219,20 +219,20 @@ export default function Index({
                                     onChange={(e) => setStatus(e.target.value)}
                                     className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700"
                                 >
-                                    <option value="">Semua Status</option>
+                                    <option value="">All Statuses</option>
                                     {statusOptions.map((option) => (
                                         <option key={option} value={option}>{statusLabel[option] ?? option}</option>
                                     ))}
                                 </select>
                             </div>
                             <div className="space-y-1 xl:col-span-3">
-                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Tahap</label>
+                                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Stage</label>
                                 <select
                                     value={stage}
                                     onChange={(e) => setStage(e.target.value)}
                                     className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700"
                                 >
-                                    <option value="">Semua Tahap</option>
+                                    <option value="">All Stages</option>
                                     {stageOptions.map((option) => (
                                         <option key={option.value} value={option.value}>{option.label}</option>
                                     ))}
@@ -245,13 +245,13 @@ export default function Index({
                         <table className="min-w-full divide-y divide-slate-200 text-sm">
                             <thead className="bg-slate-100">
                                 <tr>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Karyawan</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Employee</th>
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Exit Permit</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Tanggal</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Nominal</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Date</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Amount</th>
                                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Status</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Tahap</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Aksi</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Stage</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Action</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
@@ -278,7 +278,7 @@ export default function Index({
                                                     href={route('reimbursements.edit', item.id)}
                                                     className="rounded bg-cyan-700 px-3 py-1 text-xs font-semibold text-white transition hover:bg-cyan-600"
                                                 >
-                                                    {item.can_take_action ? 'Proses' : (item.can_update_request ? 'Edit' : 'Detail')}
+                                                    {item.can_take_action ? 'Process' : (item.can_update_request ? 'Edit' : 'Detail')}
                                                 </Link>
                                                 {/* s */}
                                                 <a
@@ -299,7 +299,7 @@ export default function Index({
 
                     {!reimbursements.data.length && (
                         <div className="px-6 py-10 text-center text-sm text-slate-500">
-                            Belum ada data reimbursement.
+                            No reimbursement data yet.
                         </div>
                     )}
 

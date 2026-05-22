@@ -93,7 +93,7 @@ export default function UpdateProfileInformation({
                         />
                     </div>
 
-                    <p className="mt-1 text-xs text-gray-500">Format gambar: JPG/PNG, maksimal 2MB.</p>
+                    <p className="mt-1 text-xs text-gray-500">Image format: JPG/PNG, max 2MB.</p>
                     <InputError className="mt-2" message={errors.profile_photo} />
                 </div>
 

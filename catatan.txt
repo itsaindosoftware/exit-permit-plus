@@ -21,6 +21,8 @@ task hari ini 05 mei: bikin API login, absen masuk, dan absen pulang untuk untuk
 
 
 === MOBILE ===== 
+mungkin nanti buatkan exit permit approval & reimbursement approval hanya khusus atasan
+
 bikin integrasi api dan ui untuk login, dashboard, absen masuk, absen pulang, dan halaman profile (karyawan).
 
  php artisan db:seed
@@ -33,5 +35,9 @@ Paling nanti saya dibedain di nik nya saja ibu yang karyawan, magang, dan outsou
 
 php artisan serve --host=192.168.1.7 --port=8080
 
-password itsa di server: Itsa2026
-password itsa di lokal: Itsa2026
+password yang baru itsa di server: Itsa@2026
+password yang baru itsa di lokal: Itsa@2026
+
+password yang lama itsa di server: Itsa2026
+password yang lama itsa di lokal: Itsa2026
+

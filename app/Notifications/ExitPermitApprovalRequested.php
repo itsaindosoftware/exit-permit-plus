@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Models\ExitPermit;
 use Illuminate\Bus\Queueable;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class ExitPermitApprovalRequested extends Notification
@@ -16,32 +17,70 @@ class ExitPermitApprovalRequested extends Notification
 
     public function via(object $notifiable): array
     {
+        if (in_array($this->stage, ['manager', 'md', 'hr_manager'], true)) {
+            return ['database', 'mail'];
+        }
+
         return ['database'];
+    }
+
+    public function toMail(object $notifiable): MailMessage
+    {
+        $recipient = trim((string) ($notifiable->name ?? ''));
+        $greeting = $recipient !== '' ? 'Hello ' . $recipient . ',' : 'Hello,';
+        $subject = 'Exit Permit Approval Required';
+        $message = 'An Exit Permit request requires your approval.';
+
+        if ($this->stage === 'manager') {
+            $subject = 'Exit Permit Awaiting Manager Approval';
+            $message = sprintf('Exit Permit #%d from %s is awaiting manager approval.', $this->exitPermit->id, $this->exitPermit->user?->name ?? 'Employee');
+        }
+
+        if ($this->stage === 'md') {
+            $subject = 'Exit Permit Awaiting MD Approval';
+            $message = sprintf('Exit Permit #%d was approved by the manager and is awaiting MD approval.', $this->exitPermit->id);
+        }
+
+        if ($this->stage === 'hr_manager') {
+            $subject = 'Exit Permit Awaiting HR Manager Approval';
+            $message = sprintf('Exit Permit #%d was approved by the MD and is awaiting HR Manager approval.', $this->exitPermit->id);
+        }
+
+        if ($this->stage === 'attendance_verifier') {
+            $subject = 'Exit Permit Check Required';
+            $message = sprintf('Exit Permit #%d needs Sisca check before it is acknowledged.', $this->exitPermit->id);
+        }
+
+        return (new MailMessage())
+            ->subject($subject)
+            ->greeting($greeting)
+            ->line($message)
+            ->action('Open Approval List', route('exit-permit-approvals.index'));
     }
 
     public function toArray(object $notifiable): array
     {
         $title = 'Exit Permit Approval';
-        $message = 'Ada pengajuan Exit Permit yang membutuhkan tindakan.';
+        $message = 'There is an Exit Permit request that requires action.';
 
         if ($this->stage === 'manager') {
-            $title = 'Menunggu Approval Manager';
-            $message = sprintf('Exit Permit #%d dari %s menunggu approval Manager.', $this->exitPermit->id, $this->exitPermit->user?->name ?? 'Karyawan');
+            $title = 'Manager Approval Pending';
+            $message = sprintf('Exit Permit #%d from %s is awaiting manager approval.', $this->exitPermit->id, $this->exitPermit->user?->name ?? 'Employee');
         }
 
         if ($this->stage === 'md') {
-            $title = 'Menunggu Approval MD';
-            $message = sprintf('Exit Permit #%d telah disetujui Manager dan menunggu approval MD.', $this->exitPermit->id);
+            $title = 'MD Approval Pending';
+            $message = sprintf('Exit Permit #%d was approved by the manager and is awaiting MD approval.', $this->exitPermit->id);
         }
 
         if ($this->stage === 'hr_manager') {
-            $title = 'Menunggu Approval HR Manager';
-            $message = sprintf('Exit Permit #%d telah disetujui MD dan menunggu approval HR Manager (PIC HR).', $this->exitPermit->id);
+            $title = 'HR Manager Approval Pending';
+            $message = sprintf('Exit Permit #%d was approved by the MD and is awaiting HR Manager approval (HR PIC).', $this->exitPermit->id);
         }
 
         if ($this->stage === 'attendance_verifier') {
-            $title = 'Menunggu Verifikasi Absensi (Sisca)';
-            $message = sprintf('Exit Permit #%d perlu verifikasi absensi oleh Sisca.', $this->exitPermit->id);
+            $title = 'Check Exit Permit Pending (Sisca)';
+            $message = sprintf('Exit Permit #%d needs Sisca check before it is acknowledged.', $this->exitPermit->id);
         }
 
         return [

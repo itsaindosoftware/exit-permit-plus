@@ -40,7 +40,7 @@
         <div class="company">
             <div class="name">PT INDONESIA THAI SUMMIT AUTO</div>
             <div>Jl. Permata Raya Lot FF.5, Kawasan Industri KIIC, Karawang 41361</div>
-            <div>Tlp : 0267-8457184 Fax : 0264-8457187</div>
+            <div>Tel : 0267-8457184 Fax : 0264-8457187</div>
         </div>
     </div>
 
@@ -48,18 +48,18 @@
 
     <table class="report">
         <tr><th>Order Meal ID</th><td>#{{ $orderMeal->id }}</td></tr>
-        <tr><th>Karyawan</th><td>{{ $orderMeal->user?->name ?? '-' }}</td></tr>
+        <tr><th>Employee</th><td>{{ $orderMeal->user?->name ?? '-' }}</td></tr>
         <tr><th>Email</th><td>{{ $orderMeal->user?->email ?? '-' }}</td></tr>
-        <tr><th>Tanggal</th><td>{{ $orderMeal->meal_date ? \Carbon\Carbon::parse((string) $orderMeal->meal_date)->format('d/m/Y') : '-' }}</td></tr>
+        <tr><th>Date</th><td>{{ $orderMeal->meal_date ? \Carbon\Carbon::parse((string) $orderMeal->meal_date)->format('d/m/Y') : '-' }}</td></tr>
         <tr><th>Menu</th><td>{{ $orderMeal->menu_name ?? '-' }}</td></tr>
         <tr><th>Schedule</th><td>{{ $orderMeal->schedule_type ?? '-' }}</td></tr>
-        <tr><th>Disediakan</th><td>{{ number_format((int) ($orderMeal->quantity ?? 0), 0, ',', '.') }}</td></tr>
-        <tr><th>Realisasi</th><td>{{ number_format((int) ($orderMeal->actual_quantity ?? 0), 0, ',', '.') }}</td></tr>
-        <tr><th>Sisa</th><td>{{ number_format(max(0, (int) ($orderMeal->quantity ?? 0) - (int) ($orderMeal->actual_quantity ?? 0)), 0, ',', '.') }}</td></tr>
+        <tr><th>Provided</th><td>{{ number_format((int) ($orderMeal->quantity ?? 0), 0, ',', '.') }}</td></tr>
+        <tr><th>Actual</th><td>{{ number_format((int) ($orderMeal->actual_quantity ?? 0), 0, ',', '.') }}</td></tr>
+        <tr><th>Remaining</th><td>{{ number_format(max(0, (int) ($orderMeal->quantity ?? 0) - (int) ($orderMeal->actual_quantity ?? 0)), 0, ',', '.') }}</td></tr>
         <tr><th>Amount</th><td>Rp {{ number_format((int) ($orderMeal->total_amount ?? 0), 0, ',', '.') }}</td></tr>
         <tr><th>Status</th><td>{{ $orderMeal->status ?? '-' }}</td></tr>
         <tr><th>Exit Permit</th><td>{{ $orderMeal->exitPermit ? ('#' . $orderMeal->exitPermit->id . ' | ' . (string) $orderMeal->exitPermit->permit_date . ' | ' . (string) $orderMeal->exitPermit->destination) : '-' }}</td></tr>
-        <tr><th>Catatan</th><td>{{ $orderMeal->notes ?? '-' }}</td></tr>
+        <tr><th>Notes</th><td>{{ $orderMeal->notes ?? '-' }}</td></tr>
         <tr><th>Printed At</th><td>{{ $printedAt ? $printedAt->format('d/m/Y H:i') : now()->format('d/m/Y H:i') }}</td></tr>
     </table>
 

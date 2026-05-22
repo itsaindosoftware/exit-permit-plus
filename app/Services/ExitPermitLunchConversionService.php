@@ -79,7 +79,7 @@ class ExitPermitLunchConversionService
 
             $order->quantity = max(0, $currentQuantity - $reduction);
 
-            $tag = sprintf('[Pengalihan jatah lunch box ke uang reimbursement karyawan EP#%d: -%d paket]', $exitPermit->id, $reduction);
+            $tag = sprintf('[Lunch box allowance converted to reimbursement for employee EP#%d: -%d packs]', $exitPermit->id, $reduction);
             $order->notes = trim(((string) $order->notes) . ' ' . $tag);
             $order->save();
 
@@ -90,17 +90,19 @@ class ExitPermitLunchConversionService
     private function hasAlreadyReducedQuota(ExitPermit $exitPermit): bool
     {
         $oldTagPrefix = sprintf('[AUTO-CONVERT EP#%d', $exitPermit->id);
-        $newTagPrefix = sprintf('[Konversi Lunch Box EP#%d', $exitPermit->id);
-        $latestTagPrefix = sprintf('[Pengalihan jatah lunch box ke uang reimbursement karyawan EP#%d', $exitPermit->id);
+        $legacyTagPrefix = sprintf('[Konversi Lunch Box EP#%d', $exitPermit->id);
+        $legacyQuotaPrefix = sprintf('[Pengalihan jatah lunch box ke uang reimbursement karyawan EP#%d', $exitPermit->id);
+        $newTagPrefix = sprintf('[Lunch box allowance converted to reimbursement for employee EP#%d', $exitPermit->id);
 
         return OrderMeal::query()
             ->where('order_scope', OrderMeal::SCOPE_GENERAL)
             ->where('meal_type', 'lunch')
             ->whereDate('meal_date', $exitPermit->permit_date)
-            ->where(function ($query) use ($oldTagPrefix, $newTagPrefix, $latestTagPrefix) {
+            ->where(function ($query) use ($oldTagPrefix, $legacyTagPrefix, $legacyQuotaPrefix, $newTagPrefix) {
                 $query->where('notes', 'like', '%' . $oldTagPrefix . '%')
-                    ->orWhere('notes', 'like', '%' . $newTagPrefix . '%')
-                    ->orWhere('notes', 'like', '%' . $latestTagPrefix . '%');
+                    ->orWhere('notes', 'like', '%' . $legacyTagPrefix . '%')
+                    ->orWhere('notes', 'like', '%' . $legacyQuotaPrefix . '%')
+                    ->orWhere('notes', 'like', '%' . $newTagPrefix . '%');
             })
             ->exists();
     }

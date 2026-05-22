@@ -10,27 +10,44 @@ function translateConversionNotes(text) {
 
     const translatedFromLegacy = String(text).replace(
         /\[AUTO-CONVERT\s+EP#(\d+)\s*-\s*(\d+)\]/g,
-        '[Pengalihan jatah lunch box ke uang reimbursement karyawan EP#$1: -$2 paket]',
+        '[Lunch box allowance converted to reimbursement for employee EP#$1: -$2 packs]',
     );
 
-    return translatedFromLegacy.replace(
+    const translatedFromLegacyLabel = translatedFromLegacy.replace(
         /\[Konversi\s+Lunch\s+Box\s+EP#(\d+):\s*-(\d+)\s*paket\]/g,
-        '[Pengalihan jatah lunch box ke uang reimbursement karyawan EP#$1: -$2 paket]',
+        '[Lunch box allowance converted to reimbursement for employee EP#$1: -$2 packs]',
+    );
+
+    return translatedFromLegacyLabel.replace(
+        /\[Pengalihan\s+jatah\s+lunch\s+box\s+ke\s+uang\s+reimbursement\s+karyawan\s+EP#(\d+):\s*-(\d+)\s*paket\]/g,
+        '[Lunch box allowance converted to reimbursement for employee EP#$1: -$2 packs]',
     );
 }
 
 const inputClass =
     'mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-cyan-600 focus:ring-2 focus:ring-cyan-200';
 
-const currencyFormatter = new Intl.NumberFormat('id-ID', {
+const currencyFormatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'IDR',
     maximumFractionDigits: 0,
 });
 
-export default function Edit({ orderMeal, canApprove, mode, indexRouteName, updateRouteName }) {
+export default function Edit({ orderMeal, canApprove, mode, indexRouteName, updateRouteName, mealPricing = null }) {
     const isExitPermitMode = mode === 'exit_permit';
     const readableNotes = translateConversionNotes(orderMeal.notes ?? '');
+    const storedPricing = {
+        meal_unit_price: Number(orderMeal.meal_unit_price ?? 12000),
+        local_tax_rate: Number(orderMeal.local_tax_rate ?? 10),
+        service_tax_rate: Number(orderMeal.service_tax_rate ?? 2),
+    };
+    const activePricing = {
+        supplier_name: mealPricing?.supplier_name ?? 'System Default',
+        meal_unit_price: Number(mealPricing?.meal_unit_price ?? 12000),
+        local_tax_rate: Number(mealPricing?.local_tax_rate ?? 10),
+        service_tax_rate: Number(mealPricing?.service_tax_rate ?? 2),
+        source: mealPricing?.source ?? 'fallback',
+    };
 
     const { data, setData, put, processing, errors } = useForm({
         meal_date: orderMeal.meal_date ?? '',
@@ -42,9 +59,6 @@ export default function Edit({ orderMeal, canApprove, mode, indexRouteName, upda
         overtime_day_shift_qty: orderMeal.overtime_day_shift_qty ?? 0,
         night_shift_qty: orderMeal.night_shift_qty ?? 0,
         overtime_night_shift_qty: orderMeal.overtime_night_shift_qty ?? 0,
-        meal_unit_price: orderMeal.meal_unit_price ?? 12000,
-        local_tax_rate: orderMeal.local_tax_rate ?? 10,
-        service_tax_rate: orderMeal.service_tax_rate ?? 2,
         notes: readableNotes,
         status: orderMeal.status ?? 'pending',
     });
@@ -58,13 +72,13 @@ export default function Edit({ orderMeal, canApprove, mode, indexRouteName, upda
     const totalProvided = baseProvided + Number(isExitPermitMode ? (data.visitor_count || 0) : 0);
     const subtotalAmount = isExitPermitMode
         ? 0
-        : totalProvided * Number(data.meal_unit_price || 0);
+        : totalProvided * storedPricing.meal_unit_price;
     const localTaxAmount = isExitPermitMode
         ? 0
-        : Math.round(subtotalAmount * (Number(data.local_tax_rate || 0) / 100));
+        : Math.round(subtotalAmount * (storedPricing.local_tax_rate / 100));
     const serviceTaxAmount = isExitPermitMode
         ? 0
-        : Math.round(subtotalAmount * (Number(data.service_tax_rate || 0) / 100));
+        : Math.round(subtotalAmount * (storedPricing.service_tax_rate / 100));
     const grandTotalAmount = isExitPermitMode
         ? 0
         : subtotalAmount + localTaxAmount - serviceTaxAmount;
@@ -108,23 +122,41 @@ export default function Edit({ orderMeal, canApprove, mode, indexRouteName, upda
                     <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">Meal Monitoring</p>
                     <p className="mt-2 text-sm text-slate-700">
                         {isExitPermitMode
-                            ? 'Perbarui order meal yang berasal dari alur Exit Permit.'
-                            : 'Perbarui Order Meal untuk rekap operasional canteen.'}
+                            ? 'Update meal orders originating from the Exit Permit flow.'
+                            : 'Update meal orders for canteen operational recap.'}
                     </p>
+                    {!isExitPermitMode && (
+                        <div className="mt-4 rounded-xl border border-cyan-200 bg-white/80 p-4">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Price Supplier Reference</p>
+                                    <p className="mt-1 text-sm font-semibold text-slate-900">{activePricing.supplier_name}</p>
+                                </div>
+                                <div className="rounded-full bg-cyan-100 px-3 py-1 text-xs font-semibold text-cyan-700">
+                                    {activePricing.source === 'supplier' ? 'Current Supplier Master' : 'System Default'}
+                                </div>
+                            </div>
+                            <div className="mt-3 grid gap-3 text-sm text-slate-700 md:grid-cols-3">
+                                <p><span className="font-semibold">Amount / Portion:</span> {currencyFormatter.format(activePricing.meal_unit_price)}</p>
+                                <p><span className="font-semibold">Local Tax:</span> {activePricing.local_tax_rate}%</p>
+                                <p><span className="font-semibold">Service Tax:</span> {activePricing.service_tax_rate}%</p>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <form onSubmit={submit} className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                     <div className="grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 md:grid-cols-4">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Paket Disediakan</p>
+                            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Provided Packs</p>
                             <p className="mt-2 text-3xl font-black text-slate-900">{totalProvided}</p>
                         </div>
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Realisasi Makan</p>
+                            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Actual Meals</p>
                             <p className="mt-2 text-3xl font-black text-slate-900">{data.actual_quantity}</p>
                         </div>
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Sisa Paket</p>
+                            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Remaining Packs</p>
                             <p className="mt-2 text-3xl font-black text-emerald-700">{Math.max(0, totalProvided - Number(data.actual_quantity || 0))}</p>
                         </div>
                         {/* <div>
@@ -135,7 +167,7 @@ export default function Edit({ orderMeal, canApprove, mode, indexRouteName, upda
 
                     {!isExitPermitMode && (
                         <div className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                            <p className="text-sm font-semibold text-slate-900">Calculation for Catering Cost (Format Excel)</p>
+                            <p className="text-sm font-semibold text-slate-900">Calculation for Catering Cost (Excel Format)</p>
 
                             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                                 <div>
@@ -196,43 +228,14 @@ export default function Edit({ orderMeal, canApprove, mode, indexRouteName, upda
                                     <label htmlFor="quantity" className="text-sm font-semibold text-slate-800">Total</label>
                                     <input id="quantity" type="number" value={shiftTotal} className={inputClass} readOnly />
                                 </div>
-                                <div>
-                                    <label htmlFor="meal_unit_price" className="text-sm font-semibold text-slate-800">Amount / Porsi</label>
-                                    <input
-                                        id="meal_unit_price"
-                                        type="number"
-                                        min="1"
-                                        value={data.meal_unit_price}
-                                        className={inputClass}
-                                        onChange={(e) => setData('meal_unit_price', Number(e.target.value))}
-                                    />
-                                    <InputError message={errors.meal_unit_price} className="mt-2" />
-                                </div>
-                                <div>
-                                    <label htmlFor="local_tax_rate" className="text-sm font-semibold text-slate-800">Local Tax (%)</label>
-                                    <input
-                                        id="local_tax_rate"
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        value={data.local_tax_rate}
-                                        className={inputClass}
-                                        onChange={(e) => setData('local_tax_rate', Number(e.target.value))}
-                                    />
-                                    <InputError message={errors.local_tax_rate} className="mt-2" />
-                                </div>
-                                <div>
-                                    <label htmlFor="service_tax_rate" className="text-sm font-semibold text-slate-800">Service Tax (%)</label>
-                                    <input
-                                        id="service_tax_rate"
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        value={data.service_tax_rate}
-                                        className={inputClass}
-                                        onChange={(e) => setData('service_tax_rate', Number(e.target.value))}
-                                    />
-                                    <InputError message={errors.service_tax_rate} className="mt-2" />
+                                <div className="rounded-lg border border-cyan-200 bg-white p-4 md:col-span-3">
+                                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Locked Pricing</p>
+                                    <div className="mt-3 grid gap-3 text-sm text-slate-700 md:grid-cols-3">
+                                        <p><span className="font-semibold">Amount / Portion:</span> {currencyFormatter.format(storedPricing.meal_unit_price)}</p>
+                                        <p><span className="font-semibold">Local Tax:</span> {storedPricing.local_tax_rate}%</p>
+                                        <p><span className="font-semibold">Service Tax:</span> {storedPricing.service_tax_rate}%</p>
+                                    </div>
+                                    <p className="mt-2 text-xs text-slate-500">Pricing follows the Price Supplier master and is not edited from this form.</p>
                                 </div>
                             </div>
 
@@ -247,7 +250,7 @@ export default function Edit({ orderMeal, canApprove, mode, indexRouteName, upda
 
                     <div className="grid gap-4 md:grid-cols-2">
                         <div>
-                            <label htmlFor="meal_date" className="text-sm font-semibold text-slate-800">Tanggal Makan</label>
+                            <label htmlFor="meal_date" className="text-sm font-semibold text-slate-800">Meal Date</label>
                             <input
                                 id="meal_date"
                                 type="date"
@@ -258,7 +261,7 @@ export default function Edit({ orderMeal, canApprove, mode, indexRouteName, upda
                             <InputError message={errors.meal_date} className="mt-2" />
                         </div>
                         <div>
-                            <label htmlFor="menu_name" className="text-sm font-semibold text-slate-800">Menu Makan Siang</label>
+                            <label htmlFor="menu_name" className="text-sm font-semibold text-slate-800">Lunch Menu</label>
                             <input
                                 id="menu_name"
                                 type="text"
@@ -272,7 +275,7 @@ export default function Edit({ orderMeal, canApprove, mode, indexRouteName, upda
 
                     <div className="grid gap-4 md:grid-cols-3">
                         <div>
-                            <label htmlFor="quantity" className="text-sm font-semibold text-slate-800">Paket Dasar Karyawan</label>
+                            <label htmlFor="quantity" className="text-sm font-semibold text-slate-800">Base Employee Packs</label>
                             <input
                                 id="quantity"
                                 type="number"
@@ -299,7 +302,7 @@ export default function Edit({ orderMeal, canApprove, mode, indexRouteName, upda
                             </div>
                         )}
                         <div>
-                            <label htmlFor="actual_quantity" className="text-sm font-semibold text-slate-800">Realisasi Makan</label>
+                            <label htmlFor="actual_quantity" className="text-sm font-semibold text-slate-800">Actual Meals</label>
                             <input
                                 id="actual_quantity"
                                 type="number"
@@ -314,12 +317,12 @@ export default function Edit({ orderMeal, canApprove, mode, indexRouteName, upda
 
                     <div className="rounded-lg border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-cyan-900">
                         {isExitPermitMode
-                            ? <>Total paket disediakan = <span className="font-semibold">{totalProvided}</span> (paket dasar + visitor).</>
-                            : <>Total paket disediakan = <span className="font-semibold">{shiftTotal}</span> (day shift + overtime day + night shift + overtime night).</>}
+                            ? <>Total packs provided = <span className="font-semibold">{totalProvided}</span> (base packs + visitors).</>
+                            : <>Total packs provided = <span className="font-semibold">{shiftTotal}</span> (day shift + overtime day + night shift + overtime night).</>}
                     </div>
 
                     <div>
-                        <label htmlFor="notes" className="text-sm font-semibold text-slate-800">Catatan</label>
+                        <label htmlFor="notes" className="text-sm font-semibold text-slate-800">Notes</label>
                         <textarea
                             id="notes"
                             className={inputClass}
@@ -332,7 +335,7 @@ export default function Edit({ orderMeal, canApprove, mode, indexRouteName, upda
 
                     {canApprove && (
                         <div>
-                            <label htmlFor="status" className="text-sm font-semibold text-slate-800">Status Approve</label>
+                            <label htmlFor="status" className="text-sm font-semibold text-slate-800">Approval Status</label>
                             <select
                                 id="status"
                                 className={inputClass}
@@ -359,7 +362,7 @@ export default function Edit({ orderMeal, canApprove, mode, indexRouteName, upda
                             href={route(indexRouteName)}
                             className="rounded-md border border-slate-300 px-4 py-2 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
                         >
-                            Batal
+                            Cancel
                         </Link>
                     </div>
                 </form>

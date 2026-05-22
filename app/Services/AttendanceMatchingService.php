@@ -46,7 +46,7 @@ class AttendanceMatchingService
 
         if ($path === '') {
             throw ValidationException::withMessages([
-                'attendance_file' => 'File attendance wajib diupload atau set ATTENDANCE_SOURCE_NETWORK_PATH/ATTENDANCE_SOURCE_PATH terlebih dahulu.',
+                'attendance_file' => 'Attendance file must be uploaded or set ATTENDANCE_SOURCE_NETWORK_PATH/ATTENDANCE_SOURCE_PATH first.',
             ]);
         }
 
@@ -63,7 +63,7 @@ class AttendanceMatchingService
 
         if (!$latestFile) {
             throw ValidationException::withMessages([
-                'attendance_file' => 'Tidak ada file attendance (csv/xlsx) di folder sharing.',
+                'attendance_file' => 'No attendance file (csv/xlsx) found in the sharing folder.',
             ]);
         }
 
@@ -71,7 +71,7 @@ class AttendanceMatchingService
 
         if ($tempPath === false) {
             throw ValidationException::withMessages([
-                'attendance_file' => 'Gagal menyiapkan file sementara attendance.',
+                'attendance_file' => 'Failed to prepare temporary attendance file.',
             ]);
         }
 
@@ -102,7 +102,7 @@ class AttendanceMatchingService
     {
         if (!is_dir($directory)) {
             throw ValidationException::withMessages([
-                'attendance_file' => 'Folder attendance network tidak dapat diakses. Gunakan UNC path (contoh: \\\\192.168.1.5\\HRGA\\Daily Attendance) atau pastikan mapped drive tersedia untuk proses web server.',
+                'attendance_file' => 'Attendance network folder cannot be accessed. Use a UNC path (example: \\\\192.168.1.5\\HRGA\\Daily Attendance) or ensure a mapped drive is available for the web server process.',
             ]);
         }
 
@@ -132,13 +132,13 @@ class AttendanceMatchingService
             }
         } catch (\Throwable $exception) {
             throw ValidationException::withMessages([
-                'attendance_file' => 'Gagal membaca folder attendance network. Periksa hak akses folder sharing.',
+                'attendance_file' => 'Failed to read network attendance folder. Check sharing folder permissions.',
             ]);
         }
 
         if (!$latestFile) {
             throw ValidationException::withMessages([
-                'attendance_file' => 'Tidak ada file attendance (csv/xlsx) di folder network sharing.',
+                'attendance_file' => 'No attendance file (csv/xlsx) found in the network sharing folder.',
             ]);
         }
 
@@ -146,7 +146,7 @@ class AttendanceMatchingService
 
         if ($tempPath === false) {
             throw ValidationException::withMessages([
-                'attendance_file' => 'Gagal menyiapkan file sementara attendance.',
+                'attendance_file' => 'Failed to prepare temporary attendance file.',
             ]);
         }
 
@@ -154,7 +154,7 @@ class AttendanceMatchingService
             @unlink($tempPath);
 
             throw ValidationException::withMessages([
-                'attendance_file' => 'Gagal menyalin file attendance dari folder network sharing.',
+                'attendance_file' => 'Failed to copy attendance file from the network sharing folder.',
             ]);
         }
 
@@ -306,13 +306,13 @@ class AttendanceMatchingService
         $rawRows = match ($extension) {
             'csv', 'txt', 'xlsx' => $this->readSpreadsheetRows($filePath, $extension),
             default => throw ValidationException::withMessages([
-                'attendance_file' => 'Format file attendance belum didukung. Gunakan CSV atau XLSX.',
+                'attendance_file' => 'Attendance file format is not supported yet. Use CSV or XLSX.',
             ]),
         };
 
         if (count($rawRows) < 2) {
             throw ValidationException::withMessages([
-                'attendance_file' => 'File attendance kosong atau tidak memiliki header + data.',
+                'attendance_file' => 'Attendance file is empty or missing header/data.',
             ]);
         }
 
@@ -468,7 +468,7 @@ class AttendanceMatchingService
 
         if ($zip->open($filePath) !== true) {
             throw ValidationException::withMessages([
-                'attendance_file' => 'File XLSX tidak dapat dibuka.',
+                'attendance_file' => 'XLSX file cannot be opened.',
             ]);
         }
 
@@ -478,7 +478,7 @@ class AttendanceMatchingService
 
         if (!$sheetXml) {
             throw ValidationException::withMessages([
-                'attendance_file' => 'Worksheet XLSX tidak ditemukan.',
+                'attendance_file' => 'XLSX worksheet not found.',
             ]);
         }
 
@@ -507,7 +507,7 @@ class AttendanceMatchingService
 
         if (!$sheet || !isset($sheet->sheetData)) {
             throw ValidationException::withMessages([
-                'attendance_file' => 'Format sheet XLSX tidak valid.',
+                'attendance_file' => 'XLSX sheet format is invalid.',
             ]);
         }
 

@@ -66,9 +66,13 @@ class HandleInertiaRequests extends Middleware
                 'unread_count' => fn() => $request->user()
                     ? $request->user()->unreadNotifications()->count()
                     : 0,
-                'schedule_car_count' => fn() => $request->user() && strtolower((string) $request->user()->email) === 'ratna@example.com'
+                'schedule_car_count' => fn() => $request->user() && strtolower((string) $request->user()->email) === 'hrga-01@thaisummit.co.id'
                     ? \App\Models\ExitPermit::query()
-                        ->where('exit_type', \App\Models\ExitPermit::EXIT_TYPE_BUSINESS_TRIP)
+                        ->whereIn('exit_type', [
+                            \App\Models\ExitPermit::EXIT_TYPE_BUSINESS_TRIP,
+                            \App\Models\ExitPermit::EXIT_TYPE_ASSIGNMENT,
+                            \App\Models\ExitPermit::EXIT_TYPE_COMPANY,
+                        ])
                         ->where('order_car', true)
                         ->where('status', 'pending')
                         ->where(function ($q) {
@@ -78,9 +82,21 @@ class HandleInertiaRequests extends Middleware
                 'exit_permit_approval_count' => fn() => $request->user() ? (function () use ($request) {
                     $user = $request->user();
                     $roleCode = $user->role?->code;
+                    $isDualApprovalUser = (bool) ($user->isWidaMustikaSari() ?? false);
                     $query = \App\Models\ExitPermit::query();
 
-                    if ($roleCode === 'manager') {
+                    if ($isDualApprovalUser) {
+                        return $query->where(function ($subQuery) {
+                            $subQuery->where(function ($managerQuery) {
+                                $managerQuery->whereNull('manager_approved_at')->where('status', 'pending');
+                            })->orWhere(function ($hrManagerQuery) {
+                                $hrManagerQuery->whereNotNull('manager_approved_at')
+                                    ->whereNotNull('md_approved_at')
+                                    ->whereNull('hr_verified_at')
+                                    ->where('status', 'pending');
+                            });
+                        })->count();
+                    } elseif ($roleCode === 'manager') {
                         return $query->whereNull('manager_approved_at')->where('status', 'pending')->count();
                     } elseif ($roleCode === 'md') {
                         return $query->whereNotNull('manager_approved_at')
@@ -91,7 +107,7 @@ class HandleInertiaRequests extends Middleware
                             ->whereNotNull('md_approved_at')
                             ->whereNull('hr_verified_at')
                             ->where('status', 'pending')->count();
-                    } elseif ($roleCode === 'hr' && strtolower((string) $user->email) === 'sisca.dewiyani@example.com') {
+                    } elseif ($roleCode === 'hr' && strtolower((string) $user->email) === 'payroll.hr@thaisummit.co.id') {
                         return $query->where('status', 'approved')
                             ->where('exit_type', \App\Models\ExitPermit::EXIT_TYPE_BUSINESS_TRIP)
                             ->whereNotNull('md_approved_at')
@@ -110,7 +126,7 @@ class HandleInertiaRequests extends Middleware
                         return \App\Models\Reimbursement::query()->where('status', \App\Models\Reimbursement::STATUS_PENDING_MANAGER)->count();
                     } elseif ($roleCode === 'md') {
                         return \App\Models\Reimbursement::query()->where('status', \App\Models\Reimbursement::STATUS_PENDING_MD)->count();
-                    } elseif ($roleCode === 'hr' && $email === 'ratna@example.com') {
+                    } elseif ($roleCode === 'hr' && $email === 'hrga-01@thaisummit.co.id') {
                         return \App\Models\Reimbursement::query()->where('status', \App\Models\Reimbursement::STATUS_PENDING_RATNA)->count();
                     } elseif ($roleCode === 'accounting') {
                         return \App\Models\Reimbursement::query()->where('status', \App\Models\Reimbursement::STATUS_SUBMITTED_TO_ACCOUNTING)->count();
