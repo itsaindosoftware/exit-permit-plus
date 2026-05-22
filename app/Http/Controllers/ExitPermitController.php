@@ -817,103 +817,6 @@ class ExitPermitController extends Controller
                 }
             }
 
-            if ($roleCode === 'admin') {
-                if ($exitPermit->status !== 'pending') {
-                    throw ValidationException::withMessages([
-                        'status' => 'Approval can only be processed while status is pending.',
-                    ]);
-                }
-
-                if (!$exitPermit->manager_approved_at) {
-                    if (in_array($newStatus, ['approved', 'rejected'], true)) {
-                        $this->fillApprovalData($exitPermit, 'manager');
-
-                        if ($newStatus === 'approved') {
-                            $hrApproverId = $this->resolveHrApproverId();
-
-                            if (!$hrApproverId) {
-                                throw ValidationException::withMessages([
-                                    'status' => 'Tiered HR PIC not found. Please contact the Administrator.',
-                                ]);
-                            }
-
-                            $exitPermit->hr_approver_id = $hrApproverId;
-                            $exitPermit->status = 'pending';
-                            $hrUser = User::query()->find($hrApproverId);
-                            if ($hrUser) {
-                                $this->notifyExitPermitApproverOnce($hrUser, $exitPermit, 'hr_manager');
-                            }
-
-                            $mds = User::query()
-                                ->whereHas('role', fn($q) => $q->where('code', 'md'))
-                                ->where('is_available_for_approval', true)
-                                ->get();
-
-                            foreach ($mds as $md) {
-                                $this->notifyExitPermitApproverOnce($md, $exitPermit, 'md');
-                            }
-
-                            $this->notifyExitPermitOwner($exitPermit, 'manager_approved');
-                        } else {
-                            $exitPermit->status = 'rejected';
-                        }
-                    }
-                } elseif (!$exitPermit->md_approved_at) {
-                    if (in_array($newStatus, ['approved', 'rejected'], true)) {
-                        $this->fillApprovalData($exitPermit, 'md');
-
-                        if ($newStatus === 'approved') {
-                            $hrApproverId = $exitPermit->hr_approver_id ?: $this->resolveHrApproverId();
-
-                            if (!$hrApproverId) {
-                                throw ValidationException::withMessages([
-                                    'status' => 'HR Manager approver not found. Please contact the Administrator.',
-                                ]);
-                            }
-
-                            $exitPermit->hr_approver_id = $hrApproverId;
-                            $exitPermit->status = 'pending';
-                            $exitPermit->hr_verified_by = null;
-                            $exitPermit->hr_verified_at = null;
-                            $exitPermit->attendance_checked_by = null;
-                            $exitPermit->attendance_checked_at = null;
-                            $exitPermit->has_valid_checkin = null;
-                            $exitPermit->post_md_path = null;
-
-                            $this->notifyExitPermitOwner($exitPermit, 'md_approved');
-                        } else {
-                            $exitPermit->status = 'rejected';
-                        }
-                    }
-                } elseif (!$exitPermit->hr_verified_at) {
-                    if (in_array($newStatus, ['approved', 'rejected'], true)) {
-                        $exitPermit->hr_verified_by = $user?->id;
-                        $exitPermit->hr_verified_at = now();
-                        $exitPermit->status = $newStatus;
-
-                        if ($newStatus === 'approved') {
-                            $exitPermit->attendance_checked_by = null;
-                            $exitPermit->attendance_checked_at = null;
-                            $exitPermit->has_valid_checkin = null;
-                            $exitPermit->post_md_path = null;
-
-                            $sisca = User::query()
-                                ->where('email', self::ATTENDANCE_VERIFIER_EMAIL)
-                                ->first();
-
-                            if ($sisca) {
-                                $sisca->notify(new ExitPermitApprovalRequested($exitPermit, 'attendance_verifier'));
-                            }
-
-                            $this->notifyExitPermitOwner($exitPermit, 'hr_manager_approved');
-                        }
-                    }
-                } else {
-                    throw ValidationException::withMessages([
-                        'status' => 'Approval has already been processed for this document.',
-                    ]);
-                }
-            }
         }
 
         if (!$canApprove && !$canArrangeCar && $canVerifyAttendance) {
@@ -1204,7 +1107,8 @@ class ExitPermitController extends Controller
 
         if ($exitPermit->status === 'approved') {
             if ($exitPermit->exit_type !== ExitPermit::EXIT_TYPE_BUSINESS_TRIP) {
-                return 'Approved by HR Manager | Completed (Acknowledged by Sisca)';
+                // return 'Approved by HR Manager | Acknowledged by Sisca (HRD)';
+                return 'Approved by HR Manager';
             }
 
             if (!$exitPermit->attendance_checked_at) {
@@ -1227,7 +1131,7 @@ class ExitPermitController extends Controller
                 return 'Approved by HR Manager | Matching Attendance Dont Match';
             }
 
-            return 'Approved by HR Manager | Acknowledged by HR Manager (' . $approverName . ')';
+            return 'Approved by HR Manager | Acknowledged by Sisca (HRD)';
         }
 
         if ($exitPermit->status === 'rejected') {
@@ -1255,28 +1159,11 @@ class ExitPermitController extends Controller
 
     private function statusLabel(ExitPermit $exitPermit): string
     {
-        if (
-            $exitPermit->status === 'approved'
-            && $exitPermit->exit_type !== ExitPermit::EXIT_TYPE_BUSINESS_TRIP
-            && (bool) $exitPermit->hr_verified_at
-        ) {
-            return 'Acknowledged by Sisca (HRD)';
-        }
-
-        if (
-            $exitPermit->status === 'approved'
-            && $exitPermit->exit_type === ExitPermit::EXIT_TYPE_BUSINESS_TRIP
-            && (bool) $exitPermit->attendance_checked_at
-            && !(bool) $exitPermit->has_valid_checkin
-        ) {
+        if ($exitPermit->status === 'approved' && (bool) $exitPermit->attendance_checked_at && $exitPermit->exit_type === ExitPermit::EXIT_TYPE_BUSINESS_TRIP && !(bool) $exitPermit->has_valid_checkin) {
             return 'Matching Attendance Dont Match';
         }
 
-        if (
-            $exitPermit->status === 'approved'
-            && (bool) $exitPermit->attendance_checked_at
-            && (bool) $exitPermit->has_valid_checkin
-        ) {
+        if ($exitPermit->status === 'approved' && (bool) $exitPermit->attendance_checked_at) {
             return 'Acknowledged by Sisca (HRD)';
         }
 
@@ -2083,10 +1970,10 @@ class ExitPermitController extends Controller
 
         return $user?->role?->code === 'hr'
             && strtolower((string) $user?->email) === self::ATTENDANCE_VERIFIER_EMAIL
-            && $exitPermit->exit_type === ExitPermit::EXIT_TYPE_BUSINESS_TRIP
             && $exitPermit->status === 'approved'
             && (bool) $exitPermit->md_approved_at
-            && (bool) $exitPermit->hr_verified_at;
+            && (bool) $exitPermit->hr_verified_at
+            && !$exitPermit->attendance_checked_at;
     }
 
     private function replaceAttachment(ExitPermit $exitPermit, UploadedFile $file): void
