@@ -25,6 +25,7 @@ export default function AuthenticatedLayout({ header, children }) {
         ...(isExitPermitApprovalUser ? [{ label: 'Exit Permit Approval', routeName: 'exit-permit-approvals.index', badgeCount: notifications.exit_permit_approval_count }] : []),
         ...(isExitPermitHistoryUser ? [{ label: 'Exit Permit History', routeName: 'exit-permit-history.index' }] : []),
         ...(isSisca || isAdmin ? [{ label: 'Order Meal', routeName: 'order-meals.index' }] : []),
+        ...(isSisca || isAdmin ? [{ label: 'Price Supplier', routeName: 'price-suppliers.index' }] : []),
         { label: 'Reimbursement', routeName: 'reimbursements.index' },
         ...(isReimbursementApprovalUser ? [{ label: 'Reimbursement Approval', routeName: 'reimbursement-approvals.index', badgeCount: notifications.reimbursement_approval_count }] : []),
         { label: 'Profile', routeName: 'profile.edit' },
@@ -77,7 +78,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                     key={item.routeName}
                                     href={route(item.routeName)}
                                     className={
-                                        `block rounded-lg border px-4 py-2 text-sm font-semibold transition flex items-center justify-between ` +
+                                        `flex w-full rounded-lg border px-4 py-2 text-sm font-semibold transition items-center justify-between ` +
                                         (isActive
                                             ? 'border-cyan-400/50 bg-cyan-500/20 text-white'
                                             : 'border-transparent text-slate-200 hover:border-slate-600 hover:bg-slate-800')
@@ -147,7 +148,6 @@ export default function AuthenticatedLayout({ header, children }) {
                                      className="flex items-center gap-3 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                                      onClick={() => {
                                          setShowUserMenu((prev) => !prev);
-                                         setShowNotifications(false);
                                      }}
                                  >
                                      {user.profile_photo_url ? (

@@ -33,9 +33,21 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
     maximumFractionDigits: 0,
 });
 
-export default function Edit({ orderMeal, canApprove, mode, indexRouteName, updateRouteName }) {
+export default function Edit({ orderMeal, canApprove, mode, indexRouteName, updateRouteName, mealPricing = null }) {
     const isExitPermitMode = mode === 'exit_permit';
     const readableNotes = translateConversionNotes(orderMeal.notes ?? '');
+    const storedPricing = {
+        meal_unit_price: Number(orderMeal.meal_unit_price ?? 12000),
+        local_tax_rate: Number(orderMeal.local_tax_rate ?? 10),
+        service_tax_rate: Number(orderMeal.service_tax_rate ?? 2),
+    };
+    const activePricing = {
+        supplier_name: mealPricing?.supplier_name ?? 'System Default',
+        meal_unit_price: Number(mealPricing?.meal_unit_price ?? 12000),
+        local_tax_rate: Number(mealPricing?.local_tax_rate ?? 10),
+        service_tax_rate: Number(mealPricing?.service_tax_rate ?? 2),
+        source: mealPricing?.source ?? 'fallback',
+    };
 
     const { data, setData, put, processing, errors } = useForm({
         meal_date: orderMeal.meal_date ?? '',
@@ -47,9 +59,6 @@ export default function Edit({ orderMeal, canApprove, mode, indexRouteName, upda
         overtime_day_shift_qty: orderMeal.overtime_day_shift_qty ?? 0,
         night_shift_qty: orderMeal.night_shift_qty ?? 0,
         overtime_night_shift_qty: orderMeal.overtime_night_shift_qty ?? 0,
-        meal_unit_price: orderMeal.meal_unit_price ?? 12000,
-        local_tax_rate: orderMeal.local_tax_rate ?? 10,
-        service_tax_rate: orderMeal.service_tax_rate ?? 2,
         notes: readableNotes,
         status: orderMeal.status ?? 'pending',
     });
@@ -63,13 +72,13 @@ export default function Edit({ orderMeal, canApprove, mode, indexRouteName, upda
     const totalProvided = baseProvided + Number(isExitPermitMode ? (data.visitor_count || 0) : 0);
     const subtotalAmount = isExitPermitMode
         ? 0
-        : totalProvided * Number(data.meal_unit_price || 0);
+        : totalProvided * storedPricing.meal_unit_price;
     const localTaxAmount = isExitPermitMode
         ? 0
-        : Math.round(subtotalAmount * (Number(data.local_tax_rate || 0) / 100));
+        : Math.round(subtotalAmount * (storedPricing.local_tax_rate / 100));
     const serviceTaxAmount = isExitPermitMode
         ? 0
-        : Math.round(subtotalAmount * (Number(data.service_tax_rate || 0) / 100));
+        : Math.round(subtotalAmount * (storedPricing.service_tax_rate / 100));
     const grandTotalAmount = isExitPermitMode
         ? 0
         : subtotalAmount + localTaxAmount - serviceTaxAmount;
@@ -116,6 +125,24 @@ export default function Edit({ orderMeal, canApprove, mode, indexRouteName, upda
                             ? 'Update meal orders originating from the Exit Permit flow.'
                             : 'Update meal orders for canteen operational recap.'}
                     </p>
+                    {!isExitPermitMode && (
+                        <div className="mt-4 rounded-xl border border-cyan-200 bg-white/80 p-4">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Price Supplier Reference</p>
+                                    <p className="mt-1 text-sm font-semibold text-slate-900">{activePricing.supplier_name}</p>
+                                </div>
+                                <div className="rounded-full bg-cyan-100 px-3 py-1 text-xs font-semibold text-cyan-700">
+                                    {activePricing.source === 'supplier' ? 'Current Supplier Master' : 'System Default'}
+                                </div>
+                            </div>
+                            <div className="mt-3 grid gap-3 text-sm text-slate-700 md:grid-cols-3">
+                                <p><span className="font-semibold">Amount / Portion:</span> {currencyFormatter.format(activePricing.meal_unit_price)}</p>
+                                <p><span className="font-semibold">Local Tax:</span> {activePricing.local_tax_rate}%</p>
+                                <p><span className="font-semibold">Service Tax:</span> {activePricing.service_tax_rate}%</p>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <form onSubmit={submit} className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -201,43 +228,14 @@ export default function Edit({ orderMeal, canApprove, mode, indexRouteName, upda
                                     <label htmlFor="quantity" className="text-sm font-semibold text-slate-800">Total</label>
                                     <input id="quantity" type="number" value={shiftTotal} className={inputClass} readOnly />
                                 </div>
-                                <div>
-                                    <label htmlFor="meal_unit_price" className="text-sm font-semibold text-slate-800">Amount / Portion</label>
-                                    <input
-                                        id="meal_unit_price"
-                                        type="number"
-                                        min="1"
-                                        value={data.meal_unit_price}
-                                        className={inputClass}
-                                        onChange={(e) => setData('meal_unit_price', Number(e.target.value))}
-                                    />
-                                    <InputError message={errors.meal_unit_price} className="mt-2" />
-                                </div>
-                                <div>
-                                    <label htmlFor="local_tax_rate" className="text-sm font-semibold text-slate-800">Local Tax (%)</label>
-                                    <input
-                                        id="local_tax_rate"
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        value={data.local_tax_rate}
-                                        className={inputClass}
-                                        onChange={(e) => setData('local_tax_rate', Number(e.target.value))}
-                                    />
-                                    <InputError message={errors.local_tax_rate} className="mt-2" />
-                                </div>
-                                <div>
-                                    <label htmlFor="service_tax_rate" className="text-sm font-semibold text-slate-800">Service Tax (%)</label>
-                                    <input
-                                        id="service_tax_rate"
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        value={data.service_tax_rate}
-                                        className={inputClass}
-                                        onChange={(e) => setData('service_tax_rate', Number(e.target.value))}
-                                    />
-                                    <InputError message={errors.service_tax_rate} className="mt-2" />
+                                <div className="rounded-lg border border-cyan-200 bg-white p-4 md:col-span-3">
+                                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Locked Pricing</p>
+                                    <div className="mt-3 grid gap-3 text-sm text-slate-700 md:grid-cols-3">
+                                        <p><span className="font-semibold">Amount / Portion:</span> {currencyFormatter.format(storedPricing.meal_unit_price)}</p>
+                                        <p><span className="font-semibold">Local Tax:</span> {storedPricing.local_tax_rate}%</p>
+                                        <p><span className="font-semibold">Service Tax:</span> {storedPricing.service_tax_rate}%</p>
+                                    </div>
+                                    <p className="mt-2 text-xs text-slate-500">Pricing follows the Price Supplier master and is not edited from this form.</p>
                                 </div>
                             </div>
 

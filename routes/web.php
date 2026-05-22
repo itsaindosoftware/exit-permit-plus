@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExitPermitListController;
 use App\Http\Controllers\ExitPermitController;
 use App\Http\Controllers\OrderMealController;
+use App\Http\Controllers\PriceSupplierController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ReimbursementController;
@@ -50,6 +51,7 @@ Route::middleware('auth')->group(function () {
     Route::get('reimbursement-approvals', [ReimbursementController::class, 'approvalIndex'])
         ->name('reimbursement-approvals.index');
     Route::resource('exit-permits', ExitPermitController::class);
+    Route::resource('price-suppliers', PriceSupplierController::class);
     Route::get('order-meals/print', [OrderMealController::class, 'print'])->name('order-meals.print');
     Route::get('order-meals/{orderMeal}/print', [OrderMealController::class, 'printItem'])->name('order-meals.print-item');
     Route::resource('order-meals', OrderMealController::class)->except([]);

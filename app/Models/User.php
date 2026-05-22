@@ -33,6 +33,7 @@ class User extends Authenticatable
         'profile_photo_path',
         'password',
         'role_id',
+        'secondary_role_id',
         'is_available_for_approval',
     ];
 
@@ -65,6 +66,24 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class);
     }
 
+    public function secondaryRole(): BelongsTo
+    {
+        return $this->belongsTo(Role::class, 'secondary_role_id');
+    }
+
+    public function roleCodes(): array
+    {
+        return array_values(array_filter([
+            $this->role?->code,
+            $this->secondaryRole?->code,
+        ]));
+    }
+
+    public function hasRoleCode(string $code): bool
+    {
+        return in_array($code, $this->roleCodes(), true);
+    }
+
     public function exitPermits(): HasMany
     {
         return $this->hasMany(ExitPermit::class);
@@ -92,5 +111,22 @@ class User extends Authenticatable
         }
 
         return Storage::url($this->profile_photo_path);
+    }
+
+    public function isWidaMustikaSari(): bool
+    {
+        return strtolower(trim((string) $this->name)) === 'wida mustika sari'
+            && $this->hasRoleCode('manager')
+            && $this->hasRoleCode('hr_manager');
+    }
+
+    public function canActAsManagerApproval(): bool
+    {
+        return $this->hasRoleCode('manager') || $this->hasRoleCode('admin') || $this->isWidaMustikaSari();
+    }
+
+    public function canActAsHrManagerApproval(): bool
+    {
+        return $this->hasRoleCode('hr_manager') || $this->hasRoleCode('admin') || $this->isWidaMustikaSari();
     }
 }

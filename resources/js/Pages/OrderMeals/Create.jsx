@@ -12,7 +12,7 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
     maximumFractionDigits: 0,
 });
 
-export default function Create({ mode, storeRouteName, indexRouteName, eligibleExitPermits = [], eligibilityWarning = null, defaultCapacity = 120 }) {
+export default function Create({ mode, storeRouteName, indexRouteName, eligibleExitPermits = [], eligibilityWarning = null, defaultCapacity = 120, mealPricing = null }) {
     const isExitPermitMode = mode === 'exit_permit';
     const firstPermitId = eligibleExitPermits?.[0]?.id ?? '';
     const firstPermitRequestorCount = Math.max(0, Number(eligibleExitPermits?.[0]?.requestors?.length ?? 0));
@@ -20,6 +20,15 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
     const baseCapacity = Number.isFinite(Number(defaultCapacity))
         ? Math.max(0, Number(defaultCapacity))
         : 120;
+    const pricing = {
+        supplier_name: mealPricing?.supplier_name ?? 'System Default',
+        meal_unit_price: Number(mealPricing?.meal_unit_price ?? 12000),
+        local_tax_rate: Number(mealPricing?.local_tax_rate ?? 10),
+        service_tax_rate: Number(mealPricing?.service_tax_rate ?? 2),
+        effective_date: mealPricing?.effective_date ?? null,
+        is_active: Boolean(mealPricing?.is_active),
+        source: mealPricing?.source ?? 'fallback',
+    };
     const [selectedShift, setSelectedShift] = useState('day');
     const [shiftQuantity, setShiftQuantity] = useState(baseCapacity);
 
@@ -34,9 +43,6 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
         overtime_day_shift_qty: 0,
         night_shift_qty: 0,
         overtime_night_shift_qty: 0,
-        meal_unit_price: 12000,
-        local_tax_rate: 10,
-        service_tax_rate: 2,
         notes: '',
     });
 
@@ -53,13 +59,13 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
     const totalProvided = displayedBaseQuantity + Number(data.visitor_count || 0);
     const subtotalAmount = isExitPermitMode
         ? 0
-        : shiftTotal * Number(data.meal_unit_price || 0);
+        : shiftTotal * pricing.meal_unit_price;
     const localTaxAmount = isExitPermitMode
         ? 0
-        : Math.round(subtotalAmount * (Number(data.local_tax_rate || 0) / 100));
+        : Math.round(subtotalAmount * (pricing.local_tax_rate / 100));
     const serviceTaxAmount = isExitPermitMode
         ? 0
-        : Math.round(subtotalAmount * (Number(data.service_tax_rate || 0) / 100));
+        : Math.round(subtotalAmount * (pricing.service_tax_rate / 100));
     const grandTotalAmount = isExitPermitMode
         ? 0
         : subtotalAmount + localTaxAmount - serviceTaxAmount;
@@ -173,6 +179,24 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
                             ? 'Exit Permit meal order. Can only be submitted after Sisca attendance verification with requestor match = Y.'
                             : 'Meal order for daily employee needs and additional visitors.'}
                     </p>
+                    {!isExitPermitMode && (
+                        <div className="mt-4 rounded-xl border border-cyan-200 bg-white/80 p-4">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Active Price Supplier</p>
+                                    <p className="mt-1 text-sm font-semibold text-slate-900">{pricing.supplier_name}</p>
+                                </div>
+                                <div className="rounded-full bg-cyan-100 px-3 py-1 text-xs font-semibold text-cyan-700">
+                                    {pricing.source === 'supplier' ? 'From Supplier Master' : 'System Default'}
+                                </div>
+                            </div>
+                            <div className="mt-3 grid gap-3 text-sm text-slate-700 md:grid-cols-3">
+                                <p><span className="font-semibold">Amount / Portion:</span> {currencyFormatter.format(pricing.meal_unit_price)}</p>
+                                <p><span className="font-semibold">Local Tax:</span> {pricing.local_tax_rate}%</p>
+                                <p><span className="font-semibold">Service Tax:</span> {pricing.service_tax_rate}%</p>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {isExitPermitMode && !hasEligiblePermits && (
@@ -278,44 +302,6 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
                                         className={inputClass}
                                         onChange={(e) => setShiftQuantity(Number(e.target.value))}
                                     />
-                                </div>
-                                <div>
-                                    <label htmlFor="meal_unit_price" className="text-sm font-semibold text-slate-800">Amount / Portion</label>
-                                    <input
-                                        id="meal_unit_price"
-                                        type="number"
-                                        min="1"
-                                        value={data.meal_unit_price}
-                                        className={inputClass}
-                                        onChange={(e) => setData('meal_unit_price', Number(e.target.value))}
-                                    />
-                                    <InputError message={errors.meal_unit_price} className="mt-2" />
-                                </div>
-                                <div>
-                                    <label htmlFor="local_tax_rate" className="text-sm font-semibold text-slate-800">Local Tax (%)</label>
-                                    <input
-                                        id="local_tax_rate"
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        value={data.local_tax_rate}
-                                        className={inputClass}
-                                        onChange={(e) => setData('local_tax_rate', Number(e.target.value))}
-                                    />
-                                    <InputError message={errors.local_tax_rate} className="mt-2" />
-                                </div>
-                                <div>
-                                    <label htmlFor="service_tax_rate" className="text-sm font-semibold text-slate-800">Service Tax (%)</label>
-                                    <input
-                                        id="service_tax_rate"
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        value={data.service_tax_rate}
-                                        className={inputClass}
-                                        onChange={(e) => setData('service_tax_rate', Number(e.target.value))}
-                                    />
-                                    <InputError message={errors.service_tax_rate} className="mt-2" />
                                 </div>
                             </div>
 

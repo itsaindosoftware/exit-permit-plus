@@ -24,6 +24,7 @@ class DashboardController extends Controller
         $canViewMealAnalytics = in_array($user?->role?->code, ['hr', 'manager', 'md', 'hr_manager', 'admin'], true);
         $canAccessExitPermitApproval = in_array($roleCode, ['manager', 'md', 'hr_manager', 'admin'], true)
             || ($roleCode === 'hr' && strtolower((string) $user?->email) === self::ATTENDANCE_VERIFIER_EMAIL);
+        $isDualApprovalUser = (bool) ($user?->isWidaMustikaSari() ?? false);
 
         $myExitPermits = ExitPermit::query()->where('user_id', $userId);
         $myExitPermitsThisMonth = (clone $myExitPermits)->whereBetween('permit_date', [$monthStart, $monthEnd]);
@@ -77,7 +78,18 @@ class DashboardController extends Controller
                 ->count(),
         ];
 
-        if ($roleCode === 'manager') {
+        if ($isDualApprovalUser) {
+            $approvalQuery->where(function ($subQuery) {
+                $subQuery->where(function ($managerQuery) {
+                    $managerQuery->whereNull('manager_approved_at')->where('status', 'pending');
+                })->orWhere(function ($hrManagerQuery) {
+                    $hrManagerQuery->whereNotNull('manager_approved_at')
+                        ->whereNotNull('md_approved_at')
+                        ->whereNull('hr_verified_at')
+                        ->where('status', 'pending');
+                });
+            });
+        } elseif ($roleCode === 'manager') {
             $approvalQuery->whereNull('manager_approved_at')->where('status', 'pending');
         } elseif ($roleCode === 'md') {
             $approvalQuery->whereNotNull('manager_approved_at')

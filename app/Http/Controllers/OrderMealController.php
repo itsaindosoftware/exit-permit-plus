@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\ExitPermit;
 use App\Models\OrderMeal;
+use App\Models\PriceSupplier;
 use App\Services\AttendanceMatchingService;
 use App\Services\ExitPermitLunchConversionService;
 use Carbon\Carbon;
@@ -278,6 +279,7 @@ class OrderMealController extends Controller
         $eligibilityWarning = null;
         $checkMealFormula = $this->buildCheckMealFormula();
         $defaultCapacity = (int) ($checkMealFormula['check_order_meal'] ?? 0);
+        $mealPricing = $this->resolveMealPricing();
 
         if ($scope === OrderMeal::SCOPE_EXIT_PERMIT) {
             $this->ensureSisca(request()->user());
@@ -295,6 +297,7 @@ class OrderMealController extends Controller
             'eligibleExitPermits' => $eligibleExitPermits,
             'eligibilityWarning' => $eligibilityWarning,
             'defaultCapacity' => $defaultCapacity,
+            'mealPricing' => $mealPricing,
         ]);
     }
 
@@ -379,6 +382,7 @@ class OrderMealController extends Controller
         $baseMealDate = Carbon::parse((string) $validated['meal_date']);
         $exitPermitId = null;
         $matchedRequestorCount = null;
+        $mealPricing = $this->resolveMealPricing();
 
         if ($scope === OrderMeal::SCOPE_EXIT_PERMIT) {
             $this->ensureSisca($request->user());
@@ -398,9 +402,9 @@ class OrderMealController extends Controller
             'overtime_night_shift_qty' => 0,
         ];
         $generalCostData = [
-            'meal_unit_price' => 12000,
-            'local_tax_rate' => 10,
-            'service_tax_rate' => 2,
+            'meal_unit_price' => (int) $mealPricing['meal_unit_price'],
+            'local_tax_rate' => (float) $mealPricing['local_tax_rate'],
+            'service_tax_rate' => (float) $mealPricing['service_tax_rate'],
             'subtotal_amount' => 0,
             'local_tax_amount' => 0,
             'service_tax_amount' => 0,
@@ -422,9 +426,9 @@ class OrderMealController extends Controller
 
             $generalCostData = $this->calculateGeneralMealCost(
                 $baseQuantity,
-                (int) ($validated['meal_unit_price'] ?? 12000),
-                (float) ($validated['local_tax_rate'] ?? 10),
-                (float) ($validated['service_tax_rate'] ?? 2),
+                (int) $mealPricing['meal_unit_price'],
+                (float) $mealPricing['local_tax_rate'],
+                (float) $mealPricing['service_tax_rate'],
             );
         }
 
@@ -495,11 +499,13 @@ class OrderMealController extends Controller
         }
 
         $this->authorizeUser($orderMeal);
+        $mealPricing = $this->resolveMealPricing();
 
         return Inertia::render('OrderMeals/Edit', [
             'mode' => $scope,
             'indexRouteName' => $this->routeName($scope, 'index'),
             'updateRouteName' => $this->routeName($scope, 'update'),
+            'mealPricing' => $mealPricing,
             'orderMeal' => [
                 'id' => $orderMeal->id,
                 'meal_date' => $orderMeal->meal_date
@@ -578,9 +584,9 @@ class OrderMealController extends Controller
 
             $generalCostData = $this->calculateGeneralMealCost(
                 $baseQuantity,
-                (int) ($validated['meal_unit_price'] ?? 12000),
-                (float) ($validated['local_tax_rate'] ?? 10),
-                (float) ($validated['service_tax_rate'] ?? 2),
+                (int) $orderMeal->meal_unit_price,
+                (float) $orderMeal->local_tax_rate,
+                (float) $orderMeal->service_tax_rate,
             );
         }
 
@@ -847,9 +853,6 @@ class OrderMealController extends Controller
             'overtime_day_shift_qty' => [Rule::requiredIf(fn() => $scope === OrderMeal::SCOPE_GENERAL), 'nullable', 'integer', 'min:0'],
             'night_shift_qty' => [Rule::requiredIf(fn() => $scope === OrderMeal::SCOPE_GENERAL), 'nullable', 'integer', 'min:0'],
             'overtime_night_shift_qty' => [Rule::requiredIf(fn() => $scope === OrderMeal::SCOPE_GENERAL), 'nullable', 'integer', 'min:0'],
-            'meal_unit_price' => [Rule::requiredIf(fn() => $scope === OrderMeal::SCOPE_GENERAL), 'nullable', 'integer', 'min:1'],
-            'local_tax_rate' => [Rule::requiredIf(fn() => $scope === OrderMeal::SCOPE_GENERAL), 'nullable', 'numeric', 'min:0'],
-            'service_tax_rate' => [Rule::requiredIf(fn() => $scope === OrderMeal::SCOPE_GENERAL), 'nullable', 'numeric', 'min:0'],
             'schedule_type' => ['nullable', Rule::in(['single', 'daily', 'weekly'])],
             'repeat_count' => ['nullable', 'integer', 'min:1', 'max:60'],
             'notes' => ['nullable', 'string'],
@@ -885,13 +888,44 @@ class OrderMealController extends Controller
                 $validated['overtime_day_shift_qty'],
                 $validated['night_shift_qty'],
                 $validated['overtime_night_shift_qty'],
-                $validated['meal_unit_price'],
-                $validated['local_tax_rate'],
-                $validated['service_tax_rate'],
             );
         }
 
         return $validated;
+    }
+
+    private function resolveMealPricing(): array
+    {
+        $supplier = PriceSupplier::query()
+            ->active()
+            ->orderByDesc('effective_date')
+            ->orderByDesc('id')
+            ->first()
+            ?? PriceSupplier::query()->orderByDesc('effective_date')->orderByDesc('id')->first();
+
+        if ($supplier) {
+            return [
+                'id' => $supplier->id,
+                'supplier_name' => $supplier->supplier_name,
+                'meal_unit_price' => (int) $supplier->meal_unit_price,
+                'local_tax_rate' => (float) $supplier->local_tax_rate,
+                'service_tax_rate' => (float) $supplier->service_tax_rate,
+                'effective_date' => $supplier->effective_date ? (string) $supplier->effective_date : null,
+                'is_active' => (bool) $supplier->is_active,
+                'source' => 'supplier',
+            ];
+        }
+
+        return [
+            'id' => null,
+            'supplier_name' => 'System Default',
+            'meal_unit_price' => 12000,
+            'local_tax_rate' => 10,
+            'service_tax_rate' => 2,
+            'effective_date' => null,
+            'is_active' => false,
+            'source' => 'fallback',
+        ];
     }
 
     private function buildCheckMealFormula(): array

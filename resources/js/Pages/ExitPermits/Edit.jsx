@@ -410,9 +410,9 @@ export default function Edit({
 
                 {canSubmitApproval && (
                     <div className="rounded-lg border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm font-medium text-cyan-900">
-                        {viewerRole === 'manager'
+                        {approvalStage.includes('Waiting Manager')
                             ? 'This document is awaiting Manager approval. If approved, it will continue to MD.'
-                            : viewerRole === 'md'
+                            : approvalStage.includes('Waiting MD')
                                 ? 'This document is awaiting MD approval. If approved, it will continue to HR Manager.'
                                 : 'This document is awaiting HR Manager approval as the final stage before HR attendance verification.'}
                     </div>
@@ -1095,7 +1095,7 @@ export default function Edit({
                                 {canArrangeCar
                                     ? 'Save Arrangement'
                                     : canVerifyAttendance
-                                        ? 'Save Attendance Verification'
+                                            ? 'Check Exit Permit'
                                         : 'Update Exit Permit'}
                             </button>
                         )}

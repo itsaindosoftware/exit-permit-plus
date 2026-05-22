@@ -47,8 +47,8 @@ class ExitPermitApprovalRequested extends Notification
         }
 
         if ($this->stage === 'attendance_verifier') {
-            $subject = 'Exit Permit Attendance Verification Required';
-            $message = sprintf('Exit Permit #%d needs attendance verification.', $this->exitPermit->id);
+            $subject = 'Exit Permit Check Required';
+            $message = sprintf('Exit Permit #%d needs Sisca check before it is acknowledged.', $this->exitPermit->id);
         }
 
         return (new MailMessage())
@@ -79,8 +79,8 @@ class ExitPermitApprovalRequested extends Notification
         }
 
         if ($this->stage === 'attendance_verifier') {
-            $title = 'Attendance Verification Pending (Sisca)';
-            $message = sprintf('Exit Permit #%d needs attendance verification by Sisca.', $this->exitPermit->id);
+            $title = 'Check Exit Permit Pending (Sisca)';
+            $message = sprintf('Exit Permit #%d needs Sisca check before it is acknowledged.', $this->exitPermit->id);
         }
 
         return [

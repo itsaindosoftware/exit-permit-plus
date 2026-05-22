@@ -117,7 +117,7 @@ class ExitPermitListController extends Controller
             }
 
             if ($exitPermit->post_md_path === ExitPermit::POST_MD_PATH_MEAL) {
-                return 'Approved by HR Manager | Meal Path';
+                return 'Approved by HR Manager | Acknowledged by Sisca (HRD)';
             }
 
             if ($exitPermit->post_md_path === ExitPermit::POST_MD_PATH_REIMBURSEMENT) {
@@ -165,7 +165,7 @@ class ExitPermitListController extends Controller
             && (bool) $exitPermit->attendance_checked_at
             && (bool) $exitPermit->has_valid_checkin
         ) {
-            return 'Checked By HR: Sisca';
+            return 'Acknowledged by Sisca (HRD)';
         }
 
         return strtoupper((string) $exitPermit->status);

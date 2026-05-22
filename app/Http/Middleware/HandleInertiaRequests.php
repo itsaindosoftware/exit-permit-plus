@@ -82,9 +82,21 @@ class HandleInertiaRequests extends Middleware
                 'exit_permit_approval_count' => fn() => $request->user() ? (function () use ($request) {
                     $user = $request->user();
                     $roleCode = $user->role?->code;
+                    $isDualApprovalUser = (bool) ($user->isWidaMustikaSari() ?? false);
                     $query = \App\Models\ExitPermit::query();
 
-                    if ($roleCode === 'manager') {
+                    if ($isDualApprovalUser) {
+                        return $query->where(function ($subQuery) {
+                            $subQuery->where(function ($managerQuery) {
+                                $managerQuery->whereNull('manager_approved_at')->where('status', 'pending');
+                            })->orWhere(function ($hrManagerQuery) {
+                                $hrManagerQuery->whereNotNull('manager_approved_at')
+                                    ->whereNotNull('md_approved_at')
+                                    ->whereNull('hr_verified_at')
+                                    ->where('status', 'pending');
+                            });
+                        })->count();
+                    } elseif ($roleCode === 'manager') {
                         return $query->whereNull('manager_approved_at')->where('status', 'pending')->count();
                     } elseif ($roleCode === 'md') {
                         return $query->whereNotNull('manager_approved_at')

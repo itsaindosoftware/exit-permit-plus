@@ -39,6 +39,7 @@ class ExitPermitController extends Controller
     private const HR_APPROVER_PRIORITY_EMAILS = [
         'hr.manager@example.com',
         'wida.mustika.sari@example.com',
+        'wida.mus@thaisummit.co.id',
         'theresia.saing@example.com',
         'hrga-01@thaisummit.co.id',
         'payroll.hr@thaisummit.co.id',
@@ -122,6 +123,7 @@ class ExitPermitController extends Controller
     public function approvalIndex(): Response
     {
         $user = request()->user();
+        $isDualApprovalUser = (bool) ($user?->isWidaMustikaSari() ?? false);
         $submitter = trim((string) request()->query('submitter', ''));
         $requestor = trim((string) request()->query('requestor', ''));
         $permitDate = trim((string) request()->query('date', ''));
@@ -136,7 +138,18 @@ class ExitPermitController extends Controller
 
         $query = ExitPermit::query()->with(['user:id,name', 'hrApprover:id,name', 'requestors:id,exit_permit_id,name'])->latest();
 
-        if ($user?->role?->code === 'manager') {
+        if ($isDualApprovalUser) {
+            $query->where(function ($subQuery) {
+                $subQuery->where(function ($managerQuery) {
+                    $managerQuery->whereNull('manager_approved_at')->where('status', 'pending');
+                })->orWhere(function ($hrManagerQuery) {
+                    $hrManagerQuery->whereNotNull('manager_approved_at')
+                        ->whereNotNull('md_approved_at')
+                        ->whereNull('hr_verified_at')
+                        ->where('status', 'pending');
+                });
+            });
+        } elseif ($user?->role?->code === 'manager') {
             $query->whereNull('manager_approved_at')->where('status', 'pending');
         } elseif ($user?->role?->code === 'md') {
             $query->whereNotNull('manager_approved_at')
@@ -674,8 +687,9 @@ class ExitPermitController extends Controller
         if ($canApprove) {
             $approval = $this->validateApprovalData($request);
             $newStatus = $approval['status'];
+            $isDualApprovalUser = (bool) ($user?->isWidaMustikaSari() ?? false);
 
-            if ($roleCode === 'manager') {
+            if ($roleCode === 'manager' && !($isDualApprovalUser && $exitPermit->manager_approved_at && $exitPermit->md_approved_at && !$exitPermit->hr_verified_at)) {
                 if ($exitPermit->manager_approved_at || $exitPermit->status !== 'pending') {
                     throw ValidationException::withMessages([
                         'status' => 'Manager approval has already been processed.',
@@ -760,7 +774,7 @@ class ExitPermitController extends Controller
                 }
             }
 
-            if ($roleCode === 'hr_manager') {
+            if ($roleCode === 'hr_manager' || ($isDualApprovalUser && $exitPermit->manager_approved_at && $exitPermit->md_approved_at && !$exitPermit->hr_verified_at)) {
                 if (!$exitPermit->manager_approved_at || !$exitPermit->md_approved_at) {
                     throw ValidationException::withMessages([
                         'status' => 'HR Manager approval can only be done after MD approval.',
@@ -773,7 +787,7 @@ class ExitPermitController extends Controller
                     ]);
                 }
 
-                if ($exitPermit->hr_approver_id && $exitPermit->hr_approver_id !== $user?->id) {
+                if (!$isDualApprovalUser && $exitPermit->hr_approver_id && $exitPermit->hr_approver_id !== $user?->id) {
                     throw ValidationException::withMessages([
                         'status' => 'This document is assigned to another HR Manager as the approver.',
                     ]);
@@ -1029,7 +1043,7 @@ class ExitPermitController extends Controller
         $owner->notify(new ExitPermitStatusUpdated($exitPermit, $stage));
     }
 
-    private function notifyExitPermitApproverOnce(User $approver, ExitPermit $exitPermit, string $stage): void
+    private function notifyExitPermitApproverOnce($approver, ExitPermit $exitPermit, string $stage): void
     {
         $alreadyNotified = $approver->notifications()
             ->where('type', ExitPermitApprovalRequested::class)
@@ -1144,6 +1158,16 @@ class ExitPermitController extends Controller
 
     private function canSubmitApproval(ExitPermit $exitPermit, $user): bool
     {
+        if (
+            $user?->isWidaMustikaSari()
+            && $exitPermit->status === 'pending'
+            && $exitPermit->manager_approved_at
+            && $exitPermit->md_approved_at
+            && !$exitPermit->hr_verified_at
+        ) {
+            return true;
+        }
+
         if ($user?->role?->code === 'manager') {
             return $exitPermit->status === 'pending' && !$exitPermit->manager_approved_at;
         }
@@ -1188,7 +1212,7 @@ class ExitPermitController extends Controller
             }
 
             if ($exitPermit->post_md_path === ExitPermit::POST_MD_PATH_MEAL) {
-                return 'Approved by HR Manager | Meal Path';
+                return 'Approved by HR Manager | Acknowledged by Sisca (HRD)';
             }
 
             if ($exitPermit->post_md_path === ExitPermit::POST_MD_PATH_REIMBURSEMENT) {
@@ -1253,7 +1277,7 @@ class ExitPermitController extends Controller
             && (bool) $exitPermit->attendance_checked_at
             && (bool) $exitPermit->has_valid_checkin
         ) {
-            return 'Checked By HR: Sisca';
+            return 'Acknowledged by Sisca (HRD)';
         }
 
         return strtoupper((string) $exitPermit->status);
@@ -1929,9 +1953,24 @@ class ExitPermitController extends Controller
     {
         $user = request()->user();
         $roleCode = $user?->role?->code;
+        $isDualApprovalUser = (bool) ($user?->isWidaMustikaSari() ?? false);
 
         if ($exitPermit->user_id === $user?->id) {
             return;
+        }
+
+        if ($isDualApprovalUser) {
+            $canApproveAsManager = $exitPermit->status === 'pending' && !$exitPermit->manager_approved_at;
+            $canApproveAsHrManager = $exitPermit->status === 'pending'
+                && (bool) $exitPermit->manager_approved_at
+                && (bool) $exitPermit->md_approved_at
+                && !$exitPermit->hr_verified_at;
+
+            if ($canApproveAsManager || $canApproveAsHrManager) {
+                return;
+            }
+
+            abort(403);
         }
 
         if (in_array($roleCode, ['manager', 'hr_manager'], true)) {
