@@ -21,7 +21,7 @@ return new class extends Migration {
         if ($hrManagerRoleId) {
             DB::table('users')
                 ->whereRaw('LOWER(email) = ?', ['wida.mustika.sari@example.com'])
-                ->orWhereRaw('LOWER(email) = ?', ['wida.mus@thaisummit.co.id'])
+                ->orWhereRaw('LOWER(email) = ?', ['wida.mus@example.com'])
                 ->update(['secondary_role_id' => $hrManagerRoleId]);
         }
     }

@@ -293,7 +293,7 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
 
                             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                                 <div>
-                                    <label htmlFor="quantity" className="text-sm font-semibold text-slate-800">Total</label>
+                                    <label htmlFor="quantity" className="text-sm font-semibold text-slate-800">Total Order</label>
                                     <input
                                         id="quantity"
                                         type="number"

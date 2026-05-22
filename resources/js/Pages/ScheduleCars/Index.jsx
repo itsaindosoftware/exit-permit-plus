@@ -87,6 +87,14 @@ export default function Index({ events, filters, arrangeItems = [] }) {
         return day;
     });
 
+    const joinOrDash = (values = []) => {
+        const items = (Array.isArray(values) ? values : [])
+            .map((value) => String(value ?? '').trim())
+            .filter(Boolean);
+
+        return items.length > 0 ? items.join(', ') : '-';
+    };
+
     return (
         <AuthenticatedLayout
             header={<h2 className="text-xl font-semibold leading-tight text-slate-800">Schedule Car</h2>}
@@ -117,8 +125,20 @@ export default function Index({ events, filters, arrangeItems = [] }) {
                         <div className="mt-4 space-y-2">
                             {arrangeItems.map((item) => (
                                 <div key={item.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-indigo-200 bg-white px-3 py-2">
-                                    <div>
+                                    <div className="min-w-0">
                                         <p className="text-sm font-semibold text-slate-900">{item.label}</p>
+                                        <p className="mt-1 text-xs text-slate-600">
+                                            Submitter: <span className="font-semibold text-slate-800">{item.submitter_name || '-'}</span>
+                                        </p>
+                                        <p className="text-xs text-slate-600">
+                                            User/Requestor: <span className="font-semibold text-slate-800">{joinOrDash(item.requestor_names)}</span>
+                                        </p>
+                                        <p className="text-xs text-slate-600">
+                                            Department: <span className="font-semibold text-slate-800">{joinOrDash(item.requestor_departments)}</span>
+                                        </p>
+                                        <p className="text-xs text-slate-600">
+                                            Cost Center: <span className="font-semibold text-slate-800">{item.cost_center_code ? `${item.cost_center_code} | ` : ''}{item.cost_center_name || '-'}</span>
+                                        </p>
                                         <span className={
                                             `inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ` +
                                             (item.is_arranged ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700')
@@ -327,6 +347,10 @@ export default function Index({ events, filters, arrangeItems = [] }) {
                                                         >
                                                             <p className="font-semibold">{event.start_time ?? '--:--'} - {event.end_time ?? '--:--'}</p>
                                                             <p className="truncate">{event.destination}</p>
+                                                            <p className="truncate">Submitter: {event.submitter_name || '-'}</p>
+                                                            <p className="truncate">User: {joinOrDash(event.requestor_names)}</p>
+                                                            <p className="truncate">Dept: {joinOrDash(event.requestor_departments)}</p>
+                                                            <p className="truncate">Cost Center: {event.cost_center_code ? `${event.cost_center_code} | ` : ''}{event.cost_center_name || '-'}</p>
                                                             <p className="truncate">{event.vehicle_plate ?? '-'} | {event.driver_name ?? '-'}</p>
                                                             <p className={
                                                                 `inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-semibold ` +

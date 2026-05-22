@@ -66,7 +66,7 @@ class HandleInertiaRequests extends Middleware
                 'unread_count' => fn() => $request->user()
                     ? $request->user()->unreadNotifications()->count()
                     : 0,
-                'schedule_car_count' => fn() => $request->user() && strtolower((string) $request->user()->email) === 'hrga-01@thaisummit.co.id'
+                'schedule_car_count' => fn() => $request->user() && strtolower((string) $request->user()->email) === 'hrga-01@example.com'
                     ? \App\Models\ExitPermit::query()
                         ->whereIn('exit_type', [
                             \App\Models\ExitPermit::EXIT_TYPE_BUSINESS_TRIP,
@@ -79,44 +79,7 @@ class HandleInertiaRequests extends Middleware
                             $q->whereNull('vehicle_plate')->orWhereNull('driver_name');
                         })->count()
                     : 0,
-                'exit_permit_approval_count' => fn() => $request->user() ? (function () use ($request) {
-                    $user = $request->user();
-                    $roleCode = $user->role?->code;
-                    $isDualApprovalUser = (bool) ($user->isWidaMustikaSari() ?? false);
-                    $query = \App\Models\ExitPermit::query();
-
-                    if ($isDualApprovalUser) {
-                        return $query->where(function ($subQuery) {
-                            $subQuery->where(function ($managerQuery) {
-                                $managerQuery->whereNull('manager_approved_at')->where('status', 'pending');
-                            })->orWhere(function ($hrManagerQuery) {
-                                $hrManagerQuery->whereNotNull('manager_approved_at')
-                                    ->whereNotNull('md_approved_at')
-                                    ->whereNull('hr_verified_at')
-                                    ->where('status', 'pending');
-                            });
-                        })->count();
-                    } elseif ($roleCode === 'manager') {
-                        return $query->whereNull('manager_approved_at')->where('status', 'pending')->count();
-                    } elseif ($roleCode === 'md') {
-                        return $query->whereNotNull('manager_approved_at')
-                            ->whereNull('md_approved_at')
-                            ->where('status', 'pending')->count();
-                    } elseif ($roleCode === 'hr_manager') {
-                        return $query->whereNotNull('manager_approved_at')
-                            ->whereNotNull('md_approved_at')
-                            ->whereNull('hr_verified_at')
-                            ->where('status', 'pending')->count();
-                    } elseif ($roleCode === 'hr' && strtolower((string) $user->email) === 'payroll.hr@thaisummit.co.id') {
-                        return $query->where('status', 'approved')
-                            ->where('exit_type', \App\Models\ExitPermit::EXIT_TYPE_BUSINESS_TRIP)
-                            ->whereNotNull('md_approved_at')
-                            ->whereNotNull('hr_verified_at')
-                            ->whereNull('attendance_checked_at')->count();
-                    }
-
-                    return 0;
-                })() : 0,
+                'exit_permit_approval_count' => fn() => $this->exitPermitApprovalCount($request->user()),
                 'reimbursement_approval_count' => fn() => $request->user() ? (function () use ($request) {
                     $user = $request->user();
                     $roleCode = $user->role?->code;
@@ -126,7 +89,7 @@ class HandleInertiaRequests extends Middleware
                         return \App\Models\Reimbursement::query()->where('status', \App\Models\Reimbursement::STATUS_PENDING_MANAGER)->count();
                     } elseif ($roleCode === 'md') {
                         return \App\Models\Reimbursement::query()->where('status', \App\Models\Reimbursement::STATUS_PENDING_MD)->count();
-                    } elseif ($roleCode === 'hr' && $email === 'hrga-01@thaisummit.co.id') {
+                    } elseif ($roleCode === 'hr' && $email === 'hrga-01@example.com') {
                         return \App\Models\Reimbursement::query()->where('status', \App\Models\Reimbursement::STATUS_PENDING_RATNA)->count();
                     } elseif ($roleCode === 'accounting') {
                         return \App\Models\Reimbursement::query()->where('status', \App\Models\Reimbursement::STATUS_SUBMITTED_TO_ACCOUNTING)->count();
@@ -136,5 +99,119 @@ class HandleInertiaRequests extends Middleware
                 })() : 0,
             ],
         ];
+    }
+
+    private const MANAGER_APPROVAL_SCOPES = [
+        '6310814' => [
+            'creators' => ['Indriani'],
+            'departments' => ['Production', 'Quality Assurance', 'Production Engineer', 'Production Administration'],
+        ],
+        '9650426' => [
+            'creators' => ['Alvin Dhuhalkarim'],
+            'departments' => ['PPIC & Sales Delivery (Outbound)'],
+        ],
+        '0190507' => [
+            'creators' => ['Yulianto Abdurrahman Affandi'],
+            'departments' => ['Accounting, Finance & CIC'],
+        ],
+        '1150808' => [
+            'creators' => ['Dede Susilawati'],
+            'departments' => ['HR, GA & LEGAL', 'SYD & IT'],
+        ],
+    ];
+
+    private function applyManagerApprovalScope($query, $user): void
+    {
+        $scope = $this->managerApprovalScopeForUser($user);
+
+        if (!$scope) {
+            return;
+        }
+
+        $creatorNames = array_values(array_filter(array_map(
+            fn($value) => strtolower(trim((string) $value)),
+            (array) ($scope['creators'] ?? []),
+        )));
+        $departments = array_values(array_filter(array_map(
+            fn($value) => strtolower(trim((string) $value)),
+            (array) ($scope['departments'] ?? []),
+        )));
+
+        if ($creatorNames !== []) {
+            $query->whereHas('user', function ($userQuery) use ($creatorNames) {
+                $userQuery->whereIn(\Illuminate\Support\Facades\DB::raw('LOWER(TRIM(name))'), $creatorNames);
+            });
+        }
+
+        if ($departments !== []) {
+            $query->whereDoesntHave('requestors', function ($requestorQuery) use ($departments) {
+                $requestorQuery->whereNotIn(\Illuminate\Support\Facades\DB::raw('LOWER(TRIM(COALESCE(department, "")))'), $departments);
+            });
+        }
+    }
+
+    private function managerApprovalScopeForUser($user): ?array
+    {
+        $approverKey = strtolower(preg_replace('/[^a-z0-9]+/i', '', trim((string) ($user?->nik ?? ''))) ?? '');
+
+        return self::MANAGER_APPROVAL_SCOPES[$approverKey] ?? null;
+    }
+
+    private function exitPermitApprovalCount($user): int
+    {
+        if (!$user) {
+            return 0;
+        }
+
+        $roleCode = $user->role?->code;
+        $isDualApprovalUser = (bool) ($user->isWidaMustikaSari() ?? false);
+        $query = \App\Models\ExitPermit::query();
+
+        if ($isDualApprovalUser) {
+            $query->where(function ($subQuery) use ($user) {
+                $subQuery->where(function ($managerQuery) use ($user) {
+                    $managerQuery->whereNull('manager_approved_at')->where('status', 'pending');
+                    $this->applyManagerApprovalScope($managerQuery, $user);
+                })->orWhere(function ($hrManagerQuery) {
+                    $hrManagerQuery->whereNotNull('manager_approved_at')
+                        ->whereNotNull('md_approved_at')
+                        ->whereNull('hr_verified_at')
+                        ->where('status', 'pending');
+                });
+            });
+
+            return $query->count();
+        }
+
+        if ($roleCode === 'manager') {
+            $this->applyManagerApprovalScope($query->whereNull('manager_approved_at')->where('status', 'pending'), $user);
+            return $query->count();
+        }
+
+        if ($roleCode === 'md') {
+            return $query->whereNotNull('manager_approved_at')
+                ->whereNull('md_approved_at')
+                ->where('status', 'pending')
+                ->count();
+        }
+
+        if ($roleCode === 'hr_manager') {
+            return $query->whereNotNull('manager_approved_at')
+                ->whereNotNull('md_approved_at')
+                ->whereNull('hr_verified_at')
+                ->where('status', 'pending')
+                ->count();
+        }
+
+        if ($roleCode === 'hr' && strtolower((string) $user->email) === 'sisca@example.com') {
+            return $query->where('status', 'approved')
+                ->where('exit_type', \App\Models\ExitPermit::EXIT_TYPE_BUSINESS_TRIP)
+                ->whereNotNull('md_approved_at')
+                ->whereNotNull('hr_verified_at')
+                ->whereNull('attendance_checked_at')
+                ->count();
+        }
+
+        return 0;
     }
 }

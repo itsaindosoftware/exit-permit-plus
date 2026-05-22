@@ -225,7 +225,7 @@ export default function Edit({ orderMeal, canApprove, mode, indexRouteName, upda
 
                             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                                 <div>
-                                    <label htmlFor="quantity" className="text-sm font-semibold text-slate-800">Total</label>
+                                    <label htmlFor="quantity" className="text-sm font-semibold text-slate-800">Total Order</label>
                                     <input id="quantity" type="number" value={shiftTotal} className={inputClass} readOnly />
                                 </div>
                                 <div className="rounded-lg border border-cyan-200 bg-white p-4 md:col-span-3">

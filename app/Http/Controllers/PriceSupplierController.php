@@ -11,7 +11,7 @@ use Inertia\Response;
 
 class PriceSupplierController extends Controller
 {
-    private const SISCA_EMAIL = 'payroll.hr@thaisummit.co.id';
+    private const SISCA_EMAIL = 'sisca@example.com';
 
     public function index(): Response
     {

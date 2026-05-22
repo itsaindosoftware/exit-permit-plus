@@ -17,7 +17,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReimbursementController extends Controller
 {
-    private const RATNA_EMAIL = 'hrga-01@thaisummit.co.id';
+    private const RATNA_EMAIL = 'hrga-01@example.com';
 
     public function attachment(Reimbursement $reimbursement): StreamedResponse
     {

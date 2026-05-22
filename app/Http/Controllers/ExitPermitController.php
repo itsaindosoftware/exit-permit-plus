@@ -32,17 +32,36 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExitPermitController extends Controller
 {
-    private const CAR_DRIVER_COORDINATOR_EMAIL = 'hrga-01@thaisummit.co.id';
+    private const CAR_DRIVER_COORDINATOR_EMAIL = 'hrga-01@example.com';
 
-    private const ATTENDANCE_VERIFIER_EMAIL = 'payroll.hr@thaisummit.co.id';
+    private const ATTENDANCE_VERIFIER_EMAIL = 'sisca@example.com';
 
     private const HR_APPROVER_PRIORITY_EMAILS = [
         'hr.manager@example.com',
         'wida.mustika.sari@example.com',
-        'wida.mus@thaisummit.co.id',
+        'wida.mus@example.com',
         'theresia.saing@example.com',
-        'hrga-01@thaisummit.co.id',
-        'payroll.hr@thaisummit.co.id',
+        'hrga-01@example.com',
+        'sisca@example.com',
+    ];
+
+    private const MANAGER_APPROVAL_SCOPES = [
+        '6310814' => [
+            'creators' => ['Indriani'],
+            'departments' => ['Production', 'Quality Assurance', 'Production Engineer', 'Production Administration'],
+        ],
+        '9650426' => [
+            'creators' => ['Alvin Dhuhalkarim'],
+            'departments' => ['PPIC & Sales Delivery (Outbound)'],
+        ],
+        '0190507' => [
+            'creators' => ['Yulianto Abdurrahman Affandi'],
+            'departments' => ['Accounting, Finance & CIC'],
+        ],
+        '1150808' => [
+            'creators' => ['Dede Susilawati'],
+            'departments' => ['HR, GA & LEGAL', 'SYD & IT'],
+        ],
     ];
 
     public function __construct(
@@ -139,9 +158,10 @@ class ExitPermitController extends Controller
         $query = ExitPermit::query()->with(['user:id,name', 'hrApprover:id,name', 'requestors:id,exit_permit_id,name'])->latest();
 
         if ($isDualApprovalUser) {
-            $query->where(function ($subQuery) {
-                $subQuery->where(function ($managerQuery) {
+            $query->where(function ($subQuery) use ($user) {
+                $subQuery->where(function ($managerQuery) use ($user) {
                     $managerQuery->whereNull('manager_approved_at')->where('status', 'pending');
+                    $this->applyManagerApprovalScope($managerQuery, $user);
                 })->orWhere(function ($hrManagerQuery) {
                     $hrManagerQuery->whereNotNull('manager_approved_at')
                         ->whereNotNull('md_approved_at')
@@ -151,6 +171,7 @@ class ExitPermitController extends Controller
             });
         } elseif ($user?->role?->code === 'manager') {
             $query->whereNull('manager_approved_at')->where('status', 'pending');
+            $this->applyManagerApprovalScope($query, $user);
         } elseif ($user?->role?->code === 'md') {
             $query->whereNotNull('manager_approved_at')
                 ->whereNull('md_approved_at')
@@ -1072,7 +1093,9 @@ class ExitPermitController extends Controller
         }
 
         if ($user?->role?->code === 'manager') {
-            return $exitPermit->status === 'pending' && !$exitPermit->manager_approved_at;
+            return $exitPermit->status === 'pending'
+                && !$exitPermit->manager_approved_at
+                && $this->canUserApproveManagerStage($exitPermit, $user);
         }
 
         if ($user?->role?->code === 'md') {
@@ -1157,6 +1180,103 @@ class ExitPermitController extends Controller
         return 'Pending';
     }
 
+    private function applyManagerApprovalScope($query, $user): void
+    {
+        $scope = $this->managerApprovalScopeForUser($user);
+
+        if (!$scope) {
+            return;
+        }
+
+        $creatorNames = array_values(array_filter(array_map(
+            fn($value) => strtolower(trim((string) $value)),
+            (array) ($scope['creators'] ?? []),
+        )));
+        $departments = array_values(array_filter(array_map(
+            fn($value) => strtolower(trim((string) $value)),
+            (array) ($scope['departments'] ?? []),
+        )));
+
+        if ($creatorNames !== []) {
+            $query->whereHas('user', function ($userQuery) use ($creatorNames) {
+                $userQuery->whereIn(DB::raw('LOWER(TRIM(name))'), $creatorNames);
+            });
+        }
+
+        if ($departments !== []) {
+            $query->whereDoesntHave('requestors', function ($requestorQuery) use ($departments) {
+                $requestorQuery->whereNotIn(DB::raw('LOWER(TRIM(COALESCE(department, "")))'), $departments);
+            });
+        }
+    }
+
+    private function canUserApproveManagerStage(ExitPermit $exitPermit, $user): bool
+    {
+        $scope = $this->managerApprovalScopeForUser($user);
+
+        if (!$scope) {
+            return true;
+        }
+
+        return $this->exitPermitMatchesManagerScope($exitPermit, $scope);
+    }
+
+    private function exitPermitMatchesManagerScope(ExitPermit $exitPermit, array $scope): bool
+    {
+        $exitPermit->loadMissing('user:id,name,nik', 'requestors:id,exit_permit_id,name,department');
+
+        $creatorTokens = array_values(array_filter(array_map(
+            fn($value) => $this->normalizeApprovalToken($value),
+            (array) ($scope['creators'] ?? []),
+        )));
+        $departmentTokens = array_values(array_filter(array_map(
+            fn($value) => $this->normalizeApprovalToken($value),
+            (array) ($scope['departments'] ?? []),
+        )));
+
+        $owner = $exitPermit->user;
+        $ownerTokens = array_values(array_filter([
+            $this->normalizeApprovalToken((string) ($owner?->name ?? '')),
+            $this->normalizeApprovalToken((string) ($owner?->nik ?? '')),
+        ]));
+
+        if ($creatorTokens === [] || count(array_intersect($ownerTokens, $creatorTokens)) === 0) {
+            return false;
+        }
+
+        if ($departmentTokens === []) {
+            return true;
+        }
+
+        $requestors = $exitPermit->requestors;
+
+        if ($requestors->isEmpty()) {
+            return false;
+        }
+
+        foreach ($requestors as $requestor) {
+            $departmentToken = $this->normalizeApprovalToken((string) ($requestor->department ?? ''));
+
+            if ($departmentToken === '' || !in_array($departmentToken, $departmentTokens, true)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function managerApprovalScopeForUser($user): ?array
+    {
+        $approverKey = $this->normalizeApprovalToken((string) ($user?->nik ?? ''));
+
+        return self::MANAGER_APPROVAL_SCOPES[$approverKey] ?? null;
+    }
+
+    private function normalizeApprovalToken(?string $value): string
+    {
+        return strtolower(preg_replace('/[^a-z0-9]+/i', '', trim((string) $value)) ?? '');
+    }
+
     private function statusLabel(ExitPermit $exitPermit): string
     {
         if ($exitPermit->status === 'approved' && (bool) $exitPermit->attendance_checked_at && $exitPermit->exit_type === ExitPermit::EXIT_TYPE_BUSINESS_TRIP && !(bool) $exitPermit->has_valid_checkin) {
@@ -1236,8 +1356,10 @@ class ExitPermitController extends Controller
             $validated['driver_name'] = null;
         }
 
-        // Field Permitted by/notes dinonaktifkan sementara dari alur form.
-        $validated['notes'] = null;
+        // Reuse notes for order car delivery details when Order Car is enabled.
+        if (!$validated['order_car']) {
+            $validated['notes'] = null;
+        }
 
         $validated['reimbursement_amount'] = 0;
 

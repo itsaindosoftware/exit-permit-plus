@@ -26,16 +26,16 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExitPermitController extends Controller
 {
-    private const CAR_DRIVER_COORDINATOR_EMAIL = 'hrga-01@thaisummit.co.id';
+    private const CAR_DRIVER_COORDINATOR_EMAIL = 'hrga-01@example.com';
 
-    private const ATTENDANCE_VERIFIER_EMAIL = 'payroll.hr@thaisummit.co.id';
+    private const ATTENDANCE_VERIFIER_EMAIL = 'sisca@example.com';
 
     private const HR_APPROVER_PRIORITY_EMAILS = [
         'hr.manager@example.com',
         'wida.mustika.sari@example.com',
         'theresia.saing@example.com',
-        'hrga-01@thaisummit.co.id',
-        'payroll.hr@thaisummit.co.id',
+        'hrga-01@example.com',
+        'sisca@example.com',
     ];
 
     public function __construct(

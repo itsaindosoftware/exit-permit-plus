@@ -371,6 +371,7 @@ export default function Edit({
             order_car: value,
             car_id: value ? prev.car_id : '',
             driver_id: value ? prev.driver_id : '',
+            notes: value ? prev.notes : '',
         }));
     };
 
@@ -840,6 +841,21 @@ export default function Edit({
                                     </select>
                                     <InputError message={errors.cost_center_id} className="mt-2" />
                                 </div>
+
+                                {data.order_car && (
+                                    <div className="mt-4">
+                                        <label htmlFor="notes" className="text-base font-semibold text-slate-800">Details of goods brought during delivery (parts / tooling)</label>
+                                        <textarea
+                                            id="notes"
+                                            className={`${inputClass} text-base`}
+                                            rows="3"
+                                            value={data.notes}
+                                            onChange={(e) => setData('notes', e.target.value)}
+                                            placeholder="Example: bracket, jig, tooling parts, or other delivery items"
+                                        />
+                                        <InputError message={errors.notes} className="mt-2" />
+                                    </div>
+                                )}
 
                                 {data.order_car && (data.vehicle_plate || data.driver_name) && (
                                     <div className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">

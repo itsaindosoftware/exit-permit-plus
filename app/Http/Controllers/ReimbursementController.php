@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReimbursementController extends Controller
 {
-    private const RATNA_EMAIL = 'hrga-01@thaisummit.co.id';
+    private const RATNA_EMAIL = 'hrga-01@example.com';
 
     private const FORM_SOURCE_INTERNAL = 'internal';
 

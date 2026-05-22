@@ -20,7 +20,7 @@
   <rect x="10" y="380" width="168" height="82" rx="8" class="l"/>
   <circle cx="24" cy="406" r="9" class="l"/>
   <text x="40" y="404" class="t">Sisca Dewiyani</text>
-  <text x="40" y="420" class="ts">payroll.hr@thaisummit.co.id</text>
+  <text x="40" y="420" class="ts">sisca@example.com</text>
 
   <rect x="200" y="4" width="1161" height="46" class="l"/>
   <text x="366" y="34" class="th">Exit Permit Approval</text>
