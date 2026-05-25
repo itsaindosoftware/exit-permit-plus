@@ -12,6 +12,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -26,6 +27,32 @@ class ReimbursementController extends Controller
     private const FORM_SOURCE_INTERNAL = 'internal';
 
     private const FORM_SOURCE_EXIT_PERMIT = 'exit_permit';
+
+    private const MANAGER_APPROVAL_SCOPES = [
+        '6310814' => [
+            'creators' => ['Indriani', 'Admin Prod'],
+            'departments' => [
+                'Production',
+                'Quality',
+                'All Prod Section',
+                'Quality Assurance',
+                'Production Engineer',
+                'Production Administration',
+            ],
+        ],
+        '9650426' => [
+            'creators' => ['Alvin Dhuhalkarim'],
+            'departments' => ['PPIC', 'PPIC & Sales Delivery (Outbound)', 'PPIC & Sales Delivery (Inbound)'],
+        ],
+        '0190507' => [
+            'creators' => ['Yulianto Abdurrahman Affandi'],
+            'departments' => ['Accounting', 'Accounting, Finance & CIC'],
+        ],
+        '1150808' => [
+            'creators' => ['Dede Susilawati'],
+            'departments' => ['HR', 'HR & SYD IT', 'HR, GA & LEGAL', 'SYD & IT'],
+        ],
+    ];
 
     public function attachment(Reimbursement $reimbursement): StreamedResponse
     {
@@ -133,8 +160,13 @@ class ReimbursementController extends Controller
         }
 
         $query = Reimbursement::query()
-            ->with(['user:id,name', 'exitPermit:id,permit_date,destination'])
+            ->with(['user:id,name', 'exitPermit:id,permit_date,destination', 'exitPermit.requestors:id,exit_permit_id,name,department'])
             ->latest();
+
+        if ($this->reimbursementApprovalScopeForUser($user)) {
+            $query->where('status', Reimbursement::STATUS_PENDING_MANAGER);
+            $this->applyManagerApprovalScope($query, $user);
+        }
 
         $this->applyListFilters($query, $filters);
 
@@ -345,12 +377,17 @@ class ReimbursementController extends Controller
 
         $this->syncLegacyDocumentSnapshot($reimbursement);
 
+        /** @var \Illuminate\Database\Eloquent\Collection<int, User> $managers */
         $managers = User::query()
             ->whereHas('role', fn($q) => $q->where('code', 'manager'))
             ->where('is_available_for_approval', true)
             ->get();
 
         foreach ($managers as $manager) {
+            if (!$this->canUserApproveManagerStage($reimbursement, $manager)) {
+                continue;
+            }
+
             $this->notifyReimbursementApproverOnce($manager, $reimbursement, 'manager');
         }
 
@@ -476,6 +513,7 @@ class ReimbursementController extends Controller
             if ($status === 'approved') {
                 $this->notifyReimbursementOwner($reimbursement, 'manager_approved');
 
+                /** @var \Illuminate\Database\Eloquent\Collection<int, User> $mds */
                 $mds = User::query()
                     ->whereHas('role', fn($q) => $q->where('code', 'md'))
                     ->where('is_available_for_approval', true)
@@ -734,7 +772,8 @@ class ReimbursementController extends Controller
     private function canApproveManager(Reimbursement $reimbursement, $user): bool
     {
         return in_array($user?->role?->code, ['manager', 'hr_manager', 'admin'], true)
-            && $reimbursement->status === Reimbursement::STATUS_PENDING_MANAGER;
+            && $reimbursement->status === Reimbursement::STATUS_PENDING_MANAGER
+            && $this->canUserApproveManagerStage($reimbursement, $user);
     }
 
     private function canApproveMd(Reimbursement $reimbursement, $user): bool
@@ -766,6 +805,117 @@ class ReimbursementController extends Controller
             || $this->canApproveMd($reimbursement, $user)
             || $this->canSubmitRatna($reimbursement, $user)
             || $this->canFinishAccounting($reimbursement, $user);
+    }
+
+    private function canUserApproveManagerStage(Reimbursement $reimbursement, $user): bool
+    {
+        $scope = $this->reimbursementApprovalScopeForUser($user);
+
+        if (!$scope) {
+            return true;
+        }
+
+        return $this->reimbursementMatchesManagerScope($reimbursement, $scope);
+    }
+
+    private function reimbursementApprovalScopeForUser($user): ?array
+    {
+        $approverKey = $this->normalizeApprovalToken((string) ($user?->nik ?? ''));
+        $scope = self::MANAGER_APPROVAL_SCOPES[$approverKey] ?? null;
+
+        if (!$scope) {
+            return null;
+        }
+
+        if ($approverKey === '1150808' && $user?->role?->code === 'hr_manager') {
+            return [
+                'creators' => $scope['creators'] ?? [],
+                'departments' => [],
+            ];
+        }
+
+        return $scope;
+    }
+
+    private function reimbursementMatchesManagerScope(Reimbursement $reimbursement, array $scope): bool
+    {
+        $reimbursement->loadMissing('user:id,name,nik', 'exitPermit.requestors:id,exit_permit_id,name,department');
+
+        $creatorTokens = array_values(array_filter(array_map(
+            fn($value) => $this->normalizeApprovalToken($value),
+            (array) ($scope['creators'] ?? []),
+        )));
+        $departmentTokens = array_values(array_filter(array_map(
+            fn($value) => $this->normalizeApprovalToken($value),
+            (array) ($scope['departments'] ?? []),
+        )));
+
+        $owner = $reimbursement->user;
+        $ownerTokens = array_values(array_filter([
+            $this->normalizeApprovalToken((string) ($owner?->name ?? '')),
+            $this->normalizeApprovalToken((string) ($owner?->nik ?? '')),
+        ]));
+
+        if ($creatorTokens === [] || count(array_intersect($ownerTokens, $creatorTokens)) === 0) {
+            return false;
+        }
+
+        if ($departmentTokens === []) {
+            return true;
+        }
+
+        $requestors = $reimbursement->exitPermit?->requestors;
+
+        if (!$requestors || $requestors->isEmpty()) {
+            return false;
+        }
+
+        foreach ($requestors as $requestor) {
+            $departmentToken = $this->normalizeApprovalToken((string) ($requestor->department ?? ''));
+
+            if ($departmentToken === '' || !in_array($departmentToken, $departmentTokens, true)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function applyManagerApprovalScope($query, $user): void
+    {
+        $scope = $this->reimbursementApprovalScopeForUser($user);
+
+        if (!$scope) {
+            return;
+        }
+
+        $creatorNames = array_values(array_filter(array_map(
+            fn($value) => $this->normalizeApprovalToken($value),
+            (array) ($scope['creators'] ?? []),
+        )));
+        $departments = array_values(array_filter(array_map(
+            fn($value) => $this->normalizeApprovalToken($value),
+            (array) ($scope['departments'] ?? []),
+        )));
+
+        if ($creatorNames !== []) {
+            $query->whereHas('user', function ($userQuery) use ($creatorNames) {
+                $userQuery->whereIn(DB::raw('LOWER(TRIM(name))'), $creatorNames);
+            });
+        }
+
+        if ($departments !== []) {
+            $query->whereHas('exitPermit', function ($exitPermitQuery) use ($departments) {
+                $exitPermitQuery->whereDoesntHave('requestors', function ($requestorQuery) use ($departments) {
+                    $requestorQuery->whereNotIn(DB::raw('LOWER(TRIM(COALESCE(department, "")))'), $departments);
+                });
+            });
+        }
+    }
+
+    private function normalizeApprovalToken(?string $value): string
+    {
+        return strtolower(preg_replace('/[^a-z0-9]+/i', '', trim((string) $value)) ?? '');
     }
 
     private function approvalStageLabel(Reimbursement $reimbursement): string

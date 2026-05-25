@@ -845,7 +845,7 @@ class OrderMealController extends Controller
                 'exists:exit_permits,id',
             ],
             'meal_date' => ['required', 'date'],
-            'menu_name' => ['required', 'string', 'max:255'],
+            'menu_name' => ['nullable', 'string', 'max:255'],
             'quantity' => ['required', 'integer', 'min:0'],
             'actual_quantity' => ['required', 'integer', 'min:0'],
             'visitor_count' => ['required', 'integer', 'min:0'],
@@ -862,6 +862,9 @@ class OrderMealController extends Controller
         if (!$allowStatus) {
             unset($validated['status']);
         }
+
+        $menuName = trim((string) ($validated['menu_name'] ?? ''));
+        $validated['menu_name'] = $menuName !== '' ? $menuName : 'Lunch';
 
         if (!$isStore) {
             unset($validated['repeat_count']);

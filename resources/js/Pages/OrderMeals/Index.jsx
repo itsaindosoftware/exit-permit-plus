@@ -638,19 +638,19 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                 <table className="min-w-full text-sm">
                                     <tbody className="divide-y divide-slate-200">
                                         <tr>
-                                            <td className="px-3 py-2 font-medium text-slate-700">Man Power (Total Karyawan)</td>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Headcount (Total Employees)</td>
                                             <td className="px-3 py-2 text-right font-semibold text-slate-900">{checkMealFormula.total_karyawan}</td>
                                         </tr>
                                         <tr>
-                                            <td className="px-3 py-2 font-medium text-slate-700">Karyawan yang Hadir (Absensi)</td>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Employees Present (Attendance)</td>
                                             <td className="px-3 py-2 text-right font-semibold text-slate-900">{checkMealFormula.karyawan_hadir_absensi}</td>
                                         </tr>
                                         <tr>
-                                            <td className="px-3 py-2 font-medium text-slate-700">Not Clock In (Exit Permit)</td>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Not Clocked In (Exit Permit)</td>
                                             <td className="px-3 py-2 text-right font-semibold text-emerald-600">{checkMealFormula.karyawan_hadir_plan_check_in}</td>
                                         </tr>
                                         <tr>
-                                            <td className="px-3 py-2 font-medium text-slate-700">Karyawan yang Hadir (Adjusted)</td>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Employees Present (Adjusted)</td>
                                             <td className="px-3 py-2 text-right font-semibold text-slate-900">{checkMealFormula.karyawan_hadir}</td>
                                         </tr>
                                         <tr>
@@ -666,7 +666,7 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                             <td className="px-3 py-2 text-right font-semibold text-slate-500">-</td>
                                         </tr>
                                         <tr>
-                                            <td className="px-3 py-2 font-medium text-slate-700">Karyawan yang Absen</td>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Employees Absent</td>
                                             <td className="px-3 py-2 text-right font-semibold text-rose-600">{checkMealFormula.karyawan_absen}</td>
                                         </tr>
                                     </tbody>
@@ -678,7 +678,7 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                     {checkMealFormula.total_karyawan} - (({checkMealFormula.exit_permit} - {checkMealFormula.karyawan_hadir_plan_check_in}) + {checkMealFormula.karyawan_absen})
                                 </p>
                                 <div className="mt-3 flex items-center justify-between border-t border-slate-200 pt-3">
-                                    <span className="font-bold text-slate-900">Total Makan di Kantin</span>
+                                    <span className="font-bold text-slate-900">Total Canteen Meals</span>
                                     <span className="text-2xl font-black text-cyan-700">{checkMealFormula.check_order_meal}</span>
                                 </div>
                             </div>

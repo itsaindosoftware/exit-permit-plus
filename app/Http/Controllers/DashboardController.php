@@ -15,20 +15,27 @@ class DashboardController extends Controller
 
     private const MANAGER_APPROVAL_SCOPES = [
         '6310814' => [
-            'creators' => ['Indriani'],
-            'departments' => ['Production', 'Quality Assurance', 'Production Engineer', 'Production Administration'],
+            'creators' => ['Indriani', 'Admin Prod'],
+            'departments' => [
+                'Production',
+                'Quality',
+                'All Prod Section',
+                'Quality Assurance',
+                'Production Engineer',
+                'Production Administration',
+            ],
         ],
         '9650426' => [
             'creators' => ['Alvin Dhuhalkarim'],
-            'departments' => ['PPIC & Sales Delivery (Outbound)'],
+            'departments' => ['PPIC', 'PPIC & Sales Delivery (Outbound)', 'PPIC & Sales Delivery (Inbound)'],
         ],
         '0190507' => [
             'creators' => ['Yulianto Abdurrahman Affandi'],
-            'departments' => ['Accounting, Finance & CIC'],
+            'departments' => ['Accounting', 'Accounting, Finance & CIC'],
         ],
         '1150808' => [
             'creators' => ['Dede Susilawati'],
-            'departments' => ['HR, GA & LEGAL', 'SYD & IT'],
+            'departments' => ['HR', 'HR & SYD IT', 'HR, GA & LEGAL', 'SYD & IT'],
         ],
     ];
 
@@ -236,7 +243,32 @@ class DashboardController extends Controller
     private function managerApprovalScopeForUser($user): ?array
     {
         $approverKey = strtolower(preg_replace('/[^a-z0-9]+/i', '', trim((string) ($user?->nik ?? ''))) ?? '');
+        $scope = self::MANAGER_APPROVAL_SCOPES[$approverKey] ?? null;
 
-        return self::MANAGER_APPROVAL_SCOPES[$approverKey] ?? null;
+        if (!$scope) {
+            return null;
+        }
+
+        if ($approverKey === '1150808' && $user?->role?->code === 'hr_manager') {
+            return [
+                'creators' => $scope['creators'] ?? [],
+                'departments' => [],
+            ];
+        }
+
+        return $scope;
+    }
+
+    private function toDateOnly(mixed $value): ?string
+    {
+        if (!$value) {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($value)->toDateString();
+        } catch (\Throwable) {
+            return null;
+        }
     }
 }

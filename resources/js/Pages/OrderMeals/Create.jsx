@@ -218,12 +218,6 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
                             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Default Capacity</p>
                             <p className="mt-2 text-3xl font-black text-slate-900">{isExitPermitMode ? selectedRequestorCount : baseCapacity}</p>
                         </div>
-                        {!isExitPermitMode && (
-                            <div>
-                                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Template Excel</p>
-                                <p className="mt-2 inline-flex rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-700">ITSA Catering Cost</p>
-                            </div>
-                        )}
                     </div>
 
                     <div className="grid gap-4 md:grid-cols-2">
@@ -258,29 +252,12 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
                             />
                             <InputError message={errors.meal_date} className="mt-2" />
                         </div>
-                        <div>
-                            <label htmlFor="menu_name" className="text-sm font-semibold text-slate-800">Lunch Menu</label>
-                            <input
-                                id="menu_name"
-                                type="text"
-                                value={data.menu_name}
-                                className={inputClass}
-                                onChange={(e) => setData('menu_name', e.target.value)}
-                                placeholder="Example: Chicken rice, soup vegetables, fruit"
-                            />
-                            <InputError message={errors.menu_name} className="mt-2" />
-                        </div>
-                    </div>
-
-                    {!isExitPermitMode && (
-                        <div className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                            <p className="text-sm font-semibold text-slate-900">Calculation for Catering Cost (Excel Format)</p>
-
-                            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                                <p className="text-sm font-semibold text-slate-800">Shift</p>
+                        {!isExitPermitMode && (
+                            <div>
+                                <label htmlFor="shift_type" className="text-sm font-semibold text-slate-800">Shift</label>
                                 <select
                                     id="shift_type"
-                                    className={`${inputClass} md:max-w-sm`}
+                                    className={inputClass}
                                     value={selectedShift}
                                     onChange={(e) => setSelectedShift(e.target.value)}
                                 >
@@ -290,6 +267,12 @@ export default function Create({ mode, storeRouteName, indexRouteName, eligibleE
                                     <option value="ot_night">Overtime Night Shift (06.15 - 06.35)</option>
                                 </select>
                             </div>
+                        )}
+                    </div>
+
+                    {!isExitPermitMode && (
+                        <div className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                            <p className="text-sm font-semibold text-slate-900">Calculation for Catering Cost (Excel Format)</p>
 
                             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                                 <div>

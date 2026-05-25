@@ -82,20 +82,7 @@ class HandleInertiaRequests extends Middleware
                 'exit_permit_approval_count' => fn() => $this->exitPermitApprovalCount($request->user()),
                 'reimbursement_approval_count' => fn() => $request->user() ? (function () use ($request) {
                     $user = $request->user();
-                    $roleCode = $user->role?->code;
-                    $email = strtolower((string) $user->email);
-
-                    if (in_array($roleCode, ['manager', 'hr_manager'], true)) {
-                        return \App\Models\Reimbursement::query()->where('status', \App\Models\Reimbursement::STATUS_PENDING_MANAGER)->count();
-                    } elseif ($roleCode === 'md') {
-                        return \App\Models\Reimbursement::query()->where('status', \App\Models\Reimbursement::STATUS_PENDING_MD)->count();
-                    } elseif ($roleCode === 'hr' && $email === 'hrga-01@example.com') {
-                        return \App\Models\Reimbursement::query()->where('status', \App\Models\Reimbursement::STATUS_PENDING_RATNA)->count();
-                    } elseif ($roleCode === 'accounting') {
-                        return \App\Models\Reimbursement::query()->where('status', \App\Models\Reimbursement::STATUS_SUBMITTED_TO_ACCOUNTING)->count();
-                    }
-
-                    return 0;
+                    return $this->reimbursementApprovalCount($user);
                 })() : 0,
             ],
         ];
@@ -103,20 +90,27 @@ class HandleInertiaRequests extends Middleware
 
     private const MANAGER_APPROVAL_SCOPES = [
         '6310814' => [
-            'creators' => ['Indriani'],
-            'departments' => ['Production', 'Quality Assurance', 'Production Engineer', 'Production Administration'],
+            'creators' => ['Indriani', 'Admin Prod'],
+            'departments' => [
+                'Production',
+                'Quality',
+                'All Prod Section',
+                'Quality Assurance',
+                'Production Engineer',
+                'Production Administration',
+            ],
         ],
         '9650426' => [
             'creators' => ['Alvin Dhuhalkarim'],
-            'departments' => ['PPIC & Sales Delivery (Outbound)'],
+            'departments' => ['PPIC', 'PPIC & Sales Delivery (Outbound)', 'PPIC & Sales Delivery (Inbound)'],
         ],
         '0190507' => [
             'creators' => ['Yulianto Abdurrahman Affandi'],
-            'departments' => ['Accounting, Finance & CIC'],
+            'departments' => ['Accounting', 'Accounting, Finance & CIC'],
         ],
         '1150808' => [
             'creators' => ['Dede Susilawati'],
-            'departments' => ['HR, GA & LEGAL', 'SYD & IT'],
+            'departments' => ['HR', 'HR & SYD IT', 'HR, GA & LEGAL', 'SYD & IT'],
         ],
     ];
 
@@ -144,17 +138,67 @@ class HandleInertiaRequests extends Middleware
         }
 
         if ($departments !== []) {
-            $query->whereDoesntHave('requestors', function ($requestorQuery) use ($departments) {
-                $requestorQuery->whereNotIn(\Illuminate\Support\Facades\DB::raw('LOWER(TRIM(COALESCE(department, "")))'), $departments);
-            });
+            $model = $query->getModel();
+
+            if ($model instanceof \App\Models\ExitPermit) {
+                $query->whereDoesntHave('requestors', function ($requestorQuery) use ($departments) {
+                    $requestorQuery->whereNotIn(\Illuminate\Support\Facades\DB::raw('LOWER(TRIM(COALESCE(department, "")))'), $departments);
+                });
+            } else {
+                $query->whereHas('exitPermit', function ($exitPermitQuery) use ($departments) {
+                    $exitPermitQuery->whereDoesntHave('requestors', function ($requestorQuery) use ($departments) {
+                        $requestorQuery->whereNotIn(\Illuminate\Support\Facades\DB::raw('LOWER(TRIM(COALESCE(department, "")))'), $departments);
+                    });
+                });
+            }
         }
     }
 
     private function managerApprovalScopeForUser($user): ?array
     {
         $approverKey = strtolower(preg_replace('/[^a-z0-9]+/i', '', trim((string) ($user?->nik ?? ''))) ?? '');
+        $scope = self::MANAGER_APPROVAL_SCOPES[$approverKey] ?? null;
 
-        return self::MANAGER_APPROVAL_SCOPES[$approverKey] ?? null;
+        if (!$scope) {
+            return null;
+        }
+
+        if ($approverKey === '1150808' && $user?->role?->code === 'hr_manager') {
+            return [
+                'creators' => $scope['creators'] ?? [],
+                'departments' => [],
+            ];
+        }
+
+        return $scope;
+    }
+
+    private function reimbursementApprovalCount($user): int
+    {
+        $roleCode = $user->role?->code;
+        $email = strtolower((string) $user->email);
+
+        if (in_array($roleCode, ['manager', 'hr_manager'], true)) {
+            $query = \App\Models\Reimbursement::query()->where('status', \App\Models\Reimbursement::STATUS_PENDING_MANAGER);
+
+            $this->applyManagerApprovalScope($query, $user);
+
+            return $query->count();
+        }
+
+        if ($roleCode === 'md') {
+            return \App\Models\Reimbursement::query()->where('status', \App\Models\Reimbursement::STATUS_PENDING_MD)->count();
+        }
+
+        if ($roleCode === 'hr' && $email === 'hrga-01@example.com') {
+            return \App\Models\Reimbursement::query()->where('status', \App\Models\Reimbursement::STATUS_PENDING_RATNA)->count();
+        }
+
+        if ($roleCode === 'accounting') {
+            return \App\Models\Reimbursement::query()->where('status', \App\Models\Reimbursement::STATUS_SUBMITTED_TO_ACCOUNTING)->count();
+        }
+
+        return 0;
     }
 
     private function exitPermitApprovalCount($user): int

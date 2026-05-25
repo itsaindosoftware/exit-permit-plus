@@ -24,9 +24,10 @@ const monthOptions = [
     { value: '12', label: 'December' },
 ];
 
-export default function Index({ exitPermits, canCreate, pageMode = 'personal', filters, exitTypes = [] }) {
+export default function Index({ exitPermits, canCreate, pageMode = 'personal', filters, exitTypes = [], viewerRole }) {
     const isApprovalMode = pageMode === 'approval';
     const isHistoryMode = pageMode === 'history';
+    const isMdViewer = viewerRole === 'md';
     const [submitter, setSubmitter] = useState(filters?.submitter ?? '');
     const [requestor, setRequestor] = useState(filters?.requestor ?? '');
     const [permitDate, setPermitDate] = useState(filters?.date ?? '');
@@ -60,6 +61,14 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
     const handleDelete = (id) => {
         if (confirm('Delete this exit permit?')) {
             router.delete(route('exit-permits.destroy', id));
+        }
+    };
+
+    const handleQuickApprove = (id) => {
+        if (confirm('Approve this exit permit now?')) {
+            router.put(route('exit-permits.update', id), {
+                status: 'approved',
+            });
         }
     };
 
@@ -323,6 +332,15 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
                                         <td className="px-4 py-3 text-xs font-semibold text-cyan-700">{item.approval_stage}</td>
                                         <td className="w-52 px-4 py-3 align-middle">
                                             <div className="flex flex-wrap items-center content-center gap-3">
+                                                {isHistoryMode && isMdViewer && item.can_submit_approval && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleQuickApprove(item.id)}
+                                                        className="inline-flex h-8 w-28 items-center justify-center rounded bg-emerald-600 px-3 text-xs font-semibold text-white transition hover:bg-emerald-500"
+                                                    >
+                                                        Approve
+                                                    </button>
+                                                )}
                                                 <Link
                                                     href={route(
                                                         item.can_submit_approval || item.can_arrange_car || item.can_update_request || item.can_verify_attendance

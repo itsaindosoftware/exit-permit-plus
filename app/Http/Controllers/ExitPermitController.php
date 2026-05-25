@@ -46,21 +46,29 @@ class ExitPermitController extends Controller
     ];
 
     private const MANAGER_APPROVAL_SCOPES = [
+        // oh iya ya, maintenance dies belum ada user kepala nya siapa
         '6310814' => [
-            'creators' => ['Indriani'],
-            'departments' => ['Production', 'Quality Assurance', 'Production Engineer', 'Production Administration'],
+            'creators' => ['Indriani', 'Admin Prod'],
+            'departments' => [
+                'Production',
+                'Quality',
+                'All Prod Section',
+                'Quality Assurance',
+                'Production Engineer',
+                'Production Administration',
+            ],
         ],
         '9650426' => [
             'creators' => ['Alvin Dhuhalkarim'],
-            'departments' => ['PPIC & Sales Delivery (Outbound)'],
+            'departments' => ['PPIC', 'PPIC & Sales Delivery (Outbound)', 'PPIC & Sales Delivery (Inbound)'],
         ],
         '0190507' => [
             'creators' => ['Yulianto Abdurrahman Affandi'],
-            'departments' => ['Accounting, Finance & CIC'],
+            'departments' => ['Accounting', 'Accounting, Finance & CIC'],
         ],
         '1150808' => [
             'creators' => ['Dede Susilawati'],
-            'departments' => ['HR, GA & LEGAL', 'SYD & IT'],
+            'departments' => ['HR', 'HR & SYD IT', 'HR, GA & LEGAL', 'SYD & IT'],
         ],
     ];
 
@@ -82,7 +90,7 @@ class ExitPermitController extends Controller
         $destination = trim((string) request()->query('destination', ''));
 
         $query = ExitPermit::query()
-            ->with(['user:id,name', 'hrApprover:id,name', 'requestors:id,exit_permit_id,name'])
+            ->with(['user:id,name,nik', 'hrApprover:id,name', 'requestors:id,exit_permit_id,name,department'])
             ->where('user_id', $user?->id)
             ->latest();
 
@@ -155,7 +163,7 @@ class ExitPermitController extends Controller
             abort(403);
         }
 
-        $query = ExitPermit::query()->with(['user:id,name', 'hrApprover:id,name', 'requestors:id,exit_permit_id,name'])->latest();
+        $query = ExitPermit::query()->with(['user:id,name,nik', 'hrApprover:id,name', 'requestors:id,exit_permit_id,name,department'])->latest();
 
         if ($isDualApprovalUser) {
             $query->where(function ($subQuery) use ($user) {
@@ -239,6 +247,7 @@ class ExitPermitController extends Controller
     public function historyIndex(): Response
     {
         $user = request()->user();
+        $isMdViewer = $user?->role?->code === 'md';
         $submitter = trim((string) request()->query('submitter', ''));
         $requestor = trim((string) request()->query('requestor', ''));
         $permitDate = trim((string) request()->query('date', ''));
@@ -252,9 +261,21 @@ class ExitPermitController extends Controller
         }
 
         $query = ExitPermit::query()
-            ->with(['user:id,name', 'hrApprover:id,name', 'requestors:id,exit_permit_id,name'])
-            ->where('status', 'approved')
+            ->with(['user:id,name,nik', 'hrApprover:id,name', 'requestors:id,exit_permit_id,name,department'])
             ->latest();
+
+        if ($isMdViewer) {
+            $query->where(function ($subQuery) {
+                $subQuery->where('status', 'approved')
+                    ->orWhere(function ($mdQuery) {
+                        $mdQuery->where('status', 'pending')
+                            ->whereNotNull('manager_approved_at')
+                            ->whereNull('md_approved_at');
+                    });
+            });
+        } else {
+            $query->where('status', 'approved');
+        }
 
         if ($submitter !== '') {
             $query->whereHas('user', function ($subQuery) use ($submitter) {
@@ -555,6 +576,10 @@ class ExitPermitController extends Controller
             ->get();
 
         foreach ($managers as $manager) {
+            if (!$this->canUserApproveManagerStage($exitPermit, $manager)) {
+                continue;
+            }
+
             $this->notifyExitPermitApproverOnce($manager, $exitPermit, 'manager');
         }
 
@@ -1223,7 +1248,13 @@ class ExitPermitController extends Controller
 
     private function exitPermitMatchesManagerScope(ExitPermit $exitPermit, array $scope): bool
     {
-        $exitPermit->loadMissing('user:id,name,nik', 'requestors:id,exit_permit_id,name,department');
+        if (!$exitPermit->relationLoaded('user') || !$exitPermit->user?->nik) {
+            $exitPermit->load('user:id,name,nik');
+        }
+
+        if (!$exitPermit->relationLoaded('requestors') || $exitPermit->requestors->contains(fn($requestor) => $requestor->department === null)) {
+            $exitPermit->load('requestors:id,exit_permit_id,name,department');
+        }
 
         $creatorTokens = array_values(array_filter(array_map(
             fn($value) => $this->normalizeApprovalToken($value),
@@ -1268,8 +1299,20 @@ class ExitPermitController extends Controller
     private function managerApprovalScopeForUser($user): ?array
     {
         $approverKey = $this->normalizeApprovalToken((string) ($user?->nik ?? ''));
+        $scope = self::MANAGER_APPROVAL_SCOPES[$approverKey] ?? null;
 
-        return self::MANAGER_APPROVAL_SCOPES[$approverKey] ?? null;
+        if (!$scope) {
+            return null;
+        }
+
+        if ($approverKey === '1150808' && $user?->role?->code === 'hr_manager') {
+            return [
+                'creators' => $scope['creators'] ?? [],
+                'departments' => [],
+            ];
+        }
+
+        return $scope;
     }
 
     private function normalizeApprovalToken(?string $value): string

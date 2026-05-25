@@ -589,7 +589,7 @@ export default function Create({
                                         No
                                     </label>
                                 </div>
-                                <p className="mt-1 text-xs text-slate-500">
+                                <p className="mt-1 text-xs text-slate-500">``
                                     If Yes, HR will arrange the car and driver in the next stage.
                                 </p>
                                 <InputError message={errors.order_car} className="mt-2" />
