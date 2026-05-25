@@ -890,11 +890,11 @@ class ReimbursementController extends Controller
         }
 
         $creatorNames = array_values(array_filter(array_map(
-            fn($value) => $this->normalizeApprovalToken($value),
+            fn($value) => strtolower(trim((string) $value)),
             (array) ($scope['creators'] ?? []),
         )));
         $departments = array_values(array_filter(array_map(
-            fn($value) => $this->normalizeApprovalToken($value),
+            fn($value) => strtolower(trim((string) $value)),
             (array) ($scope['departments'] ?? []),
         )));
 

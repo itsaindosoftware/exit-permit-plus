@@ -59,7 +59,7 @@ class ExitPermitController extends Controller
             ],
         ],
         '9650426' => [
-            'creators' => ['Alvin Dhuhalkarim'],
+            'creators' => ['Alvin Dhuhalkarim', 'HAP-PMG-017'],
             'departments' => ['PPIC', 'PPIC & Sales Delivery (Outbound)', 'PPIC & Sales Delivery (Inbound)'],
         ],
         '0190507' => [
@@ -225,7 +225,7 @@ class ExitPermitController extends Controller
 
         return Inertia::render('ExitPermits/Index', [
             'canCreate' => false,
-            'viewerRole' => $user?->role?->code,
+            'viewerRole' => $isDualApprovalUser ? 'hr_manager' : $user?->role?->code,
             'pageMode' => 'approval',
             'filters' => [
                 'submitter' => $submitter,
@@ -870,6 +870,7 @@ class ExitPermitController extends Controller
 
             if ($exitPermit->exit_type === ExitPermit::EXIT_TYPE_BUSINESS_TRIP) {
                 $cachedPreview = $request->session()->get($this->attendancePreviewSessionKey($exitPermit->id));
+                $allowManualCheck = $this->canVerifyAttendanceWithoutAttendanceFile($exitPermit);
 
                 if ($request->file('attendance_file')) {
                     $attendancePreview = $this->makeAttendancePreview($exitPermit, $request->file('attendance_file'));
@@ -877,30 +878,34 @@ class ExitPermitController extends Controller
                     $attendancePreview = $this->makeAttendancePreview($exitPermit);
                 } elseif (is_array($cachedPreview)) {
                     $attendancePreview = $cachedPreview;
+                } elseif ($allowManualCheck) {
+                    $hasValidCheckin = (bool) $attendanceData['has_valid_checkin'];
                 } else {
                     throw ValidationException::withMessages([
-                        'attendance_file' => 'Please preview attendance first or upload an attendance file before saving.',
+                        'attendance_file' => 'Business trip after 08:00 or with plan clock-in enabled requires attendance data from the shared folder or an uploaded file.',
                     ]);
                 }
 
-                $matchedCount = $this->attendanceMatchingService->applyPreview($exitPermit, $attendancePreview);
-                $hasValidCheckin = (bool) ($attendancePreview['summary']['has_valid_checkin'] ?? false);
+                if (isset($attendancePreview)) {
+                    $matchedCount = $this->attendanceMatchingService->applyPreview($exitPermit, $attendancePreview);
+                    $hasValidCheckin = (bool) ($attendancePreview['summary']['has_valid_checkin'] ?? false);
 
-                $this->logAttendanceImport(
-                    $exitPermit,
-                    $user?->id,
-                    [
-                        ...$attendancePreview,
-                        'summary' => [
-                            ...($attendancePreview['summary'] ?? []),
-                            'matched_count' => $matchedCount,
-                            'has_valid_checkin' => $hasValidCheckin,
+                    $this->logAttendanceImport(
+                        $exitPermit,
+                        $user?->id,
+                        [
+                            ...$attendancePreview,
+                            'summary' => [
+                                ...($attendancePreview['summary'] ?? []),
+                                'matched_count' => $matchedCount,
+                                'has_valid_checkin' => $hasValidCheckin,
+                            ],
                         ],
-                    ],
-                    'manual_applied',
-                );
+                        'manual_applied',
+                    );
 
-                $request->session()->forget($this->attendancePreviewSessionKey($exitPermit->id));
+                    $request->session()->forget($this->attendancePreviewSessionKey($exitPermit->id));
+                }
             } else {
                 $hasValidCheckin = (bool) $attendanceData['has_valid_checkin'];
             }
@@ -1160,7 +1165,7 @@ class ExitPermitController extends Controller
             }
 
             if (!$exitPermit->attendance_checked_at) {
-                return 'Approved by HR Manager | Waiting for Sisca attendance verification';
+                return 'Approved by HR Manager | Waiting for Sisca Checking Exit Permit';
             }
 
             if ($exitPermit->post_md_path === ExitPermit::POST_MD_PATH_MEAL) {
@@ -1515,6 +1520,7 @@ class ExitPermitController extends Controller
 
         if ($exitPermit->exit_type === ExitPermit::EXIT_TYPE_BUSINESS_TRIP) {
             return $request->validate([
+                'has_valid_checkin' => ['required', 'boolean'],
                 'attendance_file' => ['nullable', 'file', 'max:10240', 'mimes:csv,txt,xlsx'],
             ]);
         }
@@ -2139,6 +2145,14 @@ class ExitPermitController extends Controller
             && (bool) $exitPermit->md_approved_at
             && (bool) $exitPermit->hr_verified_at
             && !$exitPermit->attendance_checked_at;
+    }
+
+    private function canVerifyAttendanceWithoutAttendanceFile(ExitPermit $exitPermit): bool
+    {
+        return $exitPermit->exit_type === ExitPermit::EXIT_TYPE_BUSINESS_TRIP
+            && $exitPermit->plan_check_in === false
+            && $this->toHourMinute($exitPermit->start_time) !== null
+            && $this->toHourMinute($exitPermit->start_time) <= '08:00';
     }
 
     private function replaceAttachment(ExitPermit $exitPermit, UploadedFile $file): void

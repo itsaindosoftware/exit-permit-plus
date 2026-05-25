@@ -646,6 +646,14 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                             <td className="px-3 py-2 text-right font-semibold text-slate-900">{checkMealFormula.karyawan_hadir_absensi}</td>
                                         </tr>
                                         <tr>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Outsourcing (Attendance)</td>
+                                            <td className="px-3 py-2 text-right font-semibold text-slate-900">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Internship (Attendance)</td>
+                                            <td className="px-3 py-2 text-right font-semibold text-slate-900">-</td>
+                                        </tr>
+                                        <tr>
                                             <td className="px-3 py-2 font-medium text-slate-700">Not Clocked In (Exit Permit)</td>
                                             <td className="px-3 py-2 text-right font-semibold text-emerald-600">{checkMealFormula.karyawan_hadir_plan_check_in}</td>
                                         </tr>

@@ -113,7 +113,7 @@ class ExitPermitListController extends Controller
             }
 
             if (!$exitPermit->attendance_checked_at) {
-                return 'Approved by HR Manager | Waiting for Sisca attendance verification';
+                return 'Approved by HR Manager | Waiting for Sisca Checking Exit Permit';
             }
 
             if ($exitPermit->post_md_path === ExitPermit::POST_MD_PATH_MEAL) {

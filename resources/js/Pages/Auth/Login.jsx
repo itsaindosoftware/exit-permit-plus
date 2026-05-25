@@ -48,7 +48,7 @@ export default function Login({ status, canResetPassword }) {
                 <div className="p-6 sm:p-8 lg:col-span-3 lg:p-10">
                     <div className="mb-8">
                         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">Secure Access</p>
-                        <h2 className="mt-2 text-3xl font-black text-slate-900">Welcome Back</h2>
+                        <h2 className="mt-2 text-3xl font-black text-slate-900">Welcome</h2>
                         <p className="mt-2 text-sm text-slate-600">Sign in with your corporate account to continue your work.</p>
                     </div>
 

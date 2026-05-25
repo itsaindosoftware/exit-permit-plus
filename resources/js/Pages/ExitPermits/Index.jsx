@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
+import Swal from 'sweetalert2';
 
 // s
 const exitTypeLabel = {
@@ -28,6 +29,9 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
     const isApprovalMode = pageMode === 'approval';
     const isHistoryMode = pageMode === 'history';
     const isMdViewer = viewerRole === 'md';
+    const isHrManagerViewer = viewerRole === 'hr_manager';
+    const isManagerViewer = viewerRole === 'manager';
+    const isApprovalActionViewer = isApprovalMode && (isMdViewer || isHrManagerViewer || isManagerViewer);
     const [submitter, setSubmitter] = useState(filters?.submitter ?? '');
     const [requestor, setRequestor] = useState(filters?.requestor ?? '');
     const [permitDate, setPermitDate] = useState(filters?.date ?? '');
@@ -64,8 +68,17 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
         }
     };
 
-    const handleQuickApprove = (id) => {
-        if (confirm('Approve this exit permit now?')) {
+    const handleQuickApprove = async (id) => {
+        const result = await Swal.fire({
+            title: 'Approve this exit permit now?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, approve',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true,
+        });
+
+        if (result.isConfirmed) {
             router.put(route('exit-permits.update', id), {
                 status: 'approved',
             });
@@ -332,7 +345,7 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
                                         <td className="px-4 py-3 text-xs font-semibold text-cyan-700">{item.approval_stage}</td>
                                         <td className="w-52 px-4 py-3 align-middle">
                                             <div className="flex flex-wrap items-center content-center gap-3">
-                                                {isHistoryMode && isMdViewer && item.can_submit_approval && (
+                                                {isApprovalMode && isMdViewer && item.can_submit_approval && (
                                                     <button
                                                         type="button"
                                                         onClick={() => handleQuickApprove(item.id)}
@@ -343,17 +356,19 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
                                                 )}
                                                 <Link
                                                     href={route(
-                                                        item.can_submit_approval || item.can_arrange_car || item.can_update_request || item.can_verify_attendance
+                                                        item.can_submit_approval && isApprovalActionViewer
                                                             ? 'exit-permits.edit'
-                                                            : 'exit-permits.show',
+                                                            : (item.can_arrange_car || item.can_update_request || item.can_verify_attendance
+                                                                ? 'exit-permits.edit'
+                                                                : 'exit-permits.show'),
                                                         item.id,
                                                     )}
                                                     className={
                                                         `inline-flex w-28 items-center justify-center rounded bg-cyan-700 px-3 text-xs font-semibold text-white transition hover:bg-cyan-600 ` +
-                                                        (item.can_submit_approval || item.can_verify_attendance ? 'h-19' : 'h-8')
+                                                        ((item.can_submit_approval && isApprovalActionViewer) || item.can_verify_attendance ? 'h-19' : 'h-8')
                                                     }
                                                 >
-                                                    {item.can_submit_approval
+                                                    {item.can_submit_approval && isApprovalActionViewer
                                                         ? 'Detail & Approval'
                                                         : item.can_arrange_car
                                                             ? 'Arrange Car'

@@ -36,6 +36,9 @@ export default function Index({
 }) {
     const totalItems = reimbursements?.total ?? reimbursements?.data?.length ?? 0;
     const isApprovalMode = pageMode === 'approval';
+    const isMdViewer = viewerRole === 'md';
+    const isManagerViewer = viewerRole === 'manager';
+    const isMdApprovalViewer = isApprovalMode && isMdViewer;
     const [employee, setEmployee] = useState(filters?.employee ?? '');
     const [exitPermit, setExitPermit] = useState(filters?.exit_permit ?? '');
     const [requestDate, setRequestDate] = useState(filters?.date ?? '');
@@ -274,13 +277,26 @@ export default function Index({
                                         <td className="px-4 py-3 text-xs font-semibold text-cyan-700">{item.approval_stage}</td>
                                         <td className="px-4 py-3">
                                             <div className="flex gap-2">
+                                                {isMdApprovalViewer && item.can_take_action && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => router.post(route('reimbursements.update', item.id), {
+                                                            _method: 'put',
+                                                            status: 'approved',
+                                                        })}
+                                                        className="rounded bg-emerald-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-emerald-500"
+                                                    >
+                                                        Approve
+                                                    </button>
+                                                )}
                                                 <Link
                                                     href={route('reimbursements.edit', item.id)}
                                                     className="rounded bg-cyan-700 px-3 py-1 text-xs font-semibold text-white transition hover:bg-cyan-600"
                                                 >
-                                                    {item.can_take_action ? 'Process' : (item.can_update_request ? 'Edit' : 'Detail')}
+                                                    {isApprovalMode && item.can_take_action && (isMdViewer || isManagerViewer)
+                                                        ? 'Detail & Approval'
+                                                        : (item.can_update_request ? 'Edit' : 'Detail')}
                                                 </Link>
-                                                {/* s */}
                                                 <a
                                                     href={route('reimbursements.print', item.id)}
                                                     target="_blank"
