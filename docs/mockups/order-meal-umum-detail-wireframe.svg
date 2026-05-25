@@ -25,7 +25,7 @@
   <rect x="20" y="436" width="196" height="92" rx="10" class="l"/>
   <circle cx="38" cy="464" r="12" class="l"/>
   <text x="56" y="460" class="t">Sisca Dewiyani</text>
-  <text x="56" y="478" class="ts">payroll.hr@thaisummit.co.id</text>
+  <text x="56" y="478" class="ts">sisca@example.com</text>
   <rect x="32" y="492" width="30" height="18" rx="9" class="l"/>
   <text x="40" y="504" class="ts">HR</text>
 
@@ -49,7 +49,7 @@
   <text x="560" y="266" class="t">Service Tax: 2%</text>
   <text x="560" y="296" class="t">Nominal Service Tax: Rp 50.700</text>
 
-  <text x="894" y="116" class="t">Email: payroll.hr@thaisummit.co.id</text>
+  <text x="894" y="116" class="t">Email: sisca@example.com</text>
   <text x="894" y="146" class="t">Schedule: daily</text>
   <text x="894" y="176" class="t">Overtime Day Shift: 20</text>
   <text x="894" y="206" class="t">Paket Disediakan: 195</text>

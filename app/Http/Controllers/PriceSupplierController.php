@@ -11,7 +11,7 @@ use Inertia\Response;
 
 class PriceSupplierController extends Controller
 {
-    private const SISCA_EMAIL = 'payroll.hr@thaisummit.co.id';
+    private const SISCA_EMAIL = 'sisca@example.com';
 
     public function index(): Response
     {
@@ -114,6 +114,8 @@ class PriceSupplierController extends Controller
             'local_tax_rate' => ['required', 'numeric', 'min:0'],
             'service_tax_rate' => ['required', 'numeric', 'min:0'],
             'effective_date' => ['nullable', 'date'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'is_active' => ['nullable', 'boolean'],
             'notes' => ['nullable', 'string'],
         ]);
@@ -128,6 +130,8 @@ class PriceSupplierController extends Controller
             'local_tax_rate' => (float) $priceSupplier->local_tax_rate,
             'service_tax_rate' => (float) $priceSupplier->service_tax_rate,
             'effective_date' => $priceSupplier->getRawOriginal('effective_date') ?: null,
+            'start_date' => $priceSupplier->getRawOriginal('start_date') ?: null,
+            'end_date' => $priceSupplier->getRawOriginal('end_date') ?: null,
             'is_active' => (bool) $priceSupplier->is_active,
             'notes' => $priceSupplier->notes,
         ];

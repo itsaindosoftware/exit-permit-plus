@@ -112,20 +112,20 @@ const getRemainingTone = (remaining, provided) => {
     if (ratio <= 0.1) {
         return {
             badge: 'bg-emerald-100 text-emerald-700',
-            label: 'Efisien',
+            label: 'Efficient',
         };
     }
 
     if (ratio <= 0.3) {
         return {
             badge: 'bg-amber-100 text-amber-700',
-            label: 'Waspada',
+            label: 'Alert',
         };
     }
 
     return {
         badge: 'bg-rose-100 text-rose-700',
-        label: 'Tinggi',
+        label: 'High',
     };
 };
 
@@ -638,19 +638,27 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                 <table className="min-w-full text-sm">
                                     <tbody className="divide-y divide-slate-200">
                                         <tr>
-                                            <td className="px-3 py-2 font-medium text-slate-700">Man Power (Total Karyawan)</td>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Headcount (Total Employees)</td>
                                             <td className="px-3 py-2 text-right font-semibold text-slate-900">{checkMealFormula.total_karyawan}</td>
                                         </tr>
                                         <tr>
-                                            <td className="px-3 py-2 font-medium text-slate-700">Karyawan yang Hadir (Absensi)</td>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Employees Present (Attendance)</td>
                                             <td className="px-3 py-2 text-right font-semibold text-slate-900">{checkMealFormula.karyawan_hadir_absensi}</td>
                                         </tr>
                                         <tr>
-                                            <td className="px-3 py-2 font-medium text-slate-700">Not Clock In (Exit Permit)</td>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Outsourcing (Attendance)</td>
+                                            <td className="px-3 py-2 text-right font-semibold text-slate-900">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Internship (Attendance)</td>
+                                            <td className="px-3 py-2 text-right font-semibold text-slate-900">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Not Clocked In (Exit Permit)</td>
                                             <td className="px-3 py-2 text-right font-semibold text-emerald-600">{checkMealFormula.karyawan_hadir_plan_check_in}</td>
                                         </tr>
                                         <tr>
-                                            <td className="px-3 py-2 font-medium text-slate-700">Karyawan yang Hadir (Adjusted)</td>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Employees Present (Adjusted)</td>
                                             <td className="px-3 py-2 text-right font-semibold text-slate-900">{checkMealFormula.karyawan_hadir}</td>
                                         </tr>
                                         <tr>
@@ -666,24 +674,44 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                             <td className="px-3 py-2 text-right font-semibold text-slate-500">-</td>
                                         </tr>
                                         <tr>
-                                            <td className="px-3 py-2 font-medium text-slate-700">Karyawan yang Absen</td>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Employees Absent</td>
                                             <td className="px-3 py-2 text-right font-semibold text-rose-600">{checkMealFormula.karyawan_absen}</td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
+                            <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
+                                <p className="font-semibold text-slate-700">Where the numbers come from</p>
+                                <p className="mt-1">
+                                    Headcount comes from master employee data. Employees Present (Attendance) is the total
+                                    from daily attendance ({checkMealFormula.karyawan_hadir_absensi}). Not Clocked In (Exit Permit)
+                                    is the count of employees with an exit permit and plan clock-in set to No. Employees Absent
+                                    is derived from attendance absences. Employees Present (Adjusted) applies the formula below.
+                                </p>
+                            </div>
                             <div className="mt-4 rounded-xl bg-slate-50 p-4">
                                 <p className="mb-2 text-xs font-semibold uppercase text-slate-500">Formula</p>
                                 <p className="rounded border border-slate-200 bg-white p-2 font-mono text-sm text-slate-700">
-                                    {checkMealFormula.total_karyawan} - (({checkMealFormula.exit_permit} - {checkMealFormula.karyawan_hadir_plan_check_in}) + {checkMealFormula.karyawan_absen})
+                                    {checkMealFormula.total_karyawan} - (({checkMealFormula.karyawan_hadir_absensi} + {checkMealFormula.karyawan_hadir_plan_check_in}) - {checkMealFormula.karyawan_absen})
+                                </p>
+                                <p className="mt-2 text-xs text-slate-600">
+                                    Meaning: total headcount minus (exit permits not clocking in plus absences). Employees Present
+                                    (Attendance) is {checkMealFormula.karyawan_hadir_absensi} and is shown for reference to the
+                                    daily attendance total used in this calculation.
                                 </p>
                                 <div className="mt-3 flex items-center justify-between border-t border-slate-200 pt-3">
-                                    <span className="font-bold text-slate-900">Total Makan di Kantin</span>
+                                    <span className="font-bold text-slate-900">Total Canteen Meals</span>
                                     <span className="text-2xl font-black text-cyan-700">{checkMealFormula.check_order_meal}</span>
                                 </div>
                             </div>
                         </div>
-                        <div className="mt-6 flex justify-end">
+                        <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+                            <Link
+                                href={route(createRouteName, { default_capacity: checkMealFormula.check_order_meal })}
+                                className="rounded-xl bg-cyan-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600"
+                            >
+                                Add Order Meal
+                            </Link>
                             <button
                                 type="button"
                                 onClick={() => setShowCheckMealModal(false)}

@@ -1,7 +1,7 @@
 import InputError from '@/Components/InputError';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 function translateConversionNotes(text) {
     if (!text) {
@@ -36,6 +36,30 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
 export default function Edit({ orderMeal, canApprove, mode, indexRouteName, updateRouteName, mealPricing = null }) {
     const isExitPermitMode = mode === 'exit_permit';
     const readableNotes = translateConversionNotes(orderMeal.notes ?? '');
+    const initialShiftData = (() => {
+        const dayQty = Number(orderMeal.day_shift_qty ?? 0);
+        const otDayQty = Number(orderMeal.overtime_day_shift_qty ?? 0);
+        const nightQty = Number(orderMeal.night_shift_qty ?? 0);
+        const otNightQty = Number(orderMeal.overtime_night_shift_qty ?? 0);
+
+        if (dayQty > 0) {
+            return { type: 'day', qty: dayQty };
+        }
+
+        if (otDayQty > 0) {
+            return { type: 'ot_day', qty: otDayQty };
+        }
+
+        if (nightQty > 0) {
+            return { type: 'night', qty: nightQty };
+        }
+
+        if (otNightQty > 0) {
+            return { type: 'ot_night', qty: otNightQty };
+        }
+
+        return { type: 'day', qty: 0 };
+    })();
     const storedPricing = {
         meal_unit_price: Number(orderMeal.meal_unit_price ?? 12000),
         local_tax_rate: Number(orderMeal.local_tax_rate ?? 10),
@@ -63,6 +87,9 @@ export default function Edit({ orderMeal, canApprove, mode, indexRouteName, upda
         status: orderMeal.status ?? 'pending',
     });
 
+    const [selectedShift, setSelectedShift] = useState(initialShiftData.type);
+    const [shiftQuantity, setShiftQuantity] = useState(initialShiftData.qty);
+
     const shiftTotal =
         Number(data.day_shift_qty || 0)
         + Number(data.overtime_day_shift_qty || 0)
@@ -88,19 +115,55 @@ export default function Edit({ orderMeal, canApprove, mode, indexRouteName, upda
             return;
         }
 
-        if (Number(data.quantity || 0) !== shiftTotal) {
-            setData('quantity', shiftTotal);
+        const nextQuantity = Math.max(0, Number(shiftQuantity || 0));
+        const nextShiftData = {
+            day_shift_qty: selectedShift === 'day' ? nextQuantity : 0,
+            overtime_day_shift_qty: selectedShift === 'ot_day' ? nextQuantity : 0,
+            night_shift_qty: selectedShift === 'night' ? nextQuantity : 0,
+            overtime_night_shift_qty: selectedShift === 'ot_night' ? nextQuantity : 0,
+        };
+
+        if (Number(data.day_shift_qty || 0) !== nextShiftData.day_shift_qty) {
+            setData('day_shift_qty', nextShiftData.day_shift_qty);
+        }
+
+        if (Number(data.overtime_day_shift_qty || 0) !== nextShiftData.overtime_day_shift_qty) {
+            setData('overtime_day_shift_qty', nextShiftData.overtime_day_shift_qty);
+        }
+
+        if (Number(data.night_shift_qty || 0) !== nextShiftData.night_shift_qty) {
+            setData('night_shift_qty', nextShiftData.night_shift_qty);
+        }
+
+        if (Number(data.overtime_night_shift_qty || 0) !== nextShiftData.overtime_night_shift_qty) {
+            setData('overtime_night_shift_qty', nextShiftData.overtime_night_shift_qty);
+        }
+
+        if (Number(data.quantity || 0) !== nextQuantity) {
+            setData('quantity', nextQuantity);
         }
 
         if (Number(data.visitor_count || 0) !== 0) {
             setData('visitor_count', 0);
         }
 
-        const clampedActual = Math.min(Number(data.actual_quantity || 0), shiftTotal);
+        const clampedActual = Math.min(Number(data.actual_quantity || 0), nextQuantity);
         if (Number(data.actual_quantity || 0) !== clampedActual) {
             setData('actual_quantity', clampedActual);
         }
-    }, [isExitPermitMode, shiftTotal, data.quantity, data.visitor_count, data.actual_quantity, setData]);
+    }, [
+        isExitPermitMode,
+        selectedShift,
+        shiftQuantity,
+        data.day_shift_qty,
+        data.overtime_day_shift_qty,
+        data.night_shift_qty,
+        data.overtime_night_shift_qty,
+        data.quantity,
+        data.actual_quantity,
+        data.visitor_count,
+        setData,
+    ]);
 
     const submit = (e) => {
         e.preventDefault();
@@ -167,66 +230,17 @@ export default function Edit({ orderMeal, canApprove, mode, indexRouteName, upda
 
                     {!isExitPermitMode && (
                         <div className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                            <p className="text-sm font-semibold text-slate-900">Calculation for Catering Cost (Excel Format)</p>
-
                             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                                 <div>
-                                    <label htmlFor="day_shift_qty" className="text-sm font-semibold text-slate-800">Day Shift (12.00 - 13.00)</label>
+                                    <label htmlFor="quantity" className="text-sm font-semibold text-slate-800">Total Order</label>
                                     <input
-                                        id="day_shift_qty"
+                                        id="quantity"
                                         type="number"
                                         min="0"
-                                        value={data.day_shift_qty}
+                                        value={shiftQuantity}
                                         className={inputClass}
-                                        onChange={(e) => setData('day_shift_qty', Number(e.target.value))}
+                                        onChange={(e) => setShiftQuantity(Number(e.target.value))}
                                     />
-                                    <InputError message={errors.day_shift_qty} className="mt-2" />
-                                </div>
-
-                                <div>
-                                    <label htmlFor="overtime_day_shift_qty" className="text-sm font-semibold text-slate-800">Overtime Day Shift (18.15 - 18.35)</label>
-                                    <input
-                                        id="overtime_day_shift_qty"
-                                        type="number"
-                                        min="0"
-                                        value={data.overtime_day_shift_qty}
-                                        className={inputClass}
-                                        onChange={(e) => setData('overtime_day_shift_qty', Number(e.target.value))}
-                                    />
-                                    <InputError message={errors.overtime_day_shift_qty} className="mt-2" />
-                                </div>
-
-                                <div>
-                                    <label htmlFor="night_shift_qty" className="text-sm font-semibold text-slate-800">Night Shift (00.00 - 01.11)</label>
-                                    <input
-                                        id="night_shift_qty"
-                                        type="number"
-                                        min="0"
-                                        value={data.night_shift_qty}
-                                        className={inputClass}
-                                        onChange={(e) => setData('night_shift_qty', Number(e.target.value))}
-                                    />
-                                    <InputError message={errors.night_shift_qty} className="mt-2" />
-                                </div>
-
-                                <div>
-                                    <label htmlFor="overtime_night_shift_qty" className="text-sm font-semibold text-slate-800">Overtime Night Shift (06.15 - 06.35)</label>
-                                    <input
-                                        id="overtime_night_shift_qty"
-                                        type="number"
-                                        min="0"
-                                        value={data.overtime_night_shift_qty}
-                                        className={inputClass}
-                                        onChange={(e) => setData('overtime_night_shift_qty', Number(e.target.value))}
-                                    />
-                                    <InputError message={errors.overtime_night_shift_qty} className="mt-2" />
-                                </div>
-                            </div>
-
-                            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                                <div>
-                                    <label htmlFor="quantity" className="text-sm font-semibold text-slate-800">Total</label>
-                                    <input id="quantity" type="number" value={shiftTotal} className={inputClass} readOnly />
                                 </div>
                                 <div className="rounded-lg border border-cyan-200 bg-white p-4 md:col-span-3">
                                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Locked Pricing</p>
@@ -260,17 +274,22 @@ export default function Edit({ orderMeal, canApprove, mode, indexRouteName, upda
                             />
                             <InputError message={errors.meal_date} className="mt-2" />
                         </div>
-                        <div>
-                            <label htmlFor="menu_name" className="text-sm font-semibold text-slate-800">Lunch Menu</label>
-                            <input
-                                id="menu_name"
-                                type="text"
-                                value={data.menu_name}
-                                className={inputClass}
-                                onChange={(e) => setData('menu_name', e.target.value)}
-                            />
-                            <InputError message={errors.menu_name} className="mt-2" />
-                        </div>
+                        {!isExitPermitMode && (
+                            <div>
+                                <label htmlFor="shift_type" className="text-sm font-semibold text-slate-800">Shift</label>
+                                <select
+                                    id="shift_type"
+                                    className={inputClass}
+                                    value={selectedShift}
+                                    onChange={(e) => setSelectedShift(e.target.value)}
+                                >
+                                    <option value="day">Day Shift (12.00 - 13.00)</option>
+                                    <option value="ot_day">Overtime Day Shift (18.15 - 18.35)</option>
+                                    <option value="night">Night Shift (00.00 - 01.11)</option>
+                                    <option value="ot_night">Overtime Night Shift (06.15 - 06.35)</option>
+                                </select>
+                            </div>
+                        )}
                     </div>
 
                     <div className="grid gap-4 md:grid-cols-3">

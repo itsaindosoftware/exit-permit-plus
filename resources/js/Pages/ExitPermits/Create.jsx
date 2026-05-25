@@ -208,6 +208,7 @@ export default function Create({
             order_car: value,
             car_id: value ? prev.car_id : '',
             driver_id: value ? prev.driver_id : '',
+            notes: value ? prev.notes : '',
         }));
     };
 
@@ -588,7 +589,7 @@ export default function Create({
                                         No
                                     </label>
                                 </div>
-                                <p className="mt-1 text-xs text-slate-500">
+                                <p className="mt-1 text-xs text-slate-500">``
                                     If Yes, HR will arrange the car and driver in the next stage.
                                 </p>
                                 <InputError message={errors.order_car} className="mt-2" />
@@ -610,6 +611,21 @@ export default function Create({
                                     </select>
                                     <InputError message={errors.cost_center_id} className="mt-2" />
                                 </div>
+
+                                {data.order_car && (
+                                    <div className="mt-4">
+                                        <label htmlFor="notes" className="text-sm font-semibold text-slate-800">Details of goods brought during delivery (parts / tooling)</label>
+                                        <textarea
+                                            id="notes"
+                                            className={inputClass}
+                                            rows="3"
+                                            value={data.notes}
+                                            onChange={(e) => setData('notes', e.target.value)}
+                                            placeholder="Example: bracket, jig, tooling parts, or other delivery items"
+                                        />
+                                        <InputError message={errors.notes} className="mt-2" />
+                                    </div>
+                                )}
                             </div>
                         )}
 

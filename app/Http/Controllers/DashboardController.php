@@ -11,7 +11,33 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    private const ATTENDANCE_VERIFIER_EMAIL = 'payroll.hr@thaisummit.co.id';
+    private const ATTENDANCE_VERIFIER_EMAIL = 'sisca@example.com';
+
+    private const MANAGER_APPROVAL_SCOPES = [
+        '6310814' => [
+            'creators' => ['Indriani', 'Admin Prod'],
+            'departments' => [
+                'Production',
+                'Quality',
+                'All Prod Section',
+                'Quality Assurance',
+                'Production Engineer',
+                'Production Administration',
+            ],
+        ],
+        '9650426' => [
+            'creators' => ['Alvin Dhuhalkarim'],
+            'departments' => ['PPIC', 'PPIC & Sales Delivery (Outbound)', 'PPIC & Sales Delivery (Inbound)'],
+        ],
+        '0190507' => [
+            'creators' => ['Yulianto Abdurrahman Affandi'],
+            'departments' => ['Accounting', 'Accounting, Finance & CIC'],
+        ],
+        '1150808' => [
+            'creators' => ['Dede Susilawati'],
+            'departments' => ['HR', 'HR & SYD IT', 'HR, GA & LEGAL', 'SYD & IT'],
+        ],
+    ];
 
     public function __invoke(): Response
     {
@@ -79,9 +105,10 @@ class DashboardController extends Controller
         ];
 
         if ($isDualApprovalUser) {
-            $approvalQuery->where(function ($subQuery) {
-                $subQuery->where(function ($managerQuery) {
+            $approvalQuery->where(function ($subQuery) use ($user) {
+                $subQuery->where(function ($managerQuery) use ($user) {
                     $managerQuery->whereNull('manager_approved_at')->where('status', 'pending');
+                    $this->applyManagerApprovalScope($managerQuery, $user);
                 })->orWhere(function ($hrManagerQuery) {
                     $hrManagerQuery->whereNotNull('manager_approved_at')
                         ->whereNotNull('md_approved_at')
@@ -90,7 +117,9 @@ class DashboardController extends Controller
                 });
             });
         } elseif ($roleCode === 'manager') {
-            $approvalQuery->whereNull('manager_approved_at')->where('status', 'pending');
+            $approvalQuery->whereNull('manager_approved_at')
+                ->where('status', 'pending');
+            $this->applyManagerApprovalScope($approvalQuery, $user);
         } elseif ($roleCode === 'md') {
             $approvalQuery->whereNotNull('manager_approved_at')
                 ->whereNull('md_approved_at')
@@ -162,19 +191,6 @@ class DashboardController extends Controller
         return 'Pending';
     }
 
-    private function toDateOnly(mixed $date): ?string
-    {
-        if (!$date) {
-            return null;
-        }
-
-        if ($date instanceof \DateTimeInterface) {
-            return $date->format('Y-m-d');
-        }
-
-        return substr((string) $date, 0, 10);
-    }
-
     private function mealTrend($query): array
     {
         return (clone $query)
@@ -192,5 +208,67 @@ class DashboardController extends Controller
                 'remaining' => max(0, (int) $row->provided_total - (int) $row->actual_total),
             ])
             ->all();
+    }
+
+    private function applyManagerApprovalScope($query, $user): void
+    {
+        $scope = $this->managerApprovalScopeForUser($user);
+
+        if (!$scope) {
+            return;
+        }
+
+        $creatorNames = array_values(array_filter(array_map(
+            fn($value) => strtolower(trim((string) $value)),
+            (array) ($scope['creators'] ?? []),
+        )));
+        $departments = array_values(array_filter(array_map(
+            fn($value) => strtolower(trim((string) $value)),
+            (array) ($scope['departments'] ?? []),
+        )));
+
+        if ($creatorNames !== []) {
+            $query->whereHas('user', function ($userQuery) use ($creatorNames) {
+                $userQuery->whereIn(\Illuminate\Support\Facades\DB::raw('LOWER(TRIM(name))'), $creatorNames);
+            });
+        }
+
+        if ($departments !== []) {
+            $query->whereDoesntHave('requestors', function ($requestorQuery) use ($departments) {
+                $requestorQuery->whereNotIn(\Illuminate\Support\Facades\DB::raw('LOWER(TRIM(COALESCE(department, "")))'), $departments);
+            });
+        }
+    }
+
+    private function managerApprovalScopeForUser($user): ?array
+    {
+        $approverKey = strtolower(preg_replace('/[^a-z0-9]+/i', '', trim((string) ($user?->nik ?? ''))) ?? '');
+        $scope = self::MANAGER_APPROVAL_SCOPES[$approverKey] ?? null;
+
+        if (!$scope) {
+            return null;
+        }
+
+        if ($approverKey === '1150808' && $user?->role?->code === 'hr_manager') {
+            return [
+                'creators' => $scope['creators'] ?? [],
+                'departments' => [],
+            ];
+        }
+
+        return $scope;
+    }
+
+    private function toDateOnly(mixed $value): ?string
+    {
+        if (!$value) {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($value)->toDateString();
+        } catch (\Throwable) {
+            return null;
+        }
     }
 }

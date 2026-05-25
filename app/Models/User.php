@@ -115,9 +115,14 @@ class User extends Authenticatable
 
     public function isWidaMustikaSari(): bool
     {
-        return strtolower(trim((string) $this->name)) === 'wida mustika sari'
-            && $this->hasRoleCode('manager')
-            && $this->hasRoleCode('hr_manager');
+        $normalizedNik = preg_replace('/\D+/', '', (string) $this->nik);
+
+        return $normalizedNik === '1150808'
+            || (
+                strtolower(trim((string) $this->name)) === 'wida mustika sari'
+                && $this->hasRoleCode('manager')
+                && $this->hasRoleCode('hr_manager')
+            );
     }
 
     public function canActAsManagerApproval(): bool

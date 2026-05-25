@@ -14,6 +14,8 @@ export default function PriceSupplierForm({ mode, priceSupplier = null, defaultI
         local_tax_rate: priceSupplier?.local_tax_rate ?? 10,
         service_tax_rate: priceSupplier?.service_tax_rate ?? 2,
         effective_date: priceSupplier?.effective_date ?? '',
+        start_date: priceSupplier?.start_date ?? '',
+        end_date: priceSupplier?.end_date ?? '',
         is_active: priceSupplier?.is_active ?? defaultIsActive,
         notes: priceSupplier?.notes ?? '',
     });
@@ -50,7 +52,7 @@ export default function PriceSupplierForm({ mode, priceSupplier = null, defaultI
                 </div>
 
                 <form onSubmit={submit} className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <div className="grid gap-4 md:grid-cols-2">
+                    <div className="grid gap-4 md:grid-cols-3">
                         <div>
                             <label htmlFor="supplier_name" className="text-sm font-semibold text-slate-800">Supplier Name</label>
                             <input
@@ -73,6 +75,28 @@ export default function PriceSupplierForm({ mode, priceSupplier = null, defaultI
                                 onChange={(e) => setData('effective_date', e.target.value)}
                             />
                             <InputError message={errors.effective_date} className="mt-2" />
+                        </div>
+                        <div>
+                            <label htmlFor="start_date" className="text-sm font-semibold text-slate-800">Start Date</label>
+                            <input
+                                id="start_date"
+                                type="date"
+                                value={data.start_date}
+                                className={inputClass}
+                                onChange={(e) => setData('start_date', e.target.value)}
+                            />
+                            <InputError message={errors.start_date} className="mt-2" />
+                        </div>
+                        <div>
+                            <label htmlFor="end_date" className="text-sm font-semibold text-slate-800">End Date</label>
+                            <input
+                                id="end_date"
+                                type="date"
+                                value={data.end_date}
+                                className={inputClass}
+                                onChange={(e) => setData('end_date', e.target.value)}
+                            />
+                            <InputError message={errors.end_date} className="mt-2" />
                         </div>
                     </div>
 

@@ -34,7 +34,7 @@
 
   <!-- Right panel -->
   <text x="680" y="282" class="ts">SECURE ACCESS</text>
-  <text x="680" y="314" class="th">Welcome Back</text>
+  <text x="680" y="314" class="th">Welcome</text>
   <text x="680" y="340" class="t">Masuk menggunakan akun perusahaan</text>
 
   <text x="680" y="386" class="t">Email</text>

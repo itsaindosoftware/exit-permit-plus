@@ -15,7 +15,7 @@ use Inertia\Response;
 
 class ScheduleCarController extends Controller
 {
-    private const RATNA_EMAIL = 'hrga-01@thaisummit.co.id';
+    private const RATNA_EMAIL = 'hrga-01@example.com';
 
     private const ARRANGE_EXIT_TYPES = [
         ExitPermit::EXIT_TYPE_BUSINESS_TRIP,
@@ -52,6 +52,11 @@ class ScheduleCarController extends Controller
         [$periodStart, $periodEnd] = $this->periodByView($focusDate, $view);
 
         $events = ExitPermit::query()
+            ->with([
+                'user:id,name',
+                'costCenter:id,name,cost_center_sap,desc_cost_c',
+                'requestors:id,exit_permit_id,name,department',
+            ])
             ->whereDate('permit_date', '>=', $periodStart->toDateString())
             ->whereDate('permit_date', '<=', $periodEnd->toDateString())
             ->whereIn('exit_type', self::ARRANGE_EXIT_TYPES)
@@ -72,9 +77,16 @@ class ScheduleCarController extends Controller
             ->map(function (ExitPermit $permit) {
                 $date = Carbon::parse((string) $permit->permit_date);
                 $isArranged = filled($permit->vehicle_plate) && filled($permit->driver_name);
+                $requestorNames = $permit->requestors->pluck('name')->filter()->values()->all();
+                $requestorDepartments = $permit->requestors->pluck('department')->filter()->values()->all();
 
                 return [
                     'id' => $permit->id,
+                    'submitter_name' => $permit->user?->name,
+                    'requestor_names' => $requestorNames,
+                    'requestor_departments' => $requestorDepartments,
+                    'cost_center_name' => $permit->costCenter?->name,
+                    'cost_center_code' => $permit->costCenter?->cost_center_sap,
                     'permit_date' => $date->toDateString(),
                     'day_name' => $date->locale('en')->translatedFormat('l'),
                     'start_time' => $this->toHourMinute($permit->start_time),
@@ -111,17 +123,29 @@ class ScheduleCarController extends Controller
             ->all();
 
         $arrangeItems = ExitPermit::query()
+            ->with([
+                'user:id,name',
+                'costCenter:id,name,cost_center_sap,desc_cost_c',
+                'requestors:id,exit_permit_id,name,department',
+            ])
             ->whereIn('exit_type', self::ARRANGE_EXIT_TYPES)
             ->where('order_car', true)
             ->where('status', 'pending')
             ->orderBy('permit_date')
             ->orderBy('start_time')
-            ->get(['id', 'permit_date', 'start_time', 'end_time', 'destination', 'vehicle_plate', 'driver_name'])
+            ->get(['id', 'user_id', 'cost_center_id', 'permit_date', 'start_time', 'end_time', 'destination', 'vehicle_plate', 'driver_name'])
             ->map(function (ExitPermit $permit) {
                 $isArranged = filled($permit->vehicle_plate) && filled($permit->driver_name);
+                $requestorNames = $permit->requestors->pluck('name')->filter()->values()->all();
+                $requestorDepartments = $permit->requestors->pluck('department')->filter()->values()->all();
 
                 return [
                     'id' => $permit->id,
+                    'submitter_name' => $permit->user?->name,
+                    'requestor_names' => $requestorNames,
+                    'requestor_departments' => $requestorDepartments,
+                    'cost_center_name' => $permit->costCenter?->name,
+                    'cost_center_code' => $permit->costCenter?->cost_center_sap,
                     'label' => sprintf(
                         '#%d | %s | %s-%s | %s',
                         $permit->id,
@@ -267,6 +291,7 @@ class ScheduleCarController extends Controller
         return ExitPermit::query()
             ->with([
                 'user:id,name',
+                'costCenter:id,name,cost_center_sap,desc_cost_c',
                 'requestors:id,exit_permit_id,name,department,reimburs_lunch_box',
                 'costCenter:id,name,cost_center_sap,desc_cost_c',
             ])
@@ -289,6 +314,9 @@ class ScheduleCarController extends Controller
                 'notes',
             ])
             ->map(function (ExitPermit $permit) {
+                $requestorNames = $permit->requestors->pluck('name')->filter()->values()->all();
+                $requestorDepartments = $permit->requestors->pluck('department')->filter()->values()->all();
+
                 return [
                     'id' => $permit->id,
                     'label' => sprintf(
@@ -299,6 +327,11 @@ class ScheduleCarController extends Controller
                         $this->toHourMinute($permit->end_time) ?? '-',
                         $permit->destination,
                     ),
+                    'submitter_name' => $permit->user?->name,
+                    'requestor_names' => $requestorNames,
+                    'requestor_departments' => $requestorDepartments,
+                    'cost_center_name' => $permit->costCenter?->name,
+                    'cost_center_code' => $permit->costCenter?->cost_center_sap,
                     'template' => $this->buildArrangeTemplate($permit),
                 ];
             })

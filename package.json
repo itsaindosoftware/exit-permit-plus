@@ -1,6 +1,9 @@
 {
     "private": true,
     "type": "module",
+    "dependencies": {
+        "sweetalert2": "^11.7.27"
+    },
     "scripts": {
         "build": "vite build",
         "dev": "vite"

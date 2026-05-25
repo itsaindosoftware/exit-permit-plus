@@ -344,6 +344,10 @@ export default function Edit({
         return rawValue.toString().trim().toUpperCase() === 'Y' ? 'text-emerald-700' : 'text-slate-500';
     };
     const isRecapViewer = ['hr', 'admin'].includes(viewerRole);
+    const canSkipAttendanceFileForBusinessTrip = exitPermit.exit_type === 'business_trip'
+        && data.plan_check_in === false
+        && data.start_time
+        && data.start_time <= '08:00';
     const backRouteName = (canSubmitApproval || canVerifyAttendance) ? 'exit-permit-approvals.index' : 'exit-permits.index';
     const selectedCar = carOptions.find((car) => car.id === data.car_id);
     const selectedDriver = driverOptions.find((driver) => driver.id === data.driver_id);
@@ -371,6 +375,7 @@ export default function Edit({
             order_car: value,
             car_id: value ? prev.car_id : '',
             driver_id: value ? prev.driver_id : '',
+            notes: value ? prev.notes : '',
         }));
     };
 
@@ -432,7 +437,13 @@ export default function Edit({
 
                 {canVerifyAttendance && (
                     <div className="rounded-lg border border-violet-200 bg-violet-50 px-4 py-3 text-sm font-medium text-violet-900">
-                        Sisca attendance verification: indicate whether the employee has a check-in. The system will route to Meal or Reimbursement automatically.
+                        {exitPermit.exit_type === 'business_trip' ? (
+                            canSkipAttendanceFileForBusinessTrip
+                                ? 'Sisca may verify manually because exit time is 08:00 or earlier and plan clock-in is No.'
+                                : 'Sisca must verify attendance using the shared attendance file or uploaded attendance file for business trips after 08:00 or when plan clock-in is not No.'
+                        ) : (
+                            'Sisca attendance verification: indicate whether the employee has a check-in. The system will route to Meal or Reimbursement automatically.'
+                        )}
                     </div>
                 )}
 
@@ -841,6 +852,21 @@ export default function Edit({
                                     <InputError message={errors.cost_center_id} className="mt-2" />
                                 </div>
 
+                                {data.order_car && (
+                                    <div className="mt-4">
+                                        <label htmlFor="notes" className="text-base font-semibold text-slate-800">Details of goods brought during delivery (parts / tooling)</label>
+                                        <textarea
+                                            id="notes"
+                                            className={`${inputClass} text-base`}
+                                            rows="3"
+                                            value={data.notes}
+                                            onChange={(e) => setData('notes', e.target.value)}
+                                            placeholder="Example: bracket, jig, tooling parts, or other delivery items"
+                                        />
+                                        <InputError message={errors.notes} className="mt-2" />
+                                    </div>
+                                )}
+
                                 {data.order_car && (data.vehicle_plate || data.driver_name) && (
                                     <div className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
                                         <p><span className="font-semibold">License Plate:</span> {data.vehicle_plate || '-'}</p>
@@ -934,103 +960,22 @@ export default function Edit({
 
                         {canVerifyAttendance && (
                             <div>
-                                {exitPermit.exit_type === 'business_trip' ? (
-                                    <>
-                                        {/* <label htmlFor="attendance_file" className="text-sm font-semibold text-slate-800">Upload Attendance (CSV/XLSX)</label>
-                                        <input
-                                            id="attendance_file"
-                                            type="file"
-                                            accept=".csv,.txt,.xlsx"
-                                            className={inputClass}
-                                            onChange={(e) => setData('attendance_file', e.target.files?.[0] ?? null)}
-                                        /> */}
-                                        {/*
-                                        <p className="mt-1 text-xs text-slate-500">
-                                            For company type (business trip), when you click preview the system reads the latest attendance file from the configured network path and matches today's attendance data to the requestor list.
-                                        </p>
-                                        <InputError message={errors.attendance_file} className="mt-2" />
+                                <label htmlFor="has_valid_checkin" className="text-sm font-semibold text-slate-800">Verify Check-in Attendance</label>
+                                <select
+                                    id="has_valid_checkin"
+                                    className={inputClass}
+                                    value={data.has_valid_checkin ? '1' : '0'}
+                                    onChange={(e) => setData('has_valid_checkin', e.target.value === '1')}
+                                >
+                                    <option value="1">Has check-in (meal path if returned to office)</option>
+                                    <option value="0">No check-in (reimbursement path)</option>
+                                </select>
+                                <InputError message={errors.has_valid_checkin} className="mt-2" />
 
-                                        <button
-                                            type="button"
-                                            disabled={processing}
-                                            onClick={previewAttendance}
-                                            className="mt-3 rounded-md border border-cyan-700 px-3 py-1.5 text-sm font-semibold text-cyan-700 transition hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-60"
-                                        >
-                                            Preview Matching Attendance
-                                        </button>
-
-                                        {attendancePreview && (
-                                            <div className="mt-4 rounded-lg border border-cyan-200 bg-cyan-50 p-3">
-                                                <p className="text-sm font-semibold text-cyan-900">Matching Preview</p>
-                                                <p className="mt-1 text-xs text-cyan-900">
-                                                    Source: {attendancePreview?.source?.file_name ?? '-'} | Import: {attendancePreview?.source?.loaded_at ?? '-'}
-                                                </p>
-                                                <p className="mt-1 text-xs text-cyan-900">
-                                                    Total requestors: {attendancePreview?.summary?.total_requestors ?? 0} | Matched: {attendancePreview?.summary?.matched_count ?? 0}
-                                                </p>
-                                                <p className="mt-1 text-xs text-cyan-900">
-                                                    Attendance rows (by date): {attendancePreview?.summary?.attendance_rows_for_date ?? 0}
-                                                </p>
-                                                <p className="mt-1 text-xs text-cyan-900">
-                                                    Attendance match date: {attendancePreview?.summary?.match_date ?? attendancePreview?.match_date ?? '-'}
-                                                </p>
-
-                                                <div className="mt-3 overflow-x-auto rounded-md border border-cyan-200 bg-white">
-                                                    <table className="min-w-full border-collapse text-xs">
-                                                        <thead className="bg-cyan-100 text-cyan-900">
-                                                            <tr>
-                                                                <th className="border border-cyan-200 px-2 py-1 text-left">NO</th>
-                                                                <th className="border border-cyan-200 px-2 py-1 text-left">NAME</th>
-                                                                <th className="border border-cyan-200 px-2 py-1 text-left">EMPLOYEE ID</th>
-                                                                <th className="border border-cyan-200 px-2 py-1 text-left">DEPARTMENT</th>
-                                                                <th className="border border-cyan-200 px-2 py-1 text-left">MATCH</th>
-                                                                <th className="border border-cyan-200 px-2 py-1 text-left">MATCH BY</th>
-                                                                <th className="border border-cyan-200 px-2 py-1 text-left">REASON</th>
-                                                                <th className="border border-cyan-200 px-2 py-1 text-left">REIMBURSE LUNCH BOX</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            {(attendancePreview?.items ?? []).map((item) => (
-                                                                <tr key={`attendance-preview-${item.id}`}>
-                                                                    <td className="border border-cyan-200 px-2 py-1">{item.row_number}</td>
-                                                                    <td className="border border-cyan-200 px-2 py-1">{item.name || '-'}</td>
-                                                                    <td className="border border-cyan-200 px-2 py-1">{item.employee_id || '-'}</td>
-                                                                    <td className="border border-cyan-200 px-2 py-1">{item.department || '-'}</td>
-                                                                    <td className="border border-cyan-200 px-2 py-1">
-                                                                        {item.matched ? `Yes (${item.matched_by || '-'})` : 'No'}
-                                                                    </td>
-                                                                    <td className="border border-cyan-200 px-2 py-1">
-                                                                        {item.matched_by || '-'}
-                                                                    </td>
-                                                                    <td className="border border-cyan-200 px-2 py-1">
-                                                                        {getAttendanceMatchReason(item)}
-                                                                    </td>
-                                                                    <td className="border border-cyan-200 px-2 py-1 font-semibold">
-                                                                        {item.recommended_reimburs_lunch_box}
-                                                                    </td>
-                                                                </tr>
-                                                            ))}
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        )}
-                                        */}
-                                    </>
-                                ) : (
-                                    <>
-                                        <label htmlFor="has_valid_checkin" className="text-sm font-semibold text-slate-800">Verify Check-in Attendance</label>
-                                        <select
-                                            id="has_valid_checkin"
-                                            className={inputClass}
-                                            value={data.has_valid_checkin ? '1' : '0'}
-                                            onChange={(e) => setData('has_valid_checkin', e.target.value === '1')}
-                                        >
-                                            <option value="1">Has check-in (meal path if returned to office)</option>
-                                            <option value="0">No check-in (reimbursement path)</option>
-                                        </select>
-                                        <InputError message={errors.has_valid_checkin} className="mt-2" />
-                                    </>
+                                {exitPermit.exit_type === 'business_trip' && (
+                                    <p className="mt-2 text-xs text-slate-500">
+                                        For business trips, Sisca may manually verify check-in if attendance file is not available.
+                                    </p>
                                 )}
 
                                 {exitPermit.attendance_checked_at && (

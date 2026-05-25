@@ -15,6 +15,8 @@ class PriceSupplier extends Model
         'local_tax_rate',
         'service_tax_rate',
         'effective_date',
+        'start_date',
+        'end_date',
         'is_active',
         'notes',
     ];
@@ -26,6 +28,8 @@ class PriceSupplier extends Model
             'local_tax_rate' => 'decimal:2',
             'service_tax_rate' => 'decimal:2',
             'effective_date' => 'date',
+            'start_date' => 'date',
+            'end_date' => 'date',
             'is_active' => 'boolean',
         ];
     }

@@ -8,8 +8,8 @@ export default function AuthenticatedLayout({ header, children }) {
     const [showSidebar, setShowSidebar] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
     const userMenuRef = useRef(null);
-    const isRatna = String(user?.email ?? '').toLowerCase() === 'hrga-01@thaisummit.co.id';
-    const isSisca = String(user?.email ?? '').toLowerCase() === 'payroll.hr@thaisummit.co.id';
+    const isRatna = String(user?.email ?? '').toLowerCase() === 'hrga-01@example.com';
+    const isSisca = String(user?.email ?? '').toLowerCase() === 'sisca@example.com';
     const isHr = user?.role?.code === 'hr';
     const isAdmin = user?.role?.code === 'admin';
     const isExitPermitApprovalUser = ['manager', 'md', 'hr_manager', 'admin'].includes(user?.role?.code)
@@ -28,7 +28,7 @@ export default function AuthenticatedLayout({ header, children }) {
         ...(isSisca || isAdmin ? [{ label: 'Price Supplier', routeName: 'price-suppliers.index' }] : []),
         { label: 'Reimbursement', routeName: 'reimbursements.index' },
         ...(isReimbursementApprovalUser ? [{ label: 'Reimbursement Approval', routeName: 'reimbursement-approvals.index', badgeCount: notifications.reimbursement_approval_count }] : []),
-        { label: 'Profile', routeName: 'profile.edit' },
+        // { label: 'Profile', routeName: 'profile.edit' },
     ];
 
     const userInitials = (user?.name ?? 'U')

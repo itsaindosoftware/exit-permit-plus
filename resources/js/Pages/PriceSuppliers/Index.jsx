@@ -75,6 +75,7 @@ export default function Index({ items = [], activePriceSupplier = null }) {
                                     <th className="px-5 py-3 text-left font-semibold">Amount / Portion</th>
                                     <th className="px-5 py-3 text-left font-semibold">Taxes</th>
                                     <th className="px-5 py-3 text-left font-semibold">Effective Date</th>
+                                    <th className="px-5 py-3 text-left font-semibold">Period</th>
                                     <th className="px-5 py-3 text-left font-semibold">Status</th>
                                     <th className="px-5 py-3 text-left font-semibold">Notes</th>
                                     <th className="px-5 py-3 text-left font-semibold">Actions</th>
@@ -83,7 +84,7 @@ export default function Index({ items = [], activePriceSupplier = null }) {
                             <tbody className="divide-y divide-slate-100">
                                 {items.length === 0 ? (
                                     <tr>
-                                        <td className="px-5 py-8 text-center text-slate-500" colSpan="7">
+                                        <td className="px-5 py-8 text-center text-slate-500" colSpan="8">
                                             No price supplier data yet.
                                         </td>
                                     </tr>
@@ -101,6 +102,11 @@ export default function Index({ items = [], activePriceSupplier = null }) {
                                             <div>Service: {item.service_tax_rate}%</div>
                                         </td>
                                         <td className="px-5 py-4 text-slate-700">{item.effective_date ?? '-'}</td>
+                                        <td className="px-5 py-4 text-slate-700">
+                                            {(item.start_date || item.end_date)
+                                                ? `${item.start_date ?? '-'} - ${item.end_date ?? '-'}`
+                                                : '-'}
+                                        </td>
                                         <td className="px-5 py-4 text-slate-700">{item.is_active ? 'Active' : 'Inactive'}</td>
                                         <td className="px-5 py-4 text-slate-700">
                                             <div className="max-w-xs whitespace-pre-line">{item.notes || '-'}</div>

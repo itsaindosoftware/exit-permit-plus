@@ -19,7 +19,7 @@ use Inertia\Response;
 
 class OrderMealController extends Controller
 {
-    private const ATTENDANCE_VERIFIER_EMAIL = 'payroll.hr@thaisummit.co.id';
+    private const ATTENDANCE_VERIFIER_EMAIL = 'sisca@example.com';
 
     public function __construct(
         private readonly ExitPermitLunchConversionService $exitPermitLunchConversionService,
@@ -279,6 +279,11 @@ class OrderMealController extends Controller
         $eligibilityWarning = null;
         $checkMealFormula = $this->buildCheckMealFormula();
         $defaultCapacity = (int) ($checkMealFormula['check_order_meal'] ?? 0);
+        $requestedCapacity = (int) request()->query('default_capacity', 0);
+
+        if ($requestedCapacity > 0) {
+            $defaultCapacity = $requestedCapacity;
+        }
         $mealPricing = $this->resolveMealPricing();
 
         if ($scope === OrderMeal::SCOPE_EXIT_PERMIT) {
@@ -845,7 +850,7 @@ class OrderMealController extends Controller
                 'exists:exit_permits,id',
             ],
             'meal_date' => ['required', 'date'],
-            'menu_name' => ['required', 'string', 'max:255'],
+            'menu_name' => ['nullable', 'string', 'max:255'],
             'quantity' => ['required', 'integer', 'min:0'],
             'actual_quantity' => ['required', 'integer', 'min:0'],
             'visitor_count' => ['required', 'integer', 'min:0'],
@@ -862,6 +867,9 @@ class OrderMealController extends Controller
         if (!$allowStatus) {
             unset($validated['status']);
         }
+
+        $menuName = trim((string) ($validated['menu_name'] ?? ''));
+        $validated['menu_name'] = $menuName !== '' ? $menuName : 'Lunch';
 
         if (!$isStore) {
             unset($validated['repeat_count']);
