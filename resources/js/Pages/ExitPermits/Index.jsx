@@ -68,9 +68,19 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
         }
     };
 
-    const handleQuickApprove = async (id) => {
+    const handleQuickApprove = async (item) => {
+        const requestorNames = item.requestor_names?.length ? item.requestor_names.join(', ') : '-';
+        const requestorDepartments = item.requestor_departments?.length ? item.requestor_departments.join(', ') : '-';
+
         const result = await Swal.fire({
             title: 'Approve this exit permit now?',
+            html: `
+                <div class="text-left">
+                    <p><strong>Submitter:</strong> ${item.employee_name ?? '-'}</p>
+                    <p><strong>Requester:</strong> ${requestorNames}</p>
+                    <p><strong>Department:</strong> ${requestorDepartments}</p>
+                </div>
+            `,
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: 'Yes, approve',
@@ -79,7 +89,7 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
         });
 
         if (result.isConfirmed) {
-            router.put(route('exit-permits.update', id), {
+            router.put(route('exit-permits.update', item.id), {
                 status: 'approved',
             });
         }
@@ -313,6 +323,9 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
                                             {item.driver_name && (
                                                 <div className="text-xs text-slate-500">Driver: {item.driver_name}</div>
                                             )}
+                                            {item.order_car_time && (
+                                                <div className="text-xs text-slate-500">Order Car Time: {item.order_car_time}</div>
+                                            )}
                                         </td>
                                         <td className="px-4 py-3">
                                             <span
@@ -348,7 +361,7 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
                                                 {isApprovalMode && isMdViewer && item.can_submit_approval && (
                                                     <button
                                                         type="button"
-                                                        onClick={() => handleQuickApprove(item.id)}
+                                                        onClick={() => handleQuickApprove(item)}
                                                         className="inline-flex h-8 w-28 items-center justify-center rounded bg-emerald-600 px-3 text-xs font-semibold text-white transition hover:bg-emerald-500"
                                                     >
                                                         Approve
@@ -373,7 +386,7 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
                                                         : item.can_arrange_car
                                                             ? 'Arrange Car'
                                                             : item.can_verify_attendance
-                                                                ? 'Verify Attendance'
+                                                                ? 'Check Detail Exit Permit'
                                                             : (item.can_update_request ? 'Edit' : 'Detail')}
                                                 </Link>
                                                 {item.can_delete && (
