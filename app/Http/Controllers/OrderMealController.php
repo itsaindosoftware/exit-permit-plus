@@ -19,7 +19,7 @@ use Inertia\Response;
 
 class OrderMealController extends Controller
 {
-    private const ATTENDANCE_VERIFIER_EMAIL = 'sisca@example.com';
+    private const ATTENDANCE_VERIFIER_EMAIL = 'payroll.hr@example.com';
 
     public function __construct(
         private readonly ExitPermitLunchConversionService $exitPermitLunchConversionService,

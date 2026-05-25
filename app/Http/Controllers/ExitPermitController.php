@@ -34,7 +34,7 @@ class ExitPermitController extends Controller
 {
     private const CAR_DRIVER_COORDINATOR_EMAIL = 'hrga-01@example.com';
 
-    private const ATTENDANCE_VERIFIER_EMAIL = 'sisca@example.com';
+    private const ATTENDANCE_VERIFIER_EMAIL = 'payroll.hr@example.com';
 
     private const HR_APPROVER_PRIORITY_EMAILS = [
         'hr.manager@example.com',
@@ -42,7 +42,7 @@ class ExitPermitController extends Controller
         'wida.mus@example.com',
         'theresia.saing@example.com',
         'hrga-01@example.com',
-        'sisca@example.com',
+        'payroll.hr@example.com',
     ];
 
     private const MANAGER_APPROVAL_SCOPES = [

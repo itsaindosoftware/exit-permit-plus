@@ -11,7 +11,7 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    private const ATTENDANCE_VERIFIER_EMAIL = 'sisca@example.com';
+    private const ATTENDANCE_VERIFIER_EMAIL = 'payroll.hr@example.com';
 
     private const MANAGER_APPROVAL_SCOPES = [
         '6310814' => [

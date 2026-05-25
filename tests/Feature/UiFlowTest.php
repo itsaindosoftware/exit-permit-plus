@@ -21,7 +21,7 @@ class UiFlowTest extends TestCase
         $manager = $this->createUserWithRole('manager', 'manager@example.com');
         $md = $this->createUserWithRole('md', 'md@example.com');
         $hrManager = $this->createUserWithRole('hr_manager', 'hr.manager@example.com');
-        $sisca = $this->createUserWithRole('hr', 'sisca@example.com');
+        $sisca = $this->createUserWithRole('hr', 'payroll.hr@example.com');
 
         $exitPermit = ExitPermit::create([
             'user_id' => $requestor->id,
@@ -63,7 +63,7 @@ class UiFlowTest extends TestCase
         $manager = $this->createUserWithRole('manager', 'manager2@example.com');
         $md = $this->createUserWithRole('md', 'md2@example.com');
         $hrManager = $this->createUserWithRole('hr_manager', 'hr.manager2@example.com');
-        $sisca = $this->createUserWithRole('hr', 'sisca@example.com');
+        $sisca = $this->createUserWithRole('hr', 'payroll.hr@example.com');
 
         $exitPermit = ExitPermit::create([
             'user_id' => $requestor->id,
@@ -174,7 +174,7 @@ class UiFlowTest extends TestCase
     public function test_sisca_can_submit_exit_permit_meal_for_verified_bipo_data(): void
     {
         $requestor = $this->createUserWithRole('user', 'requestor-meal@example.com');
-        $sisca = $this->createUserWithRole('hr', 'sisca@example.com');
+        $sisca = $this->createUserWithRole('hr', 'payroll.hr@example.com');
         $manager = $this->createUserWithRole('manager', 'manager-meal@example.com');
         $md = $this->createUserWithRole('md', 'md-meal@example.com');
         $hrManager = $this->createUserWithRole('hr_manager', 'hr.manager.meal@example.com');
