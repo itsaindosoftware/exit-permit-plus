@@ -28,7 +28,7 @@ export default function AuthenticatedLayout({ header, children }) {
         ...(isSisca || isAdmin ? [{ label: 'Price Supplier', routeName: 'price-suppliers.index' }] : []),
         { label: 'Reimbursement', routeName: 'reimbursements.index' },
         ...(isReimbursementApprovalUser ? [{ label: 'Reimbursement Approval', routeName: 'reimbursement-approvals.index', badgeCount: notifications.reimbursement_approval_count }] : []),
-        { label: 'Profile', routeName: 'profile.edit' },
+        // { label: 'Profile', routeName: 'profile.edit' },
     ];
 
     const userInitials = (user?.name ?? 'U')

@@ -279,6 +279,11 @@ class OrderMealController extends Controller
         $eligibilityWarning = null;
         $checkMealFormula = $this->buildCheckMealFormula();
         $defaultCapacity = (int) ($checkMealFormula['check_order_meal'] ?? 0);
+        $requestedCapacity = (int) request()->query('default_capacity', 0);
+
+        if ($requestedCapacity > 0) {
+            $defaultCapacity = $requestedCapacity;
+        }
         $mealPricing = $this->resolveMealPricing();
 
         if ($scope === OrderMeal::SCOPE_EXIT_PERMIT) {

@@ -112,20 +112,20 @@ const getRemainingTone = (remaining, provided) => {
     if (ratio <= 0.1) {
         return {
             badge: 'bg-emerald-100 text-emerald-700',
-            label: 'Efisien',
+            label: 'Efficient',
         };
     }
 
     if (ratio <= 0.3) {
         return {
             badge: 'bg-amber-100 text-amber-700',
-            label: 'Waspada',
+            label: 'Alert',
         };
     }
 
     return {
         badge: 'bg-rose-100 text-rose-700',
-        label: 'Tinggi',
+        label: 'High',
     };
 };
 
@@ -680,10 +680,24 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                     </tbody>
                                 </table>
                             </div>
+                            <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
+                                <p className="font-semibold text-slate-700">Where the numbers come from</p>
+                                <p className="mt-1">
+                                    Headcount comes from master employee data. Employees Present (Attendance) is the total
+                                    from daily attendance ({checkMealFormula.karyawan_hadir_absensi}). Not Clocked In (Exit Permit)
+                                    is the count of employees with an exit permit and plan clock-in set to No. Employees Absent
+                                    is derived from attendance absences. Employees Present (Adjusted) applies the formula below.
+                                </p>
+                            </div>
                             <div className="mt-4 rounded-xl bg-slate-50 p-4">
                                 <p className="mb-2 text-xs font-semibold uppercase text-slate-500">Formula</p>
                                 <p className="rounded border border-slate-200 bg-white p-2 font-mono text-sm text-slate-700">
-                                    {checkMealFormula.total_karyawan} - (({checkMealFormula.exit_permit} - {checkMealFormula.karyawan_hadir_plan_check_in}) + {checkMealFormula.karyawan_absen})
+                                    {checkMealFormula.total_karyawan} - (({checkMealFormula.karyawan_hadir_absensi} + {checkMealFormula.karyawan_hadir_plan_check_in}) - {checkMealFormula.karyawan_absen})
+                                </p>
+                                <p className="mt-2 text-xs text-slate-600">
+                                    Meaning: total headcount minus (exit permits not clocking in plus absences). Employees Present
+                                    (Attendance) is {checkMealFormula.karyawan_hadir_absensi} and is shown for reference to the
+                                    daily attendance total used in this calculation.
                                 </p>
                                 <div className="mt-3 flex items-center justify-between border-t border-slate-200 pt-3">
                                     <span className="font-bold text-slate-900">Total Canteen Meals</span>
@@ -691,7 +705,13 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                 </div>
                             </div>
                         </div>
-                        <div className="mt-6 flex justify-end">
+                        <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+                            <Link
+                                href={route(createRouteName, { default_capacity: checkMealFormula.check_order_meal })}
+                                className="rounded-xl bg-cyan-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600"
+                            >
+                                Add Order Meal
+                            </Link>
                             <button
                                 type="button"
                                 onClick={() => setShowCheckMealModal(false)}
