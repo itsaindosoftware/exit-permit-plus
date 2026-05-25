@@ -16,6 +16,7 @@ export default function AuthenticatedLayout({ header, children }) {
         || (isHr && isSisca);
     const isExitPermitHistoryUser = ['manager', 'md', 'hr_manager', 'admin'].includes(user?.role?.code);
     const isReimbursementApprovalUser = ['manager', 'md', 'hr', 'accounting', 'admin'].includes(user?.role?.code);
+    const isReimbursementHistoryUser = ['manager', 'md', 'hr_manager', 'hr'].includes(user?.role?.code);
 
     const menuItems = [
         { label: 'Dashboard', routeName: 'dashboard' },
@@ -28,6 +29,7 @@ export default function AuthenticatedLayout({ header, children }) {
         ...(isSisca || isAdmin ? [{ label: 'Price Supplier', routeName: 'price-suppliers.index' }] : []),
         { label: 'Reimbursement', routeName: 'reimbursements.index' },
         ...(isReimbursementApprovalUser ? [{ label: 'Reimbursement Approval', routeName: 'reimbursement-approvals.index', badgeCount: notifications.reimbursement_approval_count }] : []),
+        ...(isReimbursementHistoryUser ? [{ label: 'Reimbursement History', routeName: 'reimbursement-history.index' }] : []),
         // { label: 'Profile', routeName: 'profile.edit' },
     ];
 

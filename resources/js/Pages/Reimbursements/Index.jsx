@@ -36,6 +36,7 @@ export default function Index({
 }) {
     const totalItems = reimbursements?.total ?? reimbursements?.data?.length ?? 0;
     const isApprovalMode = pageMode === 'approval';
+    const isHistoryMode = pageMode === 'history';
     const isMdViewer = viewerRole === 'md';
     const isManagerViewer = viewerRole === 'manager';
     const isMdApprovalViewer = isApprovalMode && isMdViewer;
@@ -47,7 +48,23 @@ export default function Index({
     const [stage, setStage] = useState(filters?.stage ?? '');
     const firstRender = useRef(true);
     const hasActiveFilters = Boolean(employee || exitPermit || requestDate || amount || status || stage);
-    const indexRouteName = isApprovalMode ? 'reimbursement-approvals.index' : 'reimbursements.index';
+    const indexRouteName = isApprovalMode
+        ? 'reimbursement-approvals.index'
+        : (isHistoryMode ? 'reimbursement-history.index' : 'reimbursements.index');
+    const pageTitle = isApprovalMode
+        ? 'Reimbursement Approval'
+        : (isHistoryMode ? 'Reimbursement History' : 'Reimbursement');
+    const heroLabel = isApprovalMode
+        ? 'Approval Workflow'
+        : (isHistoryMode ? 'Approval Archive' : 'Claim Flow');
+    const heroTitle = isApprovalMode
+        ? 'Reimbursement Approval Monitoring'
+        : (isHistoryMode ? 'Reimbursement Approval History' : 'Reimbursement');
+    const heroDescription = isApprovalMode
+        ? 'Reimbursement approval flow: User, Manager, MD, Ratna (submit accounting), then finish by Accounting.'
+        : (isHistoryMode
+            ? 'Archived reimbursement approvals for managerial oversight and reporting.'
+            : 'Manage your own reimbursements.');
 
     useEffect(() => {
         if (firstRender.current) {
@@ -92,28 +109,26 @@ export default function Index({
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-bold leading-tight text-slate-800">
-                    {isApprovalMode ? 'Reimbursement Approval' : 'Reimbursement'}
+                    {pageTitle}
                 </h2>
             }
         >
-            <Head title={isApprovalMode ? 'Reimbursement Approval' : 'Reimbursement'} />
+            <Head title={pageTitle} />
 
             <div className="space-y-6">
                 <div className="rounded-2xl border border-cyan-200 bg-gradient-to-r from-cyan-50 via-white to-slate-50 p-6 shadow-sm">
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">Claim Flow</p>
+                            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">{heroLabel}</p>
                             <h3 className="mt-2 text-2xl font-black uppercase tracking-wide text-slate-900">
-                                {isApprovalMode ? 'Reimbursement Approval Monitoring' : 'Reimbursement'}
+                                {heroTitle}
                             </h3>
                             {/* Proses approval dipantau melalui menu Reimbursement Approval. */}
                             <p className="mt-2 text-sm text-slate-600">
-                                {isApprovalMode
-                                    ? 'Reimbursement approval flow: User, Manager, MD, Ratna (submit accounting), then finish by Accounting.'
-                                    : 'Manage your own reimbursements.'}
+                                {heroDescription}
                             </p>
                         </div>
-                        {!isApprovalMode && isRequester && (
+                        {!isApprovalMode && !isHistoryMode && isRequester && (
                             <div className="flex flex-wrap items-center gap-2">
                                 <Link
                                     href={`${route('reimbursements.create')}?source=internal`}

@@ -50,6 +50,8 @@ Route::middleware('auth')->group(function () {
         ->name('reimbursement-documents.attachment');
     Route::get('reimbursement-approvals', [ReimbursementController::class, 'approvalIndex'])
         ->name('reimbursement-approvals.index');
+    Route::get('reimbursement-history', [ReimbursementController::class, 'historyIndex'])
+        ->name('reimbursement-history.index');
     Route::resource('exit-permits', ExitPermitController::class);
     Route::resource('price-suppliers', PriceSupplierController::class);
     Route::get('order-meals/print', [OrderMealController::class, 'print'])->name('order-meals.print');
