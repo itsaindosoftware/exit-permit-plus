@@ -81,6 +81,59 @@ const formatChartLabel = (group, value) => {
     return formatShortIdDate(value);
 };
 
+const formatMealTypeLabel = (value) => {
+    const type = String(value ?? '').toLowerCase();
+
+    if (type === 'lunch') return 'Lunch';
+    if (type === 'dinner') return 'Dinner';
+    if (type === 'breakfast') return 'Breakfast';
+
+    return type ? `${type.charAt(0).toUpperCase()}${type.slice(1)}` : '-';
+};
+
+const formatShiftLabel = (value) => {
+    const shift = String(value ?? '').toLowerCase();
+
+    switch (shift) {
+        case 'single':
+            return 'Single';
+        case 'daily':
+            return 'Daily';
+        case 'weekly':
+            return 'Weekly';
+        case 'day':
+            return 'Day Shift';
+        case 'ot_day':
+            return 'OT Day';
+        case 'night':
+            return 'Night Shift';
+        case 'ot_night':
+            return 'OT Night';
+        default:
+            return value ? String(value) : '-';
+    }
+};
+
+const getOrderMealShiftLabel = (item) => {
+    const shiftType = String(item.schedule_type ?? '').toLowerCase();
+    const labels = [];
+
+    if (Number(item.day_shift_qty ?? 0) > 0) labels.push('Day Shift');
+    if (Number(item.overtime_day_shift_qty ?? 0) > 0) labels.push('OT Day');
+    if (Number(item.night_shift_qty ?? 0) > 0) labels.push('Night Shift');
+    if (Number(item.overtime_night_shift_qty ?? 0) > 0) labels.push('OT Night');
+
+    if (labels.length) {
+        return labels.join(', ');
+    }
+
+    if (shiftType === 'daily' || shiftType === 'weekly' || shiftType === 'single') {
+        return formatShiftLabel(shiftType);
+    }
+
+    return item.schedule_type ? formatShiftLabel(item.schedule_type) : '-';
+};
+
 const getBarTone = (ratio) => {
     if (ratio <= 0.33) {
         return {
@@ -476,76 +529,29 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                     </div>
 
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-slate-200 text-sm">
-                            <thead className="bg-slate-100">
-                                <tr>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Employee</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Date</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Menu</th>
-                                    {isExitPermitMode ? (
-                                        <>
-                                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Schedule</th>
-                                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Visitor</th>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Day Shift</th>
-                                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">OT Day</th>
-                                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Night Shift</th>
-                                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">OT Night</th>
-                                        </>
-                                    )}
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Provided</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Actual</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Remaining</th>
-                                    {!isExitPermitMode && <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Amount</th>}
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Action</th>
+                        <table className="min-w-full table-fixed border-collapse border border-slate-200 text-sm">
+                            <thead>
+                                <tr className="bg-slate-100">
+                                    <th className="w-28 border-b border-slate-200 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Date</th>
+                                    <th className="w-28 border-b border-slate-200 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Meal Type</th>
+                                    <th className="w-28 border-b border-slate-200 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-600">Shift</th>
+                                    <th className="w-20 border-b border-slate-200 px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-600">Provided</th>
+                                    <th className="w-20 border-b border-slate-200 px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-600">Actual</th>
+                                    <th className="w-24 border-b border-slate-200 px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-600">Amount</th>
+                                    <th className="w-36 border-b border-slate-200 px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-600">Action</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {(orderMeals?.data ?? []).map((item) => {
-                                    const remaining = Number(item.remaining_quantity ?? 0);
-                                    const provided = Number(item.quantity ?? 0);
-                                    const remainingTone = getRemainingTone(remaining, provided);
-
-                                    return (
-                                    <tr key={item.id} className="transition hover:bg-slate-50">
-                                        <td className="px-4 py-3 font-semibold text-slate-800">{item.employee_name}</td>
-                                        <td className="px-4 py-3 text-slate-700">{formatShortIdDate(item.meal_date)}</td>
-                                        <td className="px-4 py-3 text-slate-700">{item.menu_name}</td>
-                                        {isExitPermitMode ? (
-                                            <>
-                                                <td className="px-4 py-3 text-slate-700">{item.schedule_type ?? 'single'}</td>
-                                                <td className="px-4 py-3 text-slate-700">{item.visitor_count ?? 0}</td>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <td className="px-4 py-3 text-slate-700">{item.day_shift_qty ?? 0}</td>
-                                                <td className="px-4 py-3 text-slate-700">{item.overtime_day_shift_qty ?? 0}</td>
-                                                <td className="px-4 py-3 text-slate-700">{item.night_shift_qty ?? 0}</td>
-                                                <td className="px-4 py-3 text-slate-700">{item.overtime_night_shift_qty ?? 0}</td>
-                                            </>
-                                        )}
-                                        <td className="px-4 py-3 text-slate-700">{item.quantity}</td>
-                                        <td className="px-4 py-3 text-slate-700">{item.actual_quantity}</td>
-                                        <td className="px-4 py-3">
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-semibold text-slate-800">{remaining}</span>
-                                                <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${remainingTone.badge}`}>
-                                                    {remainingTone.label}
-                                                </span>
-                                            </div>
-                                        </td>
-                                        {!isExitPermitMode && (
-                                            <td className="px-4 py-3 text-slate-700">
-                                                <p>{currencyFormatter.format(item.total_amount ?? 0)}</p>
-                                                {Number(item.actual_quantity ?? 0) === 0 && (
-                                                    <p className="text-[11px] text-slate-500">Actual 0, cost is still based on provided packs.</p>
-                                                )}
-                                            </td>
-                                        )}
-                                        <td className="px-4 py-3">
-                                            <div className="flex flex-nowrap items-center gap-2">
+                            <tbody>
+                                {(orderMeals?.data ?? []).map((item) => (
+                                    <tr key={item.id} className="border-b border-slate-200 bg-white transition hover:bg-slate-50">
+                                        <td className="border-r border-slate-200 px-4 py-3 text-slate-700">{formatShortIdDate(item.meal_date)}</td>
+                                        <td className="border-r border-slate-200 px-4 py-3 text-slate-700">{formatMealTypeLabel(item.meal_type)}</td>
+                                        <td className="border-r border-slate-200 px-4 py-3 text-slate-700">{getOrderMealShiftLabel(item)}</td>
+                                        <td className="border-r border-slate-200 px-4 py-3 text-right font-semibold text-slate-800">{item.quantity ?? 0}</td>
+                                        <td className="border-r border-slate-200 px-4 py-3 text-right font-semibold text-slate-800">{item.actual_quantity ?? 0}</td>
+                                        <td className="border-r border-slate-200 px-4 py-3 text-right text-slate-700">{currencyFormatter.format(item.total_amount ?? 0)}</td>
+                                        <td className="px-4 py-3 align-bottom">
+                                            <div className="flex h-full flex-col items-center justify-end gap-2">
                                                 <Link
                                                     href={route(showRouteName, item.id)}
                                                     className="inline-flex h-9 min-w-[78px] items-center justify-center whitespace-nowrap rounded bg-slate-700 px-3 text-center text-xs font-semibold leading-none text-white transition hover:bg-slate-600"
@@ -576,8 +582,7 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                             </div>
                                         </td>
                                     </tr>
-                                    );
-                                })}
+                                ))}
                             </tbody>
                         </table>
                     </div>
@@ -658,7 +663,7 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                             <td className="px-3 py-2 text-right font-semibold text-emerald-600">{checkMealFormula.karyawan_hadir_plan_check_in}</td>
                                         </tr>
                                         <tr>
-                                            <td className="px-3 py-2 font-medium text-slate-700">Employees Present (Adjusted)</td>
+                                            <td className="px-3 py-2 font-medium text-slate-700">Employees Present (Calculation)</td>
                                             <td className="px-3 py-2 text-right font-semibold text-slate-900">{checkMealFormula.karyawan_hadir}</td>
                                         </tr>
                                         <tr>
@@ -687,7 +692,7 @@ export default function Index({ orderMeals, summary, notEatenCharts, mode, creat
                                     {checkMealFormula.total_karyawan} - (({checkMealFormula.karyawan_hadir_absensi} + {checkMealFormula.karyawan_hadir_plan_check_in}) - {checkMealFormula.karyawan_absen})
                                 </p>
                                 <p className="mt-2 text-xs text-slate-600">
-                                   Headcount (Total Employees) - ((Employees Present (Attendance) + Not Clocked In (Exit Permit)) - Employees Absent)
+                                    Total Employees - ((Employees Present (Attendance) + Not Clocked In (Exit Permit)) - Employees Absent)
                                 </p>
                                 <div className="mt-3 flex items-center justify-between border-t border-slate-200 pt-3">
                                     <span className="font-bold text-slate-900">Total Canteen Meals</span>
