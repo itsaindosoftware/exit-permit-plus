@@ -194,6 +194,51 @@ class ReimbursementController extends Controller
         ]);
     }
 
+    public function historyIndex(): Response
+    {
+        $user = request()->user();
+        $filters = $this->listFiltersFromRequest();
+
+        if (!$this->canAccessHistoryMenu($user)) {
+            abort(403);
+        }
+
+        $query = Reimbursement::query()
+            ->with(['user:id,name', 'exitPermit:id,permit_date,destination'])
+            ->latest();
+
+        $query->whereNotIn('status', [
+            Reimbursement::STATUS_PENDING_MANAGER,
+            Reimbursement::STATUS_PENDING_MD,
+            Reimbursement::STATUS_PENDING_RATNA,
+        ]);
+
+        $this->applyListFilters($query, $filters);
+
+        return Inertia::render('Reimbursements/Index', [
+            'viewerRole' => $user?->role?->code,
+            'pageMode' => 'history',
+            'isRequester' => false,
+            'canCreateInternal' => false,
+            'canCreateFromExitPermit' => false,
+            'eligibleExitPermits' => [],
+            'filters' => $filters,
+            'statusOptions' => Reimbursement::STATUSES,
+            'stageOptions' => [
+                ['value' => 'manager', 'label' => 'Waiting for Manager Approval'],
+                ['value' => 'md', 'label' => 'Waiting for MD Approval'],
+                ['value' => 'ratna', 'label' => 'Waiting for Ratna Check & Submit to Accounting'],
+                ['value' => 'accounting', 'label' => 'Waiting for Accounting Processing'],
+                ['value' => 'finished', 'label' => 'Paid by Accounting'],
+                ['value' => 'rejected', 'label' => 'Rejected'],
+            ],
+            'reimbursements' => $query
+                ->paginate(10)
+                ->withQueryString()
+                ->through(fn(Reimbursement $reimbursement) => $this->transformReimbursementListItem($reimbursement, $user)),
+        ]);
+    }
+
     private function listFiltersFromRequest(): array
     {
         $amountRaw = preg_replace('/[^0-9]/', '', (string) request()->query('amount', ''));
@@ -736,6 +781,11 @@ class ReimbursementController extends Controller
     private function canAccessApprovalMenu($user): bool
     {
         return $this->canViewAllData($user);
+    }
+
+    private function canAccessHistoryMenu($user): bool
+    {
+        return in_array($user?->role?->code, ['manager', 'md', 'hr_manager', 'hr'], true);
     }
 
     private function transformReimbursementListItem(Reimbursement $reimbursement, $user): array

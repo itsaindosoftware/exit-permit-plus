@@ -34,7 +34,7 @@ class ExitPermitController extends Controller
 {
     private const CAR_DRIVER_COORDINATOR_EMAIL = 'hrga-01@example.com';
 
-    private const ATTENDANCE_VERIFIER_EMAIL = 'sisca@example.com';
+    private const ATTENDANCE_VERIFIER_EMAIL = 'payroll.hr@example.com';
 
     private const HR_APPROVER_PRIORITY_EMAILS = [
         'hr.manager@example.com',
@@ -42,7 +42,7 @@ class ExitPermitController extends Controller
         'wida.mus@example.com',
         'theresia.saing@example.com',
         'hrga-01@example.com',
-        'sisca@example.com',
+        'payroll.hr@example.com',
     ];
 
     private const MANAGER_APPROVAL_SCOPES = [
@@ -340,6 +340,11 @@ class ExitPermitController extends Controller
                 ->filter()
                 ->values()
                 ->all(),
+            'requestor_departments' => $exitPermit->requestors
+                ->pluck('department')
+                ->filter()
+                ->values()
+                ->all(),
             'permit_date' => $this->toDateOnly($exitPermit->permit_date),
             'start_time' => $this->toHourMinute($exitPermit->start_time),
             'end_time' => $this->toHourMinute($exitPermit->end_time),
@@ -347,6 +352,7 @@ class ExitPermitController extends Controller
             'exit_type' => $exitPermit->exit_type,
             'vehicle_plate' => $exitPermit->vehicle_plate,
             'driver_name' => $exitPermit->driver_name,
+            'order_car_time' => $this->resolveOrderCarTime($exitPermit),
             'returned_to_office' => $exitPermit->returned_to_office,
             'eligible_for_meal' => $exitPermit->eligible_for_meal,
             'reimbursement_amount' => $exitPermit->reimbursement_amount,
@@ -362,6 +368,28 @@ class ExitPermitController extends Controller
             'can_arrange_car' => $this->canArrangeCar($exitPermit, $user),
             'can_verify_attendance' => $this->canVerifyAttendance($exitPermit, $user),
         ];
+    }
+
+    private function resolveOrderCarTime(ExitPermit $exitPermit): ?string
+    {
+        $override = $exitPermit->arrange_template_override;
+
+        if (is_array($override)) {
+            $estimasiJam = trim((string) ($override['estimasi_jam'] ?? ''));
+
+            if ($estimasiJam !== '') {
+                return $estimasiJam;
+            }
+        }
+
+        $start = $this->toHourMinute($exitPermit->start_time);
+        $end = $this->toHourMinute($exitPermit->end_time);
+
+        if (!$start && !$end) {
+            return null;
+        }
+
+        return sprintf('%s - %s', $start ?? '-', $end ?? '-');
     }
 
     public function create(): Response
@@ -606,6 +634,7 @@ class ExitPermitController extends Controller
                 'destination' => $exitPermit->destination,
                 'exit_type' => $exitPermit->exit_type,
                 'order_car' => (bool) $exitPermit->order_car,
+                'order_car_time' => $this->resolveOrderCarTime($exitPermit),
                 'cost_center_id' => $exitPermit->cost_center_id,
                 'vehicle_plate' => $exitPermit->vehicle_plate,
                 'driver_name' => $exitPermit->driver_name,
@@ -866,49 +895,20 @@ class ExitPermitController extends Controller
         }
 
         if (!$canApprove && !$canArrangeCar && $canVerifyAttendance) {
-            $attendanceData = $this->validateAttendanceVerificationData($request, $exitPermit);
+            $validated = $this->validatedData($request);
+            unset($validated['attachment_photo']);
 
-            if ($exitPermit->exit_type === ExitPermit::EXIT_TYPE_BUSINESS_TRIP) {
-                $cachedPreview = $request->session()->get($this->attendancePreviewSessionKey($exitPermit->id));
-                $allowManualCheck = $this->canVerifyAttendanceWithoutAttendanceFile($exitPermit);
+            $exitPermit->fill($validated);
+            $exitPermit->syncBusinessRules();
+            $this->syncRequestorItems($exitPermit, $validated['requestor_items'] ?? []);
 
-                if ($request->file('attendance_file')) {
-                    $attendancePreview = $this->makeAttendancePreview($exitPermit, $request->file('attendance_file'));
-                } elseif (filled(config('attendance.source_path'))) {
-                    $attendancePreview = $this->makeAttendancePreview($exitPermit);
-                } elseif (is_array($cachedPreview)) {
-                    $attendancePreview = $cachedPreview;
-                } elseif ($allowManualCheck) {
-                    $hasValidCheckin = (bool) $attendanceData['has_valid_checkin'];
-                } else {
-                    throw ValidationException::withMessages([
-                        'attendance_file' => 'Business trip after 08:00 or with plan clock-in enabled requires attendance data from the shared folder or an uploaded file.',
-                    ]);
-                }
-
-                if (isset($attendancePreview)) {
-                    $matchedCount = $this->attendanceMatchingService->applyPreview($exitPermit, $attendancePreview);
-                    $hasValidCheckin = (bool) ($attendancePreview['summary']['has_valid_checkin'] ?? false);
-
-                    $this->logAttendanceImport(
-                        $exitPermit,
-                        $user?->id,
-                        [
-                            ...$attendancePreview,
-                            'summary' => [
-                                ...($attendancePreview['summary'] ?? []),
-                                'matched_count' => $matchedCount,
-                                'has_valid_checkin' => $hasValidCheckin,
-                            ],
-                        ],
-                        'manual_applied',
-                    );
-
-                    $request->session()->forget($this->attendancePreviewSessionKey($exitPermit->id));
-                }
-            } else {
-                $hasValidCheckin = (bool) $attendanceData['has_valid_checkin'];
+            if ($attachmentPhoto) {
+                $this->replaceAttachment($exitPermit, $attachmentPhoto);
             }
+
+            $hasValidCheckin = $exitPermit->plan_check_in === null
+                ? false
+                : (bool) $exitPermit->plan_check_in;
 
             $exitPermit->attendance_checked_by = $user?->id;
             $exitPermit->attendance_checked_at = now();

@@ -247,7 +247,7 @@ class HandleInertiaRequests extends Middleware
                 ->count();
         }
 
-        if ($roleCode === 'hr' && strtolower((string) $user->email) === 'sisca@example.com') {
+        if ($roleCode === 'hr' && strtolower((string) $user->email) === 'payroll.hr@example.com') {
             return $query->where('status', 'approved')
                 ->where('exit_type', \App\Models\ExitPermit::EXIT_TYPE_BUSINESS_TRIP)
                 ->whereNotNull('md_approved_at')

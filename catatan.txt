@@ -41,3 +41,13 @@ password yang baru itsa di lokal: Itsa@2026
 password yang lama itsa di server: Itsa2026
 password yang lama itsa di lokal: Itsa2026
 
+Google App Code fakhrul ramadhan:
+khdo qrbw wfit zvxg
+
+nanti email yang sisca (sisca@example.com) ganti ke payroll.hr@thaisummit.co.id kalau sudah final deploy
+email user cara ubahnya:
+1. ubah di codenya
+2. replace all di gambar lup search sisi kiri 
+3. ubah juga emailnya di db nya
+
+TRUNCATE TABLE order_meals; (hapus table, id nya kembali ke 1)

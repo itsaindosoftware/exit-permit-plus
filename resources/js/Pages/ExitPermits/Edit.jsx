@@ -344,10 +344,6 @@ export default function Edit({
         return rawValue.toString().trim().toUpperCase() === 'Y' ? 'text-emerald-700' : 'text-slate-500';
     };
     const isRecapViewer = ['hr', 'admin'].includes(viewerRole);
-    const canSkipAttendanceFileForBusinessTrip = exitPermit.exit_type === 'business_trip'
-        && data.plan_check_in === false
-        && data.start_time
-        && data.start_time <= '08:00';
     const backRouteName = (canSubmitApproval || canVerifyAttendance) ? 'exit-permit-approvals.index' : 'exit-permits.index';
     const selectedCar = carOptions.find((car) => car.id === data.car_id);
     const selectedDriver = driverOptions.find((driver) => driver.id === data.driver_id);
@@ -432,18 +428,6 @@ export default function Edit({
                 {canArrangeCar && (
                     <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-medium text-indigo-900">
                         Car/driver arrangement task: select the license plate and driver name, then click save.
-                    </div>
-                )}
-
-                {canVerifyAttendance && (
-                    <div className="rounded-lg border border-violet-200 bg-violet-50 px-4 py-3 text-sm font-medium text-violet-900">
-                        {exitPermit.exit_type === 'business_trip' ? (
-                            canSkipAttendanceFileForBusinessTrip
-                                ? 'Sisca may verify manually because exit time is 08:00 or earlier and plan clock-in is No.'
-                                : 'Sisca must verify attendance using the shared attendance file or uploaded attendance file for business trips after 08:00 or when plan clock-in is not No.'
-                        ) : (
-                            'Sisca attendance verification: indicate whether the employee has a check-in. The system will route to Meal or Reimbursement automatically.'
-                        )}
                     </div>
                 )}
 
@@ -871,6 +855,9 @@ export default function Edit({
                                     <div className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
                                         <p><span className="font-semibold">License Plate:</span> {data.vehicle_plate || '-'}</p>
                                         <p><span className="font-semibold">Driver:</span> {data.driver_name || '-'}</p>
+                                        {exitPermit.order_car_time && (
+                                            <p><span className="font-semibold">Order Car Time:</span> {exitPermit.order_car_time}</p>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -958,33 +945,7 @@ export default function Edit({
 
                         {canSubmitApproval && <InputError message={errors.status} className="mt-2" />}
 
-                        {canVerifyAttendance && (
-                            <div>
-                                <label htmlFor="has_valid_checkin" className="text-sm font-semibold text-slate-800">Verify Check-in Attendance</label>
-                                <select
-                                    id="has_valid_checkin"
-                                    className={inputClass}
-                                    value={data.has_valid_checkin ? '1' : '0'}
-                                    onChange={(e) => setData('has_valid_checkin', e.target.value === '1')}
-                                >
-                                    <option value="1">Has check-in (meal path if returned to office)</option>
-                                    <option value="0">No check-in (reimbursement path)</option>
-                                </select>
-                                <InputError message={errors.has_valid_checkin} className="mt-2" />
-
-                                {exitPermit.exit_type === 'business_trip' && (
-                                    <p className="mt-2 text-xs text-slate-500">
-                                        For business trips, Sisca may manually verify check-in if attendance file is not available.
-                                    </p>
-                                )}
-
-                                {exitPermit.attendance_checked_at && (
-                                    <p className="mt-2 text-xs text-slate-500">
-                                        Last verified: {exitPermit.attendance_checked_at}
-                                    </p>
-                                )}
-                            </div>
-                        )}
+                        {/* tida usah pakai Verify Check-in Attendance karean datanya sudah diketahui dari plan clock in */}
 
                         <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900">
                             Please fill in properly, this document is attachment for gasoline, toll, parking and lunch reimbursement.
@@ -1040,7 +1001,7 @@ export default function Edit({
                                 {canArrangeCar
                                     ? 'Save Arrangement'
                                     : canVerifyAttendance
-                                            ? 'Check Exit Permit'
+                                        ? 'Check Exit Permit'
                                         : 'Update Exit Permit'}
                             </button>
                         )}

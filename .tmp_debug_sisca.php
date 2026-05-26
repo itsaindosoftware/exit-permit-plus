@@ -7,7 +7,7 @@ $kernel->bootstrap();
 use App\Models\User;
 use App\Models\ExitPermit;
 
-$sisca = User::query()->with('role')->whereRaw('LOWER(email) = ?', ['sisca@example.com'])->first();
+$sisca = User::query()->with('role')->whereRaw('LOWER(email) = ?', ['payroll.hr@example.com'])->first();
 
 echo 'sisca_found=' . ($sisca ? '1' : '0') . PHP_EOL;
 if ($sisca) {

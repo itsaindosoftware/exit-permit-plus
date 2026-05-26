@@ -92,7 +92,7 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'name' => 'Sisca Dewiyani',
-                'email' => 'sisca@example.com',
+                'email' => 'payroll.hr@example.com',
                 'role_code' => 'hr',
             ],
             // buat 1 akun admin setiap departemen untuk sebagi usernya
