@@ -862,6 +862,16 @@ class OrderMealController extends Controller
             'repeat_count' => ['nullable', 'integer', 'min:1', 'max:60'],
             'notes' => ['nullable', 'string'],
             'status' => $allowStatus ? ['nullable', Rule::in(['pending', 'approved', 'rejected'])] : ['nullable'],
+        ], [
+            'exit_permit_id.required' => 'Exit Permit is required.',
+            'meal_date.required' => 'Meal date is required.',
+            'quantity.required' => 'Base employee packs are required.',
+            'actual_quantity.required' => 'Actual meals are required.',
+            'visitor_count.required' => 'Additional visitor count is required.',
+            'day_shift_qty.required' => 'Day shift quantity is required.',
+            'overtime_day_shift_qty.required' => 'Overtime day shift quantity is required.',
+            'night_shift_qty.required' => 'Night shift quantity is required.',
+            'overtime_night_shift_qty.required' => 'Overtime night shift quantity is required.',
         ]);
 
         if (!$allowStatus) {

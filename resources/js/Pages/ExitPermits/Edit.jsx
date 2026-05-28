@@ -489,6 +489,7 @@ export default function Edit({
                                                     }}
                                                     placeholder="Name"
                                                 />
+                                                <InputError message={errors[`requestor_items.${index}.name`]} className="mt-1" />
                                             </td>
                                             <td className="border border-slate-300 px-2 py-1">
                                                 <input
@@ -549,6 +550,7 @@ export default function Edit({
                                                         onChange={(e) => updateRequestorRow(index, 'reimburs_lunch_box', e.target.value.toUpperCase())}
                                                         placeholder="Y / N"
                                                     />
+                                                    <InputError message={errors[`requestor_items.${index}.reimburs_lunch_box`]} className="mt-1" />
                                                 </td>
                                             )}
                                         </tr>

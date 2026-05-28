@@ -1352,7 +1352,7 @@ class ExitPermitController extends Controller
             'requestor_items.*.employee_id' => ['nullable', 'string', 'max:60'],
             'requestor_items.*.position' => ['nullable', 'string', 'max:120'],
             'requestor_items.*.department' => ['nullable', 'string', 'max:120'],
-            'requestor_items.*.reimburs_lunch_box' => ['nullable', 'string', 'max:10'],
+            'requestor_items.*.reimburs_lunch_box' => ['nullable', 'string', 'max:10', 'required_if:exit_type,business_trip,assignment,company'],
             'order_car' => ['nullable', 'boolean'],
             'cost_center_id' => ['nullable', 'integer', 'exists:cost_centers,id'],
             'car_id' => ['nullable', 'integer', 'exists:cars,id'],
@@ -1363,6 +1363,18 @@ class ExitPermitController extends Controller
             'notes' => ['nullable', 'string'],
             'attachment_photo' => ['nullable', 'image', 'max:2048'],
             'status' => $allowStatus ? ['nullable', Rule::in(['pending', 'approved', 'rejected'])] : ['nullable'],
+        ], [
+            'permit_date.required' => 'Permit date is required.',
+            'start_time.required' => 'Exit time is required.',
+            'end_time.required' => 'Planned return time is required.',
+            'exit_type.required' => 'Exit permit type is required.',
+            'destination.required_if' => 'Destination is required for company or assignment permits.',
+            'requestor_items.required' => 'Please add at least one requestor.',
+            'requestor_items.min' => 'Please add at least one requestor.',
+            'requestor_items.*.name.required' => 'Requestor name is required.',
+            'requestor_items.*.reimburs_lunch_box.required_if' => 'Reimburs Lunch Box (Y/N) is required for company or assignment permits.',
+            'reason.required' => 'Reason is required.',
+            'returned_to_office.required' => 'Please confirm return-to-office status.',
         ]);
 
         if (!$allowStatus) {

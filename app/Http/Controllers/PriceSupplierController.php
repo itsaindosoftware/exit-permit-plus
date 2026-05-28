@@ -118,6 +118,11 @@ class PriceSupplierController extends Controller
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'is_active' => ['nullable', 'boolean'],
             'notes' => ['nullable', 'string'],
+        ], [
+            'supplier_name.required' => 'Supplier name is required.',
+            'meal_unit_price.required' => 'Amount per portion is required.',
+            'local_tax_rate.required' => 'Local tax rate is required.',
+            'service_tax_rate.required' => 'Service tax rate is required.',
         ]);
     }
 

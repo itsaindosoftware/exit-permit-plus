@@ -370,6 +370,15 @@ class ReimbursementController extends Controller
             'documents.*.attachment_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:4096'],
             'description' => ['nullable', 'string'],
             'attachment_file' => [Rule::requiredIf($source === self::FORM_SOURCE_INTERNAL), 'nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:4096'],
+        ], [
+            'exit_permit_id.required' => 'Exit Permit is required.',
+            'request_date.required' => 'Payment date is required.',
+            'paid_to.required' => 'Paid to is required.',
+            'amount_order_meal.required' => 'Meal order cost is required.',
+            'amount_in_words.required' => 'Amount in words is required.',
+            'expense_type.required' => 'Expense type is required.',
+            'purpose.required' => 'Purpose is required.',
+            'attachment_file.required' => 'Payment receipt attachment is required for internal requests.',
         ]);
 
         $exitPermit = null;
@@ -523,6 +532,15 @@ class ReimbursementController extends Controller
                 'documents.*.attachment_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:4096'],
                 'description' => ['nullable', 'string'],
                 'attachment_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:4096'],
+            ], [
+                'request_date.required' => 'Payment date is required.',
+                'paid_to.required' => 'Paid to is required.',
+                'amount_order_meal.required' => 'Meal order cost is required.',
+                'amount_fuel.required' => 'Fuel cost is required.',
+                'amount_toll.required' => 'Toll cost is required.',
+                'amount_in_words.required' => 'Amount in words is required.',
+                'expense_type.required' => 'Expense type is required.',
+                'purpose.required' => 'Purpose is required.',
             ]);
 
             $amountOrderMeal = (int) $validated['amount_order_meal'];

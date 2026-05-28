@@ -192,6 +192,10 @@ class ScheduleCarController extends Controller
             'exit_permit_id' => ['required', 'integer', 'exists:exit_permits,id'],
             'car_id' => ['required', 'integer', 'exists:cars,id'],
             'driver_id' => ['required', 'integer', 'exists:drivers,id'],
+        ], [
+            'exit_permit_id.required' => 'Exit Permit is required.',
+            'car_id.required' => 'License plate is required.',
+            'driver_id.required' => 'Driver is required.',
         ]);
         $templateOverride = $this->validatedArrangeTemplate($request);
 
@@ -265,6 +269,9 @@ class ScheduleCarController extends Controller
         $validated = $request->validate([
             'car_id' => ['required', 'integer', 'exists:cars,id'],
             'driver_id' => ['required', 'integer', 'exists:drivers,id'],
+        ], [
+            'car_id.required' => 'License plate is required.',
+            'driver_id.required' => 'Driver is required.',
         ]);
         $templateOverride = $this->validatedArrangeTemplate($request);
 
