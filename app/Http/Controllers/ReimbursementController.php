@@ -345,6 +345,66 @@ class ReimbursementController extends Controller
         ]);
     }
 
+    public function show(Reimbursement $reimbursement): Response
+    {
+        $this->authorizeUser($reimbursement);
+        $reimbursement->load([
+            'user:id,name,email',
+            'exitPermit:id,permit_date,destination,cost_center_id',
+            'exitPermit.costCenter:id,name',
+            'managerApprover:id,name',
+            'mdApprover:id,name',
+            'ratnaSubmitter:id,name',
+            'accountingProcessor:id,name',
+            'documents',
+        ]);
+
+        return Inertia::render('Reimbursements/Show', [
+            'viewerRole' => request()->user()?->role?->code,
+            'approvalStage' => $this->approvalStageLabel($reimbursement),
+            'reimbursement' => [
+                'id' => $reimbursement->id,
+                'employee_name' => $reimbursement->user?->name,
+                'employee_email' => $reimbursement->user?->email,
+                'exit_permit_id' => $reimbursement->exit_permit_id,
+                'exit_permit_label' => $this->exitPermitLabel($reimbursement->exitPermit),
+                'request_date' => $this->normalizeDateForInput($reimbursement->request_date),
+                'paid_to' => $reimbursement->paid_to,
+                'amount_order_meal' => (int) ($reimbursement->amount_order_meal ?? 0),
+                'amount_fuel' => (int) ($reimbursement->amount_fuel ?? 0),
+                'amount_toll' => (int) ($reimbursement->amount_toll ?? 0),
+                'amount' => (int) ($reimbursement->amount ?? 0),
+                'amount_in_words' => $reimbursement->amount_in_words,
+                'cost_center_name' => $reimbursement->exitPermit?->costCenter?->name,
+                'expense_type' => $reimbursement->expense_type,
+                'purpose' => $reimbursement->purpose,
+                'ref_document' => $reimbursement->ref_document,
+                'description' => $reimbursement->description,
+                'status' => $reimbursement->status,
+                'status_label' => $this->approvalStageLabel($reimbursement),
+                'manager_approved_by_name' => $reimbursement->managerApprover?->name,
+                'manager_approved_at' => optional($reimbursement->manager_approved_at)->toDateTimeString(),
+                'md_approved_by_name' => $reimbursement->mdApprover?->name,
+                'md_approved_at' => optional($reimbursement->md_approved_at)->toDateTimeString(),
+                'ratna_submitted_by_name' => $reimbursement->ratnaSubmitter?->name,
+                'ratna_submitted_at' => optional($reimbursement->ratna_submitted_at)->toDateTimeString(),
+                'accounting_processed_by_name' => $reimbursement->accountingProcessor?->name,
+                'accounting_processed_at' => optional($reimbursement->accounting_processed_at)->toDateTimeString(),
+                'documents' => $reimbursement->documents
+                    ->map(fn(ReimbursementDocument $document) => [
+                        'id' => $document->id,
+                        'ref_document' => $document->ref_document,
+                        'attachment_original_name' => $document->attachment_original_name,
+                        'attachment_url' => $document->attachment_path
+                            ? route('reimbursement-documents.attachment', $document)
+                            : null,
+                    ])
+                    ->values()
+                    ->all(),
+            ],
+        ]);
+    }
+
     public function store(Request $request): RedirectResponse
     {
         $user = $request->user();

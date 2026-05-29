@@ -902,20 +902,15 @@ class ExitPermitController extends Controller
         }
 
         if (!$canApprove && !$canArrangeCar && $canVerifyAttendance) {
-            $validated = $this->validatedData($request);
-            unset($validated['attachment_photo']);
+            $validated = $this->validateAttendanceVerificationData($request, $exitPermit);
 
-            $exitPermit->fill($validated);
-            $exitPermit->syncBusinessRules();
-            $this->syncRequestorItems($exitPermit, $validated['requestor_items'] ?? []);
-
-            if ($attachmentPhoto) {
-                $this->replaceAttachment($exitPermit, $attachmentPhoto);
+            $attendanceRows = collect();
+            if ($request->file('attendance_file') instanceof UploadedFile) {
+                $attendanceRows = $this->loadAttendanceRows($request);
+                $hasValidCheckin = $this->syncRequestorAttendance($exitPermit, $attendanceRows);
+            } else {
+                $hasValidCheckin = (bool) $validated['has_valid_checkin'];
             }
-
-            $hasValidCheckin = $exitPermit->plan_check_in === null
-                ? false
-                : (bool) $exitPermit->plan_check_in;
 
             $exitPermit->attendance_checked_by = $user?->id;
             $exitPermit->attendance_checked_at = now();
@@ -923,6 +918,10 @@ class ExitPermitController extends Controller
             $exitPermit->post_md_path = $hasValidCheckin && (bool) $exitPermit->returned_to_office
                 ? ExitPermit::POST_MD_PATH_MEAL
                 : ExitPermit::POST_MD_PATH_REIMBURSEMENT;
+
+            if ($attachmentPhoto) {
+                $this->replaceAttachment($exitPermit, $attachmentPhoto);
+            }
 
             if (
                 $postMdPathBefore !== ExitPermit::POST_MD_PATH_REIMBURSEMENT

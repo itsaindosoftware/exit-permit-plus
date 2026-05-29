@@ -305,7 +305,11 @@ export default function Index({
                                                     </button>
                                                 )}
                                                 <Link
-                                                    href={route('reimbursements.edit', item.id)}
+                                                    href={
+                                                        (item.can_take_action && (isApprovalMode && (isMdViewer || isManagerViewer)))
+                                                            ? route('reimbursements.edit', item.id)
+                                                            : route('reimbursements.show', item.id)
+                                                    }
                                                     className="rounded bg-cyan-700 px-3 py-1 text-xs font-semibold text-white transition hover:bg-cyan-600"
                                                 >
                                                     {isApprovalMode && item.can_take_action && (isMdViewer || isManagerViewer)

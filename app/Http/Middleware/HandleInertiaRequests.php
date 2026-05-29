@@ -253,9 +253,9 @@ class HandleInertiaRequests extends Middleware
                 ->count();
         }
 
+        // ini  untuk atur logic  jumlah notifikasi hr sisca
         if ($roleCode === 'hr' && strtolower((string) $user->email) === 'payroll.hr@example.com') {
             return $query->where('status', 'approved')
-                ->where('exit_type', \App\Models\ExitPermit::EXIT_TYPE_BUSINESS_TRIP)
                 ->whereNotNull('md_approved_at')
                 ->whereNotNull('hr_verified_at')
                 ->whereNull('attendance_checked_at')

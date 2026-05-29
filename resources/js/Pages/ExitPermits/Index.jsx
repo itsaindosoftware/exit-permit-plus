@@ -367,6 +367,14 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
                                                         Approve
                                                     </button>
                                                 )}
+                                                {isApprovalMode && (
+                                                    <Link
+                                                        href={route('exit-permits.show', item.id)}
+                                                        className="inline-flex h-8 w-28 items-center justify-center rounded bg-slate-700 px-3 text-xs font-semibold text-white transition hover:bg-slate-600"
+                                                    >
+                                                        Detail
+                                                    </Link>
+                                                )}
                                                 <Link
                                                     href={route(
                                                         item.can_submit_approval && isApprovalActionViewer
