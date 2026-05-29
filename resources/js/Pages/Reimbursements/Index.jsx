@@ -66,6 +66,10 @@ export default function Index({
             ? 'Archived reimbursement approvals for managerial oversight and reporting.'
             : 'Manage your own reimbursements.');
 
+    const showCreateError = () => {
+        alert('Reimbursement can only be created after the Exit Permit has been checked by Sisca.');
+    };
+
     useEffect(() => {
         if (firstRender.current) {
             firstRender.current = false;
@@ -130,28 +134,39 @@ export default function Index({
                         </div>
                         {!isApprovalMode && !isHistoryMode && isRequester && (
                             <div className="flex flex-wrap items-center gap-2">
-                                <Link
-                                    href={`${route('reimbursements.create')}?source=internal`}
-                                    className={
-                                        `inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-semibold text-white transition ` +
-                                        (canCreateInternal
-                                            ? 'bg-slate-900 hover:bg-slate-700'
-                                            : 'bg-slate-700 hover:bg-slate-600')
-                                    }
-                                >
-                                    + Create New
-                                </Link>
-                                <Link
-                                    href={`${route('reimbursements.create')}?source=exit_permit`}
-                                    className={
-                                        `inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-semibold text-white transition ` +
-                                        (canCreateFromExitPermit
-                                            ? 'bg-cyan-700 hover:bg-cyan-600'
-                                            : 'pointer-events-none bg-cyan-400 opacity-70')
-                                    }
-                                >
-                                    + From Exit Permit
-                                </Link>
+                                {canCreateInternal ? (
+                                    <Link
+                                        href={`${route('reimbursements.create')}?source=internal`}
+                                        className="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
+                                    >
+                                        + Create New
+                                    </Link>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={showCreateError}
+                                        className="inline-flex items-center justify-center rounded-md bg-slate-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-600"
+                                    >
+                                        + Create New
+                                    </button>
+                                )}
+
+                                {canCreateFromExitPermit ? (
+                                    <Link
+                                        href={`${route('reimbursements.create')}?source=exit_permit`}
+                                        className="inline-flex items-center justify-center rounded-md bg-cyan-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-600"
+                                    >
+                                        + From Exit Permit
+                                    </Link>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={showCreateError}
+                                        className="inline-flex items-center justify-center rounded-md bg-cyan-400 px-4 py-2 text-sm font-semibold text-white opacity-70 transition"
+                                    >
+                                        + From Exit Permit
+                                    </button>
+                                )}
                             </div>
                         )}
                     </div>

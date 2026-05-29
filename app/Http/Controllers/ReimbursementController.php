@@ -323,7 +323,11 @@ class ReimbursementController extends Controller
         $user = request()->user();
 
         if (!$this->isRequesterRole($user)) {
-            abort(403);
+            return Inertia::render('Reimbursements/Create', [
+                'formSource' => self::FORM_SOURCE_INTERNAL,
+                'eligibleExitPermits' => [],
+                'blockedMessage' => 'Reimbursement can only be created after the Exit Permit has been checked by Sisca.',
+            ]);
         }
 
         $source = (string) request()->query('source', self::FORM_SOURCE_INTERNAL);
@@ -335,8 +339,11 @@ class ReimbursementController extends Controller
         $eligibleExitPermits = $this->eligibleExitPermitsForUser($user->id);
 
         if ($source === self::FORM_SOURCE_EXIT_PERMIT && count($eligibleExitPermits) === 0) {
-            return redirect()->route('reimbursements.index')
-                ->with('warning', 'Form From Exit Permit is only available after Exit Permit has been verified by Sisca.');
+            return Inertia::render('Reimbursements/Create', [
+                'formSource' => $source,
+                'eligibleExitPermits' => $eligibleExitPermits,
+                'blockedMessage' => 'Reimbursement can only be created after the Exit Permit has been checked by Sisca.',
+            ]);
         }
 
         return Inertia::render('Reimbursements/Create', [

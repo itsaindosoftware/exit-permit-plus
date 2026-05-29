@@ -95,7 +95,7 @@ const numberToEnglishWords = (value) => {
 const inputClass =
     'mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-cyan-600 focus:ring-2 focus:ring-cyan-200';
 
-export default function Create({ eligibleExitPermits, formSource = 'internal' }) {
+export default function Create({ eligibleExitPermits, formSource = 'internal', blockedMessage = '' }) {
     const isFromExitPermit = formSource === 'exit_permit';
     const firstPermitId = isFromExitPermit ? (eligibleExitPermits?.[0]?.id ?? '') : '';
     const selectedPermit = isFromExitPermit
@@ -215,6 +215,36 @@ export default function Create({ eligibleExitPermits, formSource = 'internal' })
         setData('attachment_file', file);
     };
 
+    if (blockedMessage) {
+        return (
+            <AuthenticatedLayout
+                header={
+                    <h2 className="text-xl font-bold leading-tight text-slate-800">
+                        {isFromExitPermit ? 'From Exit Permit' : 'Create New Reimbursement'}
+                    </h2>
+                }
+            >
+                <Head title={isFromExitPermit ? 'From Exit Permit' : 'Create New Reimbursement'} />
+
+                <div className="space-y-6">
+                    <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-rose-800 shadow-sm">
+                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-rose-700">Reimbursement Form</p>
+                        <p className="mt-2 text-sm font-medium">{blockedMessage}</p>
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                        <Link
+                            href={route('reimbursements.index')}
+                            className="inline-flex rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
+                        >
+                            Back to Reimbursement List
+                        </Link>
+                    </div>
+                </div>
+            </AuthenticatedLayout>
+        );
+    }
+
     return (
         <AuthenticatedLayout
             header={
@@ -234,6 +264,12 @@ export default function Create({ eligibleExitPermits, formSource = 'internal' })
                             : 'Use this form for internal reimbursement requests for ITSA items/needs outside the Exit Permit flow.'}
                     </p>
                 </div>
+
+                {blockedMessage && (
+                    <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                        {blockedMessage}
+                    </div>
+                )}
 
                 {isFromExitPermit && !eligibleExitPermits?.length && (
                     <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">

@@ -236,6 +236,18 @@ export default function AuthenticatedLayout({ header, children }) {
                             </div>
                         )}
 
+                        {flash?.warning && (
+                            <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                                {flash.warning}
+                            </div>
+                        )}
+
+                        {flash?.error && (
+                            <div className="mb-4 rounded-md border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+                                {flash.error}
+                            </div>
+                        )}
+
                         {children}
                     </div>
                 </main>

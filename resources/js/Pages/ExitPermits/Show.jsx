@@ -45,11 +45,15 @@ export default function Show({ exitPermit, approvalStage }) {
         { label: 'Exit Type', value: exitTypeLabel[exitPermit.exit_type] ?? exitPermit.exit_type },
         { label: 'Destination', value: exitPermit.destination },
         { label: 'Cost Center', value: exitPermit.cost_center_name ?? '-' },
+        { label: 'Returned To Office', value: exitPermit.returned_to_office ? 'Yes' : 'No' },
+        { label: 'Eligible Meal', value: exitPermit.eligible_for_meal ? 'Yes' : 'No' },
+    ];
+
+    const vehicleRows = [
+        { label: 'Cost Center', value: exitPermit.cost_center_name ?? '-' },
         { label: 'Order Car Time', value: exitPermit.order_car ? (exitPermit.order_car_time ?? '-') : 'Not arranged' },
         { label: 'License Plate (1.4)', value: exitPermit.vehicle_plate ?? 'Not set' },
         { label: 'Driver Name', value: exitPermit.driver_name ?? 'Not set' },
-        { label: 'Returned To Office', value: exitPermit.returned_to_office ? 'Yes' : 'No' },
-        { label: 'Eligible Meal', value: exitPermit.eligible_for_meal ? 'Yes' : 'No' },
     ];
 
     const noteRows = [
@@ -101,6 +105,11 @@ export default function Show({ exitPermit, approvalStage }) {
                 <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                     <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Reasons and Notes</p>
                     <DetailTable rows={noteRows} />
+                </div>
+
+                <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Order Car Arrangement</p>
+                    <DetailTable rows={vehicleRows} />
                 </div>
 
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">

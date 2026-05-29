@@ -58,6 +58,8 @@ class DashboardController extends Controller
         $canViewMealAnalytics = in_array($user?->role?->code, ['hr', 'manager', 'md', 'hr_manager', 'admin'], true);
         $canAccessExitPermitApproval = in_array($roleCode, ['manager', 'md', 'hr_manager', 'admin'], true)
             || ($roleCode === 'hr' && strtolower((string) $user?->email) === self::ATTENDANCE_VERIFIER_EMAIL);
+        $eligibleExitPermits = $this->eligibleExitPermitsForUser((int) ($user?->id ?? 0));
+        $canCreateReimbursement = $this->isRequesterRole($user) && count($eligibleExitPermits) > 0;
         $isDualApprovalUser = (bool) ($user?->isWidaMustikaSari() ?? false);
 
         $myExitPermits = ExitPermit::query()->where('user_id', $userId);
@@ -143,6 +145,8 @@ class DashboardController extends Controller
             'viewerRole' => $user?->role?->code,
             'canViewMealAnalytics' => $canViewMealAnalytics,
             'canAccessExitPermitApproval' => $canAccessExitPermitApproval,
+            'canCreateReimbursement' => $canCreateReimbursement,
+            'eligibleExitPermitCount' => count($eligibleExitPermits),
             'stats' => [
                 'exitPermitCount' => ExitPermit::query()
                     ->where('user_id', $userId)
@@ -278,5 +282,87 @@ class DashboardController extends Controller
         } catch (\Throwable) {
             return null;
         }
+    }
+
+    private function isRequesterRole($user): bool
+    {
+        $roleCode = $user?->role?->code;
+
+        if (!$roleCode) {
+            return true;
+        }
+
+        if (in_array($roleCode, ['user', 'manager', 'md', 'hr_manager', 'admin'], true)) {
+            return true;
+        }
+
+        return $roleCode === 'hr'
+            && strtolower((string) $user?->email) === self::ATTENDANCE_VERIFIER_EMAIL;
+    }
+
+    private function eligibleExitPermitsForUser(int $userId): array
+    {
+        return ExitPermit::query()
+            ->where('user_id', $userId)
+            ->where('status', 'approved')
+            ->whereNotNull('attendance_checked_at')
+            ->where('has_valid_checkin', true)
+            ->whereDoesntHave('reimbursements', function ($query) {
+                $query->where('status', Reimbursement::STATUS_FINISHED);
+            })
+            ->latest('permit_date')
+            ->with(['user:id,name', 'requestors:id,exit_permit_id,name,row_number,reimburs_lunch_box', 'costCenter:id,name'])
+            ->get(['id', 'user_id', 'permit_date', 'destination', 'reimbursement_amount', 'cost_center_id'])
+            ->map(function (ExitPermit $exitPermit): array {
+                $requestorNames = $exitPermit->requestors
+                    ->filter(fn($requestor) => strtoupper(trim((string) ($requestor->reimburs_lunch_box ?? 'N'))) === 'Y')
+                    ->sortBy('row_number')
+                    ->pluck('name')
+                    ->filter()
+                    ->values()
+                    ->all();
+
+                $requestorCount = count($requestorNames);
+                $unitAmount = (int) ($exitPermit->reimbursement_amount ?? 0);
+
+                if ($unitAmount <= 0) {
+                    $unitAmount = 12000;
+                }
+
+                $namePreview = implode(', ', array_slice($requestorNames, 0, 8));
+                if ($requestorCount > 8) {
+                    $namePreview .= ', ...';
+                }
+
+                return [
+                    'id' => $exitPermit->id,
+                    'label' => sprintf('Exit Permit #%d - %s', $exitPermit->id, $exitPermit->destination ?? '-'),
+                    'permit_date' => $exitPermit->permit_date ? (string) $exitPermit->permit_date : null,
+                    'cost_center_name' => $exitPermit->costCenter?->name,
+                    'requestor_count' => $requestorCount,
+                    'requestor_names' => $requestorNames,
+                    'unit_amount' => $unitAmount,
+                    'suggested_amount' => $unitAmount * $requestorCount,
+                    'amount_order_meal_default' => $unitAmount * $requestorCount,
+                    'amount_fuel_default' => 0,
+                    'amount_toll_default' => 0,
+                    'paid_to_default' => $exitPermit->user?->name ?? '',
+                    'expense_type_default' => 'Reimbursement Exit Permit',
+                    'purpose_default' => sprintf(
+                        'Lunch box conversion for %d requestor(s) (Exit Permit #%d). Requestors: %s',
+                        $requestorCount,
+                        $exitPermit->id,
+                        $namePreview !== '' ? $namePreview : '-'
+                    ),
+                    'ref_document_default' => 'AUTO-LUNCH-EP-' . $exitPermit->id,
+                    'description_default' => sprintf(
+                        'Lunch box allowance converted to reimbursement for %d requestor(s) x Rp %d.',
+                        $requestorCount,
+                        $unitAmount
+                    ),
+                ];
+            })
+            ->values()
+            ->all();
     }
 }

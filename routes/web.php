@@ -53,6 +53,7 @@ Route::middleware('auth')->group(function () {
     Route::get('reimbursement-history', [ReimbursementController::class, 'historyIndex'])
         ->name('reimbursement-history.index');
     Route::get('reimbursements/{reimbursement}', [ReimbursementController::class, 'show'])
+        ->whereNumber('reimbursement')
         ->name('reimbursements.show');
     Route::resource('exit-permits', ExitPermitController::class);
     Route::resource('price-suppliers', PriceSupplierController::class);

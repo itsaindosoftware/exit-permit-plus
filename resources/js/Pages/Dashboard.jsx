@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 const currencyFormatter = new Intl.NumberFormat('en-US');
@@ -42,6 +42,8 @@ export default function Dashboard({
     recentExitPermits = [],
     canViewMealAnalytics = false,
     canAccessExitPermitApproval = false,
+    canCreateReimbursement = false,
+    eligibleExitPermitCount = 0,
 }) {
     const [hoveredBar, setHoveredBar] = useState(null);
     const chartWidth = 760;
@@ -180,12 +182,22 @@ export default function Dashboard({
                             >
                                 + Create Exit Permit
                             </Link>
-                            <Link
-                                href={route('reimbursements.create')}
-                                className="block rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                            >
-                                + Create Reimbursement
-                            </Link>
+                            {canCreateReimbursement ? (
+                                <Link
+                                    href={route('reimbursements.create', { source: 'exit_permit' })}
+                                    className="block rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                                >
+                                    + Create Reimbursement
+                                </Link>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={() => alert('Reimbursement can only be created after the Exit Permit has been checked by Sisca.')}
+                                    className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                                >
+                                    + Create Reimbursement
+                                </button>
+                            )}
                             <Link
                                 href={route('exit-permits.index')}
                                 className="block rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
