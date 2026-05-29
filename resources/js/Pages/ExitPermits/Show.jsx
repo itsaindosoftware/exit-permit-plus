@@ -45,6 +45,7 @@ export default function Show({ exitPermit, approvalStage }) {
         { label: 'Exit Type', value: exitTypeLabel[exitPermit.exit_type] ?? exitPermit.exit_type },
         { label: 'Destination', value: exitPermit.destination },
         { label: 'Cost Center', value: exitPermit.cost_center_name ?? '-' },
+        { label: 'Order Car Time', value: exitPermit.order_car ? (exitPermit.order_car_time ?? '-') : 'Not arranged' },
         { label: 'License Plate (1.4)', value: exitPermit.vehicle_plate ?? 'Not set' },
         { label: 'Driver Name', value: exitPermit.driver_name ?? 'Not set' },
         { label: 'Returned To Office', value: exitPermit.returned_to_office ? 'Yes' : 'No' },

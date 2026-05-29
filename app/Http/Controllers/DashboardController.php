@@ -13,7 +13,9 @@ class DashboardController extends Controller
 {
     private const ATTENDANCE_VERIFIER_EMAIL = 'payroll.hr@example.com';
 
+    // set hak akses approval manager berdasarkan pembagian scope yang sudah ditentukan untuk menghindari terlalu banyak data yang harus diproses di level aplikasi disini
     private const MANAGER_APPROVAL_SCOPES = [
+        // pak idham bisa approve produksi
         '6310814' => [
             'creators' => ['Indriani', 'Admin Prod'],
             'departments' => [
@@ -36,6 +38,12 @@ class DashboardController extends Controller
         '1150808' => [
             'creators' => ['Dede Susilawati'],
             'departments' => ['HR', 'HR & SYD IT', 'HR, GA & LEGAL', 'SYD & IT'],
+        ],
+        '9280125' => [
+            'creators' => ['Rydha Ramlan Gunawan'],
+            'departments' => [
+                'Maintenance Dies',
+            ],
         ],
     ];
 

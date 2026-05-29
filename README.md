@@ -7,6 +7,81 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## API Approval Endpoints
+
+All approval endpoints require `Authorization: Bearer {token}` from the `/api/login` response.
+
+### Exit Permit Approval
+
+**Endpoint**
+
+`POST /api/exit-permits/{exitPermit}/approval`
+
+**Request Body**
+
+- `status` (optional): `approved` or `rejected` (default: `approved`).
+
+**Example Request**
+
+```bash
+curl -X POST "http://localhost/api/exit-permits/123/approval" \
+	-H "Authorization: Bearer YOUR_TOKEN" \
+	-H "Content-Type: application/json" \
+	-d '{"status":"approved"}'
+```
+
+**Example Success Response**
+
+```json
+{
+    "message": "Exit permit approval has been processed.",
+    "data": {
+        "id": 123,
+        "status": "pending",
+        "manager_approved_at": "2026-05-29 10:20:30",
+        "md_approved_at": null,
+        "hr_verified_at": null
+    }
+}
+```
+
+### Reimbursement Approval
+
+**Endpoint**
+
+`POST /api/reimbursements/{reimbursement}/approval`
+
+**Request Body**
+
+- Manager/MD: `status` = `approved` or `rejected` (default: `approved`).
+- Ratna: `status` = `submitted_to_accounting` (default: `submitted_to_accounting`).
+- Accounting: `status` = `finished` (default: `finished`).
+
+**Example Request (Manager Approval)**
+
+```bash
+curl -X POST "http://localhost/api/reimbursements/456/approval" \
+	-H "Authorization: Bearer YOUR_TOKEN" \
+	-H "Content-Type: application/json" \
+	-d '{"status":"approved"}'
+```
+
+**Example Success Response**
+
+```json
+{
+    "message": "Manager approval has been processed.",
+    "data": {
+        "id": 456,
+        "status": "pending_md",
+        "manager_approved_at": "2026-05-29 10:25:30",
+        "md_approved_at": null,
+        "ratna_submitted_at": null,
+        "accounting_processed_at": null
+    }
+}
+```
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

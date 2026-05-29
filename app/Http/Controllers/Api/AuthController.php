@@ -16,6 +16,7 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
             'device_id' => ['required', 'string', 'max:191'],
             'device_name' => ['nullable', 'string', 'max:100'],
+            'fcm_token' => ['nullable', 'string', 'max:255'],
         ]);
 
         $rawNik = trim((string) $validated['nik']);
@@ -50,6 +51,13 @@ class AuthController extends Controller
             ], 403);
         }
 
+        $fcmToken = trim((string) ($validated['fcm_token'] ?? ''));
+
+        if ($fcmToken !== '' && $fcmToken !== (string) $user->fcm_token) {
+            $user->fcm_token = $fcmToken;
+            $user->save();
+        }
+
         // Keep one active token per account so relogin from the same device rotates token cleanly.
         $user->tokens()->delete();
 
@@ -66,7 +74,31 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'role' => $user->role?->code,
                 'role_name' => $user->role?->name,
+                'has_fcm_token' => filled($user->fcm_token),
             ],
+        ]);
+    }
+
+    public function updateFcmToken(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'fcm_token' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Unauthenticated.',
+            ], 401);
+        }
+
+        $user->fcm_token = trim((string) ($validated['fcm_token'] ?? '')) ?: null;
+        $user->save();
+
+        return response()->json([
+            'message' => 'FCM token updated.',
+            'has_fcm_token' => filled($user->fcm_token),
         ]);
     }
 

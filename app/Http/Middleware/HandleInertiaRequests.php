@@ -112,6 +112,12 @@ class HandleInertiaRequests extends Middleware
             'creators' => ['Dede Susilawati'],
             'departments' => ['HR', 'HR & SYD IT', 'HR, GA & LEGAL', 'SYD & IT'],
         ],
+        '9280125' => [
+            'creators' => ['Rydha Ramlan Gunawan'],
+            'departments' => [
+                'Maintenance Dies',
+            ],
+        ],
     ];
 
     private function applyManagerApprovalScope($query, $user): void

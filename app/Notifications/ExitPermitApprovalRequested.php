@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\ExitPermit;
+use App\Notifications\Channels\FirebasePushChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -17,11 +18,13 @@ class ExitPermitApprovalRequested extends Notification
 
     public function via(object $notifiable): array
     {
+        $channels = ['database', FirebasePushChannel::class];
+
         if (in_array($this->stage, ['manager', 'md', 'hr_manager'], true)) {
-            return ['database', 'mail'];
+            $channels[] = 'mail';
         }
 
-        return ['database'];
+        return $channels;
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -90,6 +93,22 @@ class ExitPermitApprovalRequested extends Notification
             'message' => $message,
             'exit_permit_id' => $this->exitPermit->id,
             'permit_date' => $this->exitPermit->permit_date ? (string) $this->exitPermit->permit_date : null,
+        ];
+    }
+
+    public function toFcm(object $notifiable): array
+    {
+        $payload = $this->toArray($notifiable);
+
+        return [
+            'title' => (string) ($payload['title'] ?? 'Exit Permit Approval'),
+            'body' => (string) ($payload['message'] ?? 'There is an Exit Permit request that requires action.'),
+            'data' => [
+                'type' => 'exit_permit_approval',
+                'stage' => $this->stage,
+                'exit_permit_id' => (string) $this->exitPermit->id,
+                'target' => 'exit-permit-approvals',
+            ],
         ];
     }
 }

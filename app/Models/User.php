@@ -31,6 +31,7 @@ class User extends Authenticatable
         'nik',
         'email',
         'profile_photo_path',
+        'fcm_token',
         'password',
         'role_id',
         'secondary_role_id',
@@ -45,7 +46,16 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'login_device_hash',
+        'fcm_token',
     ];
+
+    public function routeNotificationForFcm(): ?string
+    {
+        $token = trim((string) $this->fcm_token);
+
+        return $token !== '' ? $token : null;
+    }
 
     /**
      * Get the attributes that should be cast.

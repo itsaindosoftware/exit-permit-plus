@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\Reimbursement;
+use App\Notifications\Channels\FirebasePushChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -17,7 +18,7 @@ class ReimbursementApprovalRequested extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['database', 'mail'];
+        return ['database', 'mail', FirebasePushChannel::class];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -66,6 +67,22 @@ class ReimbursementApprovalRequested extends Notification
             'message' => $message,
             'reimbursement_id' => $this->reimbursement->id,
             'request_date' => $this->reimbursement->request_date ? (string) $this->reimbursement->request_date : null,
+        ];
+    }
+
+    public function toFcm(object $notifiable): array
+    {
+        $payload = $this->toArray($notifiable);
+
+        return [
+            'title' => (string) ($payload['title'] ?? 'Reimbursement Approval'),
+            'body' => (string) ($payload['message'] ?? 'A reimbursement request requires action.'),
+            'data' => [
+                'type' => 'reimbursement_approval',
+                'stage' => $this->stage,
+                'reimbursement_id' => (string) $this->reimbursement->id,
+                'target' => 'reimbursement-approvals',
+            ],
         ];
     }
 }

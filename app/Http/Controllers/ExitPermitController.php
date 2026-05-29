@@ -70,6 +70,12 @@ class ExitPermitController extends Controller
             'creators' => ['Dede Susilawati'],
             'departments' => ['HR', 'HR & SYD IT', 'HR, GA & LEGAL', 'SYD & IT'],
         ],
+        '9280125' => [
+            'creators' => ['Rydha Ramlan Gunawan'],
+            'departments' => [
+                'Maintenance Dies',
+            ],
+        ],
     ];
 
     public function __construct(
@@ -518,6 +524,7 @@ class ExitPermitController extends Controller
                 'destination' => $exitPermit->destination,
                 'exit_type' => $exitPermit->exit_type,
                 'order_car' => (bool) $exitPermit->order_car,
+                'order_car_time' => $this->resolveOrderCarTime($exitPermit),
                 'cost_center_name' => $exitPermit->costCenter?->name,
                 'vehicle_plate' => $exitPermit->vehicle_plate,
                 'driver_name' => $exitPermit->driver_name,
