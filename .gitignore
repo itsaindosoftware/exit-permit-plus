@@ -22,3 +22,7 @@ yarn-error.log
 /.vscode
 /.zed
 vite.config.js
+
+# Ignore Firebase service account keys
+/storage/keys/*.json
+*.firebase-service-account.json

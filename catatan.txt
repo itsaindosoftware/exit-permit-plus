@@ -51,3 +51,5 @@ email user cara ubahnya:
 3. ubah juga emailnya di db nya
 
 TRUNCATE TABLE order_meals; (hapus table, id nya kembali ke 1)
+
+gitignore utk memasukkan nama file / direktori yang tidak ingin ikut ke push github
