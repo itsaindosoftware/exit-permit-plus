@@ -37,6 +37,7 @@ return [
 
     'firebase' => [
         'server_key' => env('FIREBASE_SERVER_KEY'),
+        'service_account' => env('FIREBASE_SERVICE_ACCOUNT'),
     ],
 
 ];

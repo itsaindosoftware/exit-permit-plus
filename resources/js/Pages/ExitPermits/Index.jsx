@@ -62,8 +62,18 @@ export default function Index({ exitPermits, canCreate, pageMode = 'personal', f
             ? 'Approved exit permit archive for managerial oversight and reporting.'
             : 'User menu to create and monitor Exit Permit requests.');
 
-    const handleDelete = (id) => {
-        if (confirm('Delete this exit permit?')) {
+    const handleDelete = async (id) => {
+        const result = await Swal.fire({
+            title: 'Delete this exit permit?',
+            text: 'This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true,
+        });
+
+        if (result.isConfirmed) {
             router.delete(route('exit-permits.destroy', id));
         }
     };

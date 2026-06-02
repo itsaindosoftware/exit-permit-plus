@@ -2,11 +2,11 @@
 
 namespace App\Notifications\Channels;
 
-use App\Services\FirebasePushService;
+use App\Services\FirebaseMessagingService;
 
 class FirebasePushChannel
 {
-    public function __construct(private readonly FirebasePushService $firebasePushService)
+    public function __construct(private readonly FirebaseMessagingService $firebaseMessagingService)
     {
     }
 
@@ -29,6 +29,12 @@ class FirebasePushChannel
         $body = trim((string) ($payload['body'] ?? 'You have a new notification.'));
         $data = is_array($payload['data'] ?? null) ? $payload['data'] : [];
 
-        $this->firebasePushService->sendToToken($token, $title, $body, $data);
+        // Use HTTP v1 FirebaseMessagingService which requires a service account JSON
+        // The service will log on failure; we don't need the return value here.
+        try {
+            $this->firebaseMessagingService->sendToToken($token, $title, $body, $data);
+        } catch (\Throwable $e) {
+            // Let the service log errors; swallow to avoid breaking notification flow
+        }
     }
 }

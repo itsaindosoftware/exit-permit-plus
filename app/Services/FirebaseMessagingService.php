@@ -14,7 +14,11 @@ class FirebaseMessagingService
 
     public function __construct()
     {
-        $this->serviceAccountPath = env('FIREBASE_SERVICE_ACCOUNT', env('GOOGLE_APPLICATION_CREDENTIALS', ''));
+        $this->serviceAccountPath = config('services.firebase.service_account')
+            ?: env('FIREBASE_SERVICE_ACCOUNT')
+            ?: env('GOOGLE_APPLICATION_CREDENTIALS')
+            ?: getenv('FIREBASE_SERVICE_ACCOUNT')
+            ?: ($_ENV['FIREBASE_SERVICE_ACCOUNT'] ?? $_SERVER['FIREBASE_SERVICE_ACCOUNT'] ?? null);
 
         if (!$this->serviceAccountPath || !file_exists($this->serviceAccountPath)) {
             throw new \RuntimeException('Firebase service account JSON not configured or file not found. Set FIREBASE_SERVICE_ACCOUNT in .env');
@@ -69,7 +73,8 @@ class FirebaseMessagingService
             $payload['message']['data'] = array_map(fn($v) => is_scalar($v) ? (string) $v : json_encode($v), $data);
         }
 
-        $response = Http::withToken($accessToken)
+        $response = $this->http()
+            ->withToken($accessToken)
             ->acceptJson()
             ->post($url, $payload);
 
@@ -105,7 +110,7 @@ class FirebaseMessagingService
 
         $jwt = $this->encodeJwt($header, $claimSet, $privateKey);
 
-        $response = Http::asForm()->post('https://oauth2.googleapis.com/token', [
+        $response = $this->http()->asForm()->post('https://oauth2.googleapis.com/token', [
             'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
             'assertion' => $jwt,
         ]);
@@ -126,6 +131,17 @@ class FirebaseMessagingService
         $this->accessTokenExpiry = $now + (int) ($data['expires_in'] ?? 3600);
 
         return $this->accessToken;
+    }
+
+    private function http()
+    {
+        $options = [];
+
+        if (defined('CURLOPT_IPRESOLVE') && defined('CURL_IPRESOLVE_V4')) {
+            $options['curl'][CURLOPT_IPRESOLVE] = CURL_IPRESOLVE_V4;
+        }
+
+        return Http::withOptions($options);
     }
 
     private function base64UrlEncode(string $input): string
