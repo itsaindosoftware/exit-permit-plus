@@ -326,7 +326,7 @@ class ReimbursementController extends Controller
             return Inertia::render('Reimbursements/Create', [
                 'formSource' => self::FORM_SOURCE_INTERNAL,
                 'eligibleExitPermits' => [],
-                'blockedMessage' => 'Reimbursement can only be created after the Exit Permit has been checked by Sisca.',
+                'blockedMessage' => 'Reimbursement can only be created after the Exit Permit has been acknowledged by Sisca (HRD).',
             ]);
         }
 
@@ -342,7 +342,7 @@ class ReimbursementController extends Controller
             return Inertia::render('Reimbursements/Create', [
                 'formSource' => $source,
                 'eligibleExitPermits' => $eligibleExitPermits,
-                'blockedMessage' => 'Reimbursement can only be created after the Exit Permit has been checked by Sisca.',
+                'blockedMessage' => 'Reimbursement can only be created after the Exit Permit has been acknowledged by Sisca (HRD).',
             ]);
         }
 

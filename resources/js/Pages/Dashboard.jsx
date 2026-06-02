@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
+import Swal from 'sweetalert2';
 
 const currencyFormatter = new Intl.NumberFormat('en-US');
 const shortDateFormatter = new Intl.DateTimeFormat('en-US', {
@@ -55,6 +56,21 @@ export default function Dashboard({
     const groupWidth = mealTrend.length > 0 ? plotWidth / mealTrend.length : 0;
     const barWidth = Math.min(18, groupWidth / 4);
     const barGap = 4;
+    const canStartReimbursement = canCreateReimbursement && eligibleExitPermitCount > 0;
+
+    const handleCreateReimbursement = () => {
+        if (!canStartReimbursement) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Reimbursement not available',
+                text: 'No Exit Permit with status Acknowledged by Sisca (HRD) is available for reimbursement.',
+                confirmButtonText: 'OK',
+            });
+            return;
+        }
+
+        router.visit(route('reimbursements.create', { source: 'exit_permit' }));
+    };
 
     return (
         <AuthenticatedLayout
@@ -182,22 +198,13 @@ export default function Dashboard({
                             >
                                 + Create Exit Permit
                             </Link>
-                            {canCreateReimbursement ? (
-                                <Link
-                                    href={route('reimbursements.create', { source: 'exit_permit' })}
-                                    className="block rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                                >
-                                    + Create Reimbursement
-                                </Link>
-                            ) : (
-                                <button
-                                    type="button"
-                                    onClick={() => alert('Reimbursement can only be created after the Exit Permit has been checked by Sisca.')}
-                                    className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                                >
-                                    + Create Reimbursement
-                                </button>
-                            )}
+                            <button
+                                type="button"
+                                onClick={handleCreateReimbursement}
+                                className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                            >
+                                + Create Reimbursement
+                            </button>
                             <Link
                                 href={route('exit-permits.index')}
                                 className="block rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"

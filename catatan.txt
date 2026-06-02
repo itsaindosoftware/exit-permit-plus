@@ -53,3 +53,11 @@ email user cara ubahnya:
 TRUNCATE TABLE order_meals; (hapus table, id nya kembali ke 1)
 
 gitignore utk memasukkan nama file / direktori yang tidak ingin ikut ke push github
+
+Supaya bisa memastikan penyebabnya, bisa bantu info ini?
+
+NIK akun Restu (untuk lihat apakah masuk MANAGER_APPROVAL_SCOPES).
+Status Exit Permit Alvin (apakah masih pending dan manager_approved_at masih kosong).
+Department requestor di Exit Permit Alvin (apakah semua ada di list departemen scope Restu).
+
+No Exit Permit with status Acknowledged by Sisca (HRD) is available for reimbursement.

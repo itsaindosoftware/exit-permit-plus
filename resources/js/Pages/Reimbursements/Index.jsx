@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
+import Swal from 'sweetalert2';
 
 const currencyFormatter = new Intl.NumberFormat('en-US');
 
@@ -67,7 +68,12 @@ export default function Index({
             : 'Manage your own reimbursements.');
 
     const showCreateError = () => {
-        alert('Reimbursement can only be created after the Exit Permit has been checked by Sisca.');
+        Swal.fire({
+            icon: 'warning',
+            title: 'Reimbursement not available',
+            text: 'No Exit Permit with status Acknowledged by Sisca (HRD) is available for reimbursement.',
+            confirmButtonText: 'OK',
+        });
     };
 
     useEffect(() => {
@@ -174,7 +180,7 @@ export default function Index({
 
                 {!isApprovalMode && isRequester && (eligibleExitPermits?.length ?? 0) === 0 && (
                     <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                        No Exit Permit with status Checked By HR: Sisca is available for reimbursement.
+                        No Exit Permit with status Acknowledged by Sisca (HRD) is available for reimbursement.
                     </div>
                 )}
 
