@@ -59,6 +59,36 @@ class ExitPermitApprovalController extends Controller
 
     public function submit(Request $request, ExitPermit $exitPermit): JsonResponse
     {
+        return $this->processApproval($request, $exitPermit, $this->validateStatus($request));
+    }
+
+    public function approve(Request $request, ExitPermit $exitPermit): JsonResponse
+    {
+        return $this->processApproval($request, $exitPermit, 'approved');
+    }
+
+    public function reject(Request $request, ExitPermit $exitPermit): JsonResponse
+    {
+        return $this->processApproval($request, $exitPermit, 'rejected');
+    }
+
+    public function show(Request $request, ExitPermit $exitPermit): JsonResponse
+    {
+        $user = $request->user();
+
+        if (!$this->canViewExitPermit($exitPermit, $user)) {
+            return response()->json([
+                'message' => 'You do not have access to view this exit permit.',
+            ], 403);
+        }
+
+        return response()->json([
+            'data' => $this->exitPermitPayload($exitPermit),
+        ]);
+    }
+
+    private function processApproval(Request $request, ExitPermit $exitPermit, string $status): JsonResponse
+    {
         $user = $request->user();
 
         if (!$this->canSubmitApproval($exitPermit, $user)) {
@@ -67,7 +97,6 @@ class ExitPermitApprovalController extends Controller
             ], 403);
         }
 
-        $status = $this->validateStatus($request);
         $roleCode = $user?->role?->code;
         $isDualApprovalUser = (bool) ($user?->isWidaMustikaSari() ?? false);
 
@@ -198,10 +227,6 @@ class ExitPermitApprovalController extends Controller
             }
         }
 
-        if ($roleCode === 'admin') {
-            $this->applyAdminApproval($exitPermit, $user, $status);
-        }
-
         if (!$exitPermit->isDirty()) {
             return response()->json([
                 'message' => 'No approval changes were applied.',
@@ -212,13 +237,7 @@ class ExitPermitApprovalController extends Controller
 
         return response()->json([
             'message' => 'Exit permit approval has been processed.',
-            'data' => [
-                'id' => $exitPermit->id,
-                'status' => $exitPermit->status,
-                'manager_approved_at' => optional($exitPermit->manager_approved_at)->toDateTimeString(),
-                'md_approved_at' => optional($exitPermit->md_approved_at)->toDateTimeString(),
-                'hr_verified_at' => optional($exitPermit->hr_verified_at)->toDateTimeString(),
-            ],
+            'data' => $this->exitPermitPayload($exitPermit),
         ]);
     }
 
@@ -409,6 +428,12 @@ class ExitPermitApprovalController extends Controller
 
     private function canSubmitApproval(ExitPermit $exitPermit, $user): bool
     {
+        $roleCode = $user?->role?->code;
+
+        if (!in_array($roleCode, ['manager', 'md', 'hr_manager'], true)) {
+            return false;
+        }
+
         if (
             $user?->isWidaMustikaSari()
             && $exitPermit->status === 'pending'
@@ -419,19 +444,19 @@ class ExitPermitApprovalController extends Controller
             return true;
         }
 
-        if ($user?->role?->code === 'manager') {
+        if ($roleCode === 'manager') {
             return $exitPermit->status === 'pending'
                 && !$exitPermit->manager_approved_at
                 && $this->canUserApproveManagerStage($exitPermit, $user);
         }
 
-        if ($user?->role?->code === 'md') {
+        if ($roleCode === 'md') {
             return $exitPermit->status === 'pending'
                 && (bool) $exitPermit->manager_approved_at
                 && !$exitPermit->md_approved_at;
         }
 
-        if ($user?->role?->code === 'hr_manager') {
+        if ($roleCode === 'hr_manager') {
             return $exitPermit->status === 'pending'
                 && (bool) $exitPermit->manager_approved_at
                 && (bool) $exitPermit->md_approved_at
@@ -439,16 +464,54 @@ class ExitPermitApprovalController extends Controller
                 && (!$exitPermit->hr_approver_id || $exitPermit->hr_approver_id === $user?->id);
         }
 
-        if ($user?->role?->code === 'admin') {
-            return $exitPermit->status === 'pending'
-                && (
-                    !$exitPermit->manager_approved_at
-                    || !$exitPermit->md_approved_at
-                    || !$exitPermit->hr_verified_at
-                );
+        return false;
+    }
+
+    private function exitPermitPayload(ExitPermit $exitPermit): array
+    {
+        $exitPermit->loadMissing([
+            'user:id,name,nik',
+            'requestors:id,exit_permit_id,name,department',
+        ]);
+
+        return [
+            'id' => $exitPermit->id,
+            'status' => $exitPermit->status,
+            'permit_date' => $exitPermit->permit_date ? (string) $exitPermit->permit_date : null,
+            'destination' => $exitPermit->destination,
+            'exit_type' => $exitPermit->exit_type,
+            'manager_approved_at' => optional($exitPermit->manager_approved_at)->toDateTimeString(),
+            'md_approved_at' => optional($exitPermit->md_approved_at)->toDateTimeString(),
+            'hr_verified_at' => optional($exitPermit->hr_verified_at)->toDateTimeString(),
+            'user' => [
+                'id' => $exitPermit->user?->id,
+                'name' => $exitPermit->user?->name,
+                'nik' => $exitPermit->user?->nik,
+            ],
+            'requestors' => $exitPermit->requestors
+                ->map(fn($requestor) => [
+                    'id' => $requestor->id,
+                    'name' => $requestor->name,
+                    'department' => $requestor->department,
+                ])
+                ->values()
+                ->all(),
+        ];
+    }
+
+    private function canViewExitPermit(ExitPermit $exitPermit, $user): bool
+    {
+        $roleCode = $user?->role?->code;
+
+        if (!in_array($roleCode, ['manager', 'md', 'hr_manager'], true)) {
+            return false;
         }
 
-        return false;
+        if ($roleCode === 'manager') {
+            return $this->canUserApproveManagerStage($exitPermit, $user);
+        }
+
+        return true;
     }
 
     private function canUserApproveManagerStage(ExitPermit $exitPermit, $user): bool

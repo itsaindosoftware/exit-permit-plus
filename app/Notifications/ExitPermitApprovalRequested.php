@@ -108,6 +108,8 @@ class ExitPermitApprovalRequested extends Notification
                 'stage' => $this->stage,
                 'exit_permit_id' => (string) $this->exitPermit->id,
                 'target' => 'exit-permit-approvals',
+                'screen' => 'exit-permit-detail',
+                'detail_api' => '/api/exit-permits/' . $this->exitPermit->id,
             ],
         ];
     }
