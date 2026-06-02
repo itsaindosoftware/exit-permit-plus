@@ -61,3 +61,23 @@ Status Exit Permit Alvin (apakah masih pending dan manager_approved_at masih kos
 Department requestor di Exit Permit Alvin (apakah semua ada di list departemen scope Restu).
 
 No Exit Permit with status Acknowledged by Sisca (HRD) is available for reimbursement.
+
+ALur notifikasi (ke mobile, email) yang reimbursement:
+Create.jsx form submit
+    ↓
+ReimbursementController::store()
+    ↓
+Reimbursement::create() dengan status PENDING_MANAGER
+    ↓
+notifyReimbursementApproverOnce($manager, $reimbursement, 'manager')
+    ↓
+ReimbursementApprovalRequested::notify()
+    ↓
+via() → ['database', 'mail', FirebasePushChannel::class] ✓
+    ↓
+toFcm() → mengirim push ke device manager
+    {
+        type: 'reimbursement_approval',
+        screen: 'reimbursement-approvals',
+        detail_api: '/api/reimbursements/{id}'
+    }

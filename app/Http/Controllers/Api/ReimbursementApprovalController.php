@@ -52,6 +52,10 @@ class ReimbursementApprovalController extends Controller
     {
         $user = $request->user();
 
+        if (!$this->isManagerOrMd($user)) {
+            abort(403);
+        }
+
         if ($this->canApproveManager($reimbursement, $user)) {
             $status = $this->validateStatus($request, ['approved', 'rejected']);
             $reimbursement->manager_approved_by = $user?->id;
@@ -191,6 +195,11 @@ class ReimbursementApprovalController extends Controller
             && $this->canUserApproveManagerStage($reimbursement, $user);
     }
 
+    private function isManagerOrMd($user): bool
+    {
+        return in_array($user?->role?->code, ['manager', 'md'], true);
+    }
+
     private function canApproveMd(Reimbursement $reimbursement, $user): bool
     {
         return in_array($user?->role?->code, ['md', 'admin'], true)
@@ -212,6 +221,45 @@ class ReimbursementApprovalController extends Controller
     {
         return in_array($user?->role?->code, ['accounting', 'admin'], true)
             && $reimbursement->status === Reimbursement::STATUS_SUBMITTED_TO_ACCOUNTING;
+    }
+
+    public function reject(Request $request, Reimbursement $reimbursement): JsonResponse
+    {
+        $user = $request->user();
+
+        if (!$this->isManagerOrMd($user)) {
+            abort(403);
+        }
+
+        if ($this->canApproveManager($reimbursement, $user)) {
+            $reimbursement->manager_approved_by = $user?->id;
+            $reimbursement->manager_approved_at = now();
+            $reimbursement->status = Reimbursement::STATUS_REJECTED;
+            $reimbursement->save();
+            $this->notifyReimbursementOwner($reimbursement, 'rejected');
+
+            return response()->json([
+                'message' => 'Manager rejection has been processed.',
+                'data' => $this->approvalSummary($reimbursement),
+            ]);
+        }
+
+        if ($this->canApproveMd($reimbursement, $user)) {
+            $reimbursement->md_approved_by = $user?->id;
+            $reimbursement->md_approved_at = now();
+            $reimbursement->status = Reimbursement::STATUS_REJECTED;
+            $reimbursement->save();
+            $this->notifyReimbursementOwner($reimbursement, 'rejected');
+
+            return response()->json([
+                'message' => 'MD rejection has been processed.',
+                'data' => $this->approvalSummary($reimbursement),
+            ]);
+        }
+
+        throw ValidationException::withMessages([
+            'status' => 'You do not have access to reject this reimbursement.',
+        ]);
     }
 
     private function canUserApproveManagerStage(Reimbursement $reimbursement, $user): bool

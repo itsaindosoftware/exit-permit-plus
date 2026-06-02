@@ -67,6 +67,9 @@ class ReimbursementApprovalRequested extends Notification
             'message' => $message,
             'reimbursement_id' => $this->reimbursement->id,
             'request_date' => $this->reimbursement->request_date ? (string) $this->reimbursement->request_date : null,
+            'target' => 'reimbursement-approvals',
+            'screen' => 'reimbursement-approvals',
+            'detail_api' => '/api/reimbursements/' . $this->reimbursement->id,
         ];
     }
 
@@ -82,6 +85,8 @@ class ReimbursementApprovalRequested extends Notification
                 'stage' => $this->stage,
                 'reimbursement_id' => (string) $this->reimbursement->id,
                 'target' => 'reimbursement-approvals',
+                'screen' => 'reimbursement-approvals',
+                'detail_api' => '/api/reimbursements/' . (string) $this->reimbursement->id,
             ],
         ];
     }

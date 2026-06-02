@@ -16,6 +16,7 @@ class ExitPermitApprovalRequested extends Notification
     {
     }
 
+    // utk kirim notifikasinya ada 3 tahap, database, firebase push channel, dan email (mail)
     public function via(object $notifiable): array
     {
         $channels = ['database', FirebasePushChannel::class];
