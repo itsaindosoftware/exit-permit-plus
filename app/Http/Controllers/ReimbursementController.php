@@ -865,8 +865,13 @@ class ReimbursementController extends Controller
             return true;
         }
 
+        $email = strtolower((string) $user?->email);
+
         return $roleCode === 'hr'
-            && strtolower((string) $user?->email) === self::RATNA_EMAIL;
+            && in_array($email, [
+                self::RATNA_EMAIL,
+                'payroll.hr@example.com',
+            ], true);
     }
 
     private function canAccessApprovalMenu($user): bool
