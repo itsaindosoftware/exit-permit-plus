@@ -740,8 +740,19 @@ class ReimbursementController extends Controller
             ->where('status', 'approved')
             ->whereNotNull('attendance_checked_at')
             ->where('has_valid_checkin', true)
+            // where doesnt have artinya datanya tidak akan muncul jika memiliki data reimbursement dengan kondisi yang di set pada whereDoesntHave, jadi data exit permit yang sudah memiliki reimbursement dengan status pending manager, pending md, pending ratna, submitted to accounting, atau finished tidak akan muncul sebagai pilihan untuk membuat reimbursement baru dari exit permit tersebut
             ->whereDoesntHave('reimbursements', function ($query) {
-                $query->where('status', Reimbursement::STATUS_FINISHED);
+                // data exit permit tidak akan muncul jika data reimbursement untuk exit permit tersebut sudah memiliki status finished
+                // $query->where('status', Reimbursement::STATUS_FINISHED);
+    
+                // data exit permit tidak akan muncul jika data reimbursement untuk exit permit tersebut sudah di klik submit (from exit permit)
+                $query->whereIn('status', [
+                    Reimbursement::STATUS_PENDING_MANAGER,
+                    Reimbursement::STATUS_PENDING_MD,
+                    Reimbursement::STATUS_PENDING_RATNA,
+                    Reimbursement::STATUS_SUBMITTED_TO_ACCOUNTING,
+                    Reimbursement::STATUS_FINISHED,
+                ]);
             })
             ->latest('permit_date')
             ->with(['user:id,name', 'requestors:id,exit_permit_id,name,row_number,reimburs_lunch_box', 'costCenter:id,name'])
